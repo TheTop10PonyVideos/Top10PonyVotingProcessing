@@ -12,7 +12,7 @@ Script with inbuild GUI to process the voting of the Video Series: "Top 10 Pony 
 
 - Absolutely never, and I mean never push an update directly into master. The correct workflow is the usual; clone to your computer, create branch, work on that branch, ask for a PR. Most of us will have the right to push into master but even then we should never do so. PRs will always be reviewed by at least one other member before merging.   
 
-- If any of this points isn't crystal clear or you don't understand what exactly I mean feel free to contact me via Discord ping (preferably on #tech-team) or DM (@Vari#2508 on most MLP discord servers). I don't care if you think it is a dumb question or it will make you look stupid, chances are if you are not sure, we won't be sure either and the discussion will be beneficial for all of us. Nobody expects anyone to remember things they learnt years ago in college and the only way we can all freshen up a bit is by asking questions.   
+- If any of this points aren't crystal clear or you don't understand what exactly I mean feel free to contact me via Discord ping (preferably on #tech-team) or DM (@Vari#2508 on most MLP discord servers). I don't care if you think it is a dumb question or it will make you look stupid, chances are if you are not sure, we won't be sure either and the discussion will be beneficial for all of us. Nobody expects anyone to remember things they learnt years ago in college and the only way we can all freshen up a bit is by asking questions.   
 
  I will be making a Guide on the installation of everything I mentioned here over the next couple weeks. Meanwhile, have a few links you'll probably find useful:  
 
