@@ -16,7 +16,7 @@ Script with inbuild GUI to process the voting of the Video Series: "Top 10 Pony 
 
  I will be making a Guide on the installation of everything I mentioned here over the next couple weeks. Meanwhile, have a few links you'll probably find useful:  
 
-## Useful Links
+## Links
 
 [Our Github](https://github.com/TheTop10PonyVideos)
 
