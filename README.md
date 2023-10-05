@@ -28,7 +28,7 @@ Script with inbuild GUI to process the voting of the Video Series: "Top 10 Pony 
 
 [Github with VSC 101](https://www.youtube.com/watch?v=RGOj5yH7evk)
 
-[Overhaul Meeting](https://github.com/TheTop10PonyVideos/Top10PonyVotingProcessing.git)
+[Overhaul Meeting](https://docs.google.com/drawings/d/1p4D8QmpdhN-f_IkulZAoQoT7WqaGD-Hd2b8RkN1IWOA/edit?usp=sharing)
 
 
 ***
