@@ -1,5 +1,3 @@
-# NOT WORKING CODE, PUSHED FOR AVAILABILITY BETWEEN DEVICES
-
 import csv
 
 csv_file = "data.csv"
