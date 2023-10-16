@@ -1,4 +1,4 @@
-# Make sure you run "pip3 install google-api-python-client" the first time to install the
+# Make sure you run "pip3 install google-api-python-client" the first time to install the api
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
