@@ -3,7 +3,6 @@ import re
 from googleapiclient.discovery import build
 from yt_dlp import YoutubeDL
 
-
 API_KEY = 'API TOKEN' # may replace this
 
 youtube = build('youtube', 'v3', developerKey=API_KEY)
@@ -74,5 +73,4 @@ with open(input_file, 'r', encoding='utf-8') as csv_in, open(output_file, 'w', n
                             new_row.insert(index + 1, status)
                         else:
                             new_row.insert(index + 1, 'private')
-
         writer.writerow(new_row)
