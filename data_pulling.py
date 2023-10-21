@@ -1,56 +1,76 @@
 import csv
-import requests
+import re
+from googleapiclient.discovery import build
+from yt_dlp import YoutubeDL
 
-youtube_api_key = "EEEEEEEEEEEEEEEEEEEEEE"  # may put your api token here
+API_KEY = 'API TOKEN' # may replace this
 
-csv_file = "Top_10_Pony_Videos.csv"  # may replace this
+youtube = build('youtube', 'v3', developerKey=API_KEY)
 
-updated_data = []
+def check_privacy_and_get_title(video_id):
+    try:
+        video_data = youtube.videos().list(
+            part='status,snippet',
+            id=video_id
+        ).execute()
 
-with open(csv_file, "r", newline="", encoding="utf-8") as file:
-    reader = csv.DictReader(file)
+        status = video_data['items'][0]['status']['privacyStatus']
+        title = video_data['items'][0]['snippet']['title']
+        uploader = video_data['items'][0]['snippet']['channelTitle'] # For Vari Uploader :D
+        print(f'Fetched state for {title}. Status: {status}, Uploader: {uploader}')
+        return title, status
 
+    except Exception as e:
+        return None, f"Error: {str(e)}"
+def check_withYtDlp(video_link):
+    try:
+        with YoutubeDL() as ydl:
+            info = ydl.extract_info(video_link, download=False) #This is for vari (uploader getter for blacklist thing for non YT Videos)
+            if video_link[:4]:
+                info = info['entries'][0]
+            title = info['title']
+            uploader = info['uploader']
+            print(f'Fetched state for {title}. Uploader: {uploader}')
+            return title, uploader
+    except Exception as e:
+        return None, f"Error: {str(e)}"
+
+def extract_video_id(url):
+    video_id_match = re.search(r'(?:\?v=|/embed/|/watch\?v=|/youtu.be/)([a-zA-Z0-9_-]+)', url)
+    if video_id_match:
+        return video_id_match.group(1)
+    return None
+
+
+input_file = 'datalinks.csv'
+output_file = 'output_file.csv'
+
+with open(input_file, 'r', encoding='utf-8') as csv_in, open(output_file, 'w', newline='', encoding='utf-8') as csv_out:
+    reader = csv.reader(csv_in)
+    writer = csv.writer(csv_out)
+    
     for row in reader:
-        year = row["year"]
-        month = row["month"]
-        link = row["link"]
-        title = row["title"]
-        channel = row["channel"]
-        upload_date = row["upload date"]
-        state = row["state"]
-        alternate_link = row["alternate link"]
-        found = row["found"]
-        notes = row["notes"]
-
-        video_id = None
-        try:
-            video_id = link.split("?v=")[1]
-        except IndexError:
-            print(f"Invalid YouTube link in row: {row}")
-            continue
-
-        api_url = f"https://www.googleapis.com/youtube/v3/videos?key={youtube_api_key}&id={video_id}&part=status"
-        response = requests.get(api_url)
-
-        if response.status_code == 200:
-            video_data = response.json()
-            if "items" in video_data and len(video_data["items"]) > 0:
-                video_status = video_data["items"][0]["status"]["privacyStatus"]
-
-                row["state"] = video_status
-                print(f"Updated state for video: {title} to {video_status}")
+        new_row = row  
+        
+        for index, cell in enumerate(row):
+            if 'youtube.com' in cell or 'youtu.be' in cell:
+                video_id = extract_video_id(cell)
+                
+                if video_id:
+                    title, privacy_state = check_privacy_and_get_title(video_id)
+                    if title is not None:
+                        new_row.insert(index + 1, privacy_state)
+                    else:
+                        new_row.insert(index + 1, 'private')
             else:
-                row["state"] = "Deleted"
-                print(f"Video not found in row: {row}! Setting state to 'Deleted'.")
+                if 'pony.tube' in cell or 'vimeo.com' in cell or 'dailymotion.com' in cell:
+                    video_link = cell
 
-        updated_data.append(row)
-
-with open(csv_file, "w", newline="", encoding="utf-8") as file:
-    fieldnames = reader.fieldnames
-    writer = csv.DictWriter(file, fieldnames=fieldnames)
-
-    writer.writeheader()
-
-    writer.writerows(updated_data)
-
-print("Processing complete. CSV file updated.")
+                    if video_link:
+                        print(video_link)
+                        title, status = check_withYtDlp(video_link=video_link)
+                        if status is not None:
+                            new_row.insert(index + 1, status)
+                        else:
+                            new_row.insert(index + 1, 'private')
+        writer.writerow(new_row)
