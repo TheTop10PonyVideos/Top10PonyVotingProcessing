@@ -1,8 +1,14 @@
 import csv
+from datetime import datetime
+from pytz import timezone
 from modules import data_pulling
 
-input_file = "outputs/processedblacklist.csv"
+input_file = "WEGOTTAMAKETHEORDERCLEAR.csv"  # comment this tomorrow
 output_file = "outputs/processed.csv"
+today = datetime.today()
+zone = timezone("NAMEINPYTZ")
+today = datetime.now(zone)
+limit_date = datetime(today.year, today.month, 1)
 
 
 def checkDuration():
@@ -25,12 +31,13 @@ def checkDuration():
                             privacy_state,
                             uploader,
                             duration,
+                            upload_date,
                         ) = data_pulling.check_privacy_and_get_title(video_id)
 
-                        seconds = int(duration)
+                        date = int(upload_date)
 
-                        if seconds <= 30:
-                            new_row[index] = cell + " [Video too Short]"
+                        if date <= limit_date:
+                            new_row[index] = cell + " [Video too old]"
                 else:
                     if (
                         "pony.tube" in cell
@@ -41,12 +48,15 @@ def checkDuration():
 
                         if video_link:
                             print(video_link)
-                            title, uploader, duration = data_pulling.check_withYtDlp(
-                                video_link=video_link
-                            )
+                            (
+                                title,
+                                uploader,
+                                duration,
+                                upload_date,  # UPLOAD DATE IN RELEVANT TIMEZONE
+                            ) = data_pulling.check_withYtDlp(video_link=video_link)
 
-                            seconds = int(duration)
+                            date = int(upload_date)
 
-                            if seconds <= 30:
-                                new_row[index] = cell + " [Video to Short]"
+                            if date <= limit_date:
+                                new_row[index] = cell + " [Video too old]"
             writer.writerow(new_row)
