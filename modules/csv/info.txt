@@ -1,0 +1,4 @@
+Needed files:
+
+blacklist.csv (Contains the Blacklisted channels (collumn name: channel, cell 1: LittleshyFiM))
+datalinks.csv (Main Input File from the Form (Link format))

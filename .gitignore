@@ -3,3 +3,8 @@ date_checker.py
 e.py
 datalinks.csv
 testo.csv
+blacklist.csv
+datalinkss.csv
+mainCSV
+automated
+__pycache__
