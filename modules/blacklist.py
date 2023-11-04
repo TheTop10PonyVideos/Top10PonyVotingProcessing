@@ -1,7 +1,6 @@
 import csv
 from modules import data_pulling
 
-
 input_file = 'outputs/processedduplicates.csv'
 output_file = 'outputs/processedblacklist.csv'
 def checkBlacklist():
@@ -17,7 +16,7 @@ def checkBlacklist():
                     video_id = data_pulling.extract_video_id(cell)
                 
                     if video_id:
-                        title, privacy_state, uploader, seconds = data_pulling.check_privacy_and_get_title(video_id)
+                        title, uploader, seconds = data_pulling.ytAPI(video_id)
 
                         if data_pulling.checkBlacklistedChannels(uploader):
                             new_row[index] = cell + ' [BLACKLISTED]'
