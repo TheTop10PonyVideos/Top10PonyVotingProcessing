@@ -4,7 +4,7 @@ from googleapiclient.discovery import build
 from yt_dlp import YoutubeDL
 
 
-API_KEY = "AIzaSyCiLSrY_EUwYNlfd_mvg-enV6NUpG7zFDU"  # may replace this
+API_KEY = "E"  # may replace this
 
 youtube = build("youtube", "v3", developerKey=API_KEY)
 links_count = 0  # Used for percentage calculation
