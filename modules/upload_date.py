@@ -6,12 +6,12 @@ from modules import data_pulling
 input_file = "WEGOTTAMAKETHEORDERCLEAR.csv"  # comment this tomorrow
 output_file = "outputs/processed.csv"
 today = datetime.today()
-zone = timezone("NAMEINPYTZ")
+zone = timezone("Etc/GMT-14")
 today = datetime.now(zone)
 limit_date = datetime(today.year, today.month, 1)
 
 
-def checkDuration():
+def checkUploaddate():
     with open(input_file, "r", encoding="utf-8") as csv_in, open(
         output_file, "w", newline="", encoding="utf-8"
     ) as csv_out:
@@ -32,9 +32,9 @@ def checkDuration():
                             uploader,
                             duration,
                             upload_date,
-                        ) = data_pulling.check_privacy_and_get_title(video_id)
+                        ) = data_pulling.ytAPI(video_id)
 
-                        date = int(upload_date)
+                        date = zone.localize(upload_date)
 
                         if date <= limit_date:
                             new_row[index] = cell + " [Video too old]"
@@ -55,7 +55,7 @@ def checkDuration():
                                 upload_date,  # UPLOAD DATE IN RELEVANT TIMEZONE
                             ) = data_pulling.check_withYtDlp(video_link=video_link)
 
-                            date = int(upload_date)
+                            date = zone.localize(upload_date)
 
                             if date <= limit_date:
                                 new_row[index] = cell + " [Video too old]"
