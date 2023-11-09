@@ -7,20 +7,22 @@ from yt_dlp import YoutubeDL
 API_KEY = "E"  # may replace this
 
 youtube = build("youtube", "v3", developerKey=API_KEY)
-links_count = 0
-links_processed_count = 0
-
+links_count = 0  # Used for percentage calculation
+links_processed_count = 0  # Used for percentage calculation
+max_retry_count = 0
 with open("modules/csv/datalinks.csv", "r") as file:
     csv_reader = csv.reader(file)
 
     for row in csv_reader:
         for cell in row:
             if "http" in cell:
-                links_count += 2  # this will be updated to "1" after we only need one datapulling fetch soon TM
+                links_count += 3  # this will be updated to "1" after we only need one datapulling fetch soon TM
 
 
-def check_privacy_and_get_title(video_id):
+# This is the API fetch through youtube. Usage: title, uploader, duration = data_pulling.ytAPI(video_id)
+def ytAPI(video_id):
     global links_processed_count
+    global max_retry_count
     try:
         video_data = (
             youtube.videos()
@@ -28,7 +30,7 @@ def check_privacy_and_get_title(video_id):
             .execute()
         )
 
-        status = video_data["items"][0]["status"]["privacyStatus"]
+        # status = video_data['items'][0]['status']['privacyStatus']
         title = video_data["items"][0]["snippet"]["title"]
         uploader = video_data["items"][0]["snippet"]["channelTitle"]
         duration = video_data["items"][0]["contentDetails"]["duration"]
@@ -42,12 +44,20 @@ def check_privacy_and_get_title(video_id):
         percentage_processed = (links_processed_count / links_count) * 100
         formatted_percentage = "{:.2f}%".format(percentage_processed)
         print(f"{formatted_percentage} done ({links_count}/{links_processed_count})")
-        return title, status, uploader, seconds
+        max_retry_count = 0
+        return title, uploader, seconds
 
     except Exception as e:
-        return None, f"Error: {str(e)}"
+        max_retry_count += 1
+        print(f"An error occurred: {e}")
+        if max_retry_count > 5:
+            return None, "Timed Out"
+        else:
+            print("Retrying...")
+            return ytAPI(video_id=video_id)
 
 
+# Converts ISO times into seconds (just don't touch it, if it works lol)
 def iso8601_converter(duration_str):
     if duration_str.startswith("PT"):
         duration_str = duration_str[2:]
@@ -74,6 +84,7 @@ def iso8601_converter(duration_str):
     return total_seconds
 
 
+# The yt_dlp check. Same usage as ytAPI.
 def check_withYtDlp(video_link):
     global links_processed_count
     try:
@@ -91,24 +102,30 @@ def check_withYtDlp(video_link):
             uploader = info.get("uploader")
             duration = info.get("duration")
             durationString = str(duration)
-            # print(durationString)
             seconds = iso8601_converter(duration_str=durationString)
 
-            # print(f'Fetched state for {title}. Uploader: {uploader}')
-            # print(f'Duration: {duration} seconds')
             links_processed_count += 1
             percentage_processed = (links_processed_count / links_count) * 100
             formatted_percentage = "{:.2f}%".format(percentage_processed)
             print(
-                f"{formatted_percentage}% done ({links_count}/{links_processed_count})"
+                f"{formatted_percentage} done ({links_count}/{links_processed_count})"
             )
             return title, uploader, seconds
 
     except Exception as e:
         print(f"An error occurred: {e}")
-        return None, f"Error: {str(e)}"
+        print("Retrying...")
+        max_retry_count += 1
+        if max_retry_count > 5:
+            return None, f"Error {e}"
+        else:
+            print("Retrying...")
+            return check_withYtDlp(video_link)
+
+        return check_withYtDlp(video_link)
 
 
+# YT API needs the video id not the link! Call this regex function to extract the video id (video_id = data_pulling.extract_video_id(cell))
 def extract_video_id(url):
     video_id_match = re.search(
         r"(?:\?v=|/embed/|/watch\?v=|/youtu.be/)([a-zA-Z0-9_-]+)", url
@@ -118,6 +135,7 @@ def extract_video_id(url):
     return None
 
 
+# why is this here :P hmmmmmmmmmmmmmmm anyways don't touch it :D
 checker_file = "modules/csv/blacklist.csv"
 
 

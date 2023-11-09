@@ -20,17 +20,12 @@ def checkDuration():
                     video_id = data_pulling.extract_video_id(cell)
 
                     if video_id:
-                        (
-                            title,
-                            privacy_state,
-                            uploader,
-                            duration,
-                        ) = data_pulling.check_privacy_and_get_title(video_id)
+                        title, uploader, duration = data_pulling.ytAPI(video_id)
 
                         seconds = int(duration)
 
                         if seconds <= 30:
-                            new_row[index] = cell + " [Video too Short]"
+                            new_row[index] = cell + " [Video to Short]"
                 else:
                     if (
                         "pony.tube" in cell
@@ -50,3 +45,6 @@ def checkDuration():
                             if seconds <= 30:
                                 new_row[index] = cell + " [Video to Short]"
             writer.writerow(new_row)
+
+
+# To-DO: Add threshold for videos above 30s which may be to short aswell.
