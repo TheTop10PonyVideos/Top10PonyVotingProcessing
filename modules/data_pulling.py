@@ -1,5 +1,6 @@
 import csv
 import re
+from datetime import datetime
 from googleapiclient.discovery import build
 from yt_dlp import YoutubeDL
 
@@ -35,6 +36,7 @@ def ytAPI(video_id):
         uploader = video_data["items"][0]["snippet"]["channelTitle"]
         duration = video_data["items"][0]["contentDetails"]["duration"]
         durationString = str(duration)
+        upload_date = video_data["items"][0]["snippet"]["publishedAt"]
         # print(durationString)
 
         seconds = iso8601_converter(duration_str=durationString)
@@ -45,7 +47,7 @@ def ytAPI(video_id):
         formatted_percentage = "{:.2f}%".format(percentage_processed)
         print(f"{formatted_percentage} done ({links_count}/{links_processed_count})")
         max_retry_count = 0
-        return title, uploader, seconds
+        return title, uploader, seconds, upload_date
 
     except Exception as e:
         max_retry_count += 1
@@ -103,14 +105,14 @@ def check_withYtDlp(video_link):
             duration = info.get("duration")
             durationString = str(duration)
             seconds = iso8601_converter(duration_str=durationString)
-
+            upload_date = info.get("upload_date")
             links_processed_count += 1
             percentage_processed = (links_processed_count / links_count) * 100
             formatted_percentage = "{:.2f}%".format(percentage_processed)
             print(
                 f"{formatted_percentage} done ({links_count}/{links_processed_count})"
             )
-            return title, uploader, seconds
+            return title, uploader, seconds, upload_date
 
     except Exception as e:
         print(f"An error occurred: {e}")
