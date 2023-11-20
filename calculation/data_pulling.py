@@ -32,17 +32,13 @@ def ytAPI(video_id):
             .execute()
         )
 
-        # status = video_data['items'][0]['status']['privacyStatus']
         title = video_data["items"][0]["snippet"]["title"]
         uploader = video_data["items"][0]["snippet"]["channelTitle"]
         duration = video_data["items"][0]["contentDetails"]["duration"]
         upload_date = video_data["items"][0]["snippet"]["publishedAt"]
         durationString = str(duration)
-        # print(durationString)
 
         seconds = iso8601_converter(duration_str=durationString)
-        # print(seconds)
-        # print(f'Fetched state for {title}. Status: {status}, Uploader: {uploader}')
         links_processed_count += 1
         percentage_processed = (links_processed_count / links_count) * 100
         formatted_percentage = "{:.2f}%".format(percentage_processed)
