@@ -2,8 +2,8 @@ import csv
 import re
 from googleapiclient.discovery import build
 from yt_dlp import YoutubeDL
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 load_dotenv()
 API_KEY = os.getenv("apikey")  # may replace this
 
@@ -11,20 +11,17 @@ youtube = build("youtube", "v3", developerKey=API_KEY)
 links_count = 0  # Used for percentage calculation
 links_processed_count = 0  # Used for percentage calculation
 max_retry_count = 0
-def setCount(input):   
-    global links_count
-    with open(input, "r") as file:
-        csv_reader = csv.reader(file)
+with open("modules/csv/datalink.csv", "r") as file:
+    csv_reader = csv.reader(file)
 
-        for row in csv_reader:
-            for cell in row:
-                if "http" in cell:
-                    links_count += 4  # this will be updated to "1" after we only need one datapulling fetch soon TM
+    for row in csv_reader:
+        for cell in row:
+            if "http" in cell:
+                links_count += 1  # this will be updated to "1" after we only need one datapulling fetch soon TM
 
 
 # This is the API fetch through youtube. Usage: title, uploader, duration = data_pulling.ytAPI(video_id)
 def ytAPI(video_id):
-    
     global links_processed_count
     global max_retry_count
     try:
@@ -53,9 +50,13 @@ def ytAPI(video_id):
         return title, uploader, seconds, upload_date
 
     except Exception as e:
+        max_retry_count += 1
         print(f"An error occurred: {e}")
-        print("Retrying...")
-        return ytAPI(video_id=video_id)
+        if max_retry_count > 5:
+            return None, "Timed Out"
+        else:
+            print("Retrying...")
+            return ytAPI(video_id=video_id)
 
 
 # Converts ISO times into seconds (just don't touch it, if it works lol)
@@ -115,9 +116,15 @@ def check_withYtDlp(video_link):
             return title, uploader, seconds, upload_date
 
     except Exception as e:
-        max_retry_count
         print(f"An error occurred: {e}")
         print("Retrying...")
+        max_retry_count += 1
+        if max_retry_count > 5:
+            return None, f"Error {e}"
+        else:
+            print("Retrying...")
+            return check_withYtDlp(video_link)
+
         return check_withYtDlp(video_link)
 
 

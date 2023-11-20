@@ -7,4 +7,7 @@ blacklist.csv
 datalinkss.csv
 mainCSV
 automated
+jsonHandler.pys
 __pycache__
+jsonHandler.py
+.env
