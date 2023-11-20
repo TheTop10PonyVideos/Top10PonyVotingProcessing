@@ -8,20 +8,21 @@ from modules import upload_date
 from modules import data_pulling
 import os
 
+
 def browse_file():
     file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
     entry_var.set(file_path)
 
+
 def run_checks():
     csv_file = entry_var.get()
     data_pulling.setCount(csv_file)
-    fuzzycheck.linksToTitles(csv_file) 
+    fuzzycheck.linksToTitles(csv_file)
     duplicate.checkDuplicates(csv_file)
     blacklist.checkBlacklist(csv_file)
     upload_date.checkDates(csv_file)
     durationcheck.checkDuration(csv_file)
     fuzzycheck.adapt_output_csv()
-    
 
     if os.path.exists("outputs/processedblacklist.csv"):
         os.remove("outputs/processedblacklist.csv")

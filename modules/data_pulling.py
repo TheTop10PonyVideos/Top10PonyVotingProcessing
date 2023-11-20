@@ -4,6 +4,7 @@ from googleapiclient.discovery import build
 from yt_dlp import YoutubeDL
 from dotenv import load_dotenv
 import os
+
 load_dotenv()
 API_KEY = os.getenv("apikey")  # may replace this
 
@@ -11,7 +12,9 @@ youtube = build("youtube", "v3", developerKey=API_KEY)
 links_count = 0  # Used for percentage calculation
 links_processed_count = 0  # Used for percentage calculation
 max_retry_count = 0
-def setCount(input):   
+
+
+def setCount(input):
     global links_count
     with open(input, "r") as file:
         csv_reader = csv.reader(file)
@@ -24,7 +27,6 @@ def setCount(input):
 
 # This is the API fetch through youtube. Usage: title, uploader, duration = data_pulling.ytAPI(video_id)
 def ytAPI(video_id):
-    
     global links_processed_count
     global max_retry_count
     try:
