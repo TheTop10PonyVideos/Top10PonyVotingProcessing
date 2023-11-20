@@ -1,6 +1,6 @@
 import csv
 
-csv_file = "modules/csv/datalinks.csv"
+csv_file = "modules/csv/datalink.csv"
 output_file = "outputs/processedduplicates.csv"
 
 
@@ -14,8 +14,8 @@ def markDuplicateCells(row):
     return row
 
 
-def checkDuplicates():
-    with open(csv_file, "r", newline="", encoding="utf-8") as file:
+def checkDuplicates(input):
+    with open(input, "r", newline="", encoding="utf-8") as file:
         reader = csv.reader(file)
         rows = list(reader)
 
