@@ -1,5 +1,6 @@
 import csv
 import re
+from datetime import datetime
 from googleapiclient.discovery import build
 from yt_dlp import YoutubeDL
 from dotenv import load_dotenv
@@ -40,6 +41,7 @@ def ytAPI(video_id):
         duration = video_data["items"][0]["contentDetails"]["duration"]
         upload_date = video_data["items"][0]["snippet"]["publishedAt"]
         durationString = str(duration)
+        upload_date = video_data["items"][0]["snippet"]["publishedAt"]
         # print(durationString)
 
         seconds = iso8601_converter(duration_str=durationString)
@@ -105,7 +107,7 @@ def check_withYtDlp(video_link):
             upload_date = info.get("upload_date")
             durationString = str(duration)
             seconds = iso8601_converter(duration_str=durationString)
-
+            upload_date = info.get("upload_date")
             links_processed_count += 1
             percentage_processed = (links_processed_count / links_count) * 100
             formatted_percentage = "{:.2f}%".format(percentage_processed)
