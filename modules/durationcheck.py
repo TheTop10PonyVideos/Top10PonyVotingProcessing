@@ -1,18 +1,23 @@
 import csv
 from modules import data_pulling
 import re
-input_file_duration = "modules/csv/datalink.csv" 
-input_file_additional_info = "outputs/processedDates.csv"  
+
+input_file_duration = "modules/csv/datalink.csv"
+input_file_additional_info = "outputs/processedDates.csv"
 output_file = "outputs/processed.csv"
-date_time_pattern = r'\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{1,2}:\d{1,2}'
+date_time_pattern = r"\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{1,2}:\d{1,2}"
+
 
 def is_date_time_match(cell):
     return bool(re.search(date_time_pattern, cell))
+
+
 def checkDuration(input):
-    with open(input, "r", encoding="utf-8") as csv_duration, \
-            open(input_file_additional_info, "r", encoding="utf-8") as csv_additional, \
-            open(output_file, "w", newline="", encoding="utf-8") as csv_out:
-        
+    with open(input, "r", encoding="utf-8") as csv_duration, open(
+        input_file_additional_info, "r", encoding="utf-8"
+    ) as csv_additional, open(
+        output_file, "w", newline="", encoding="utf-8"
+    ) as csv_out:
         reader_duration = csv.reader(csv_duration)
         reader_additional = csv.reader(csv_additional)
         writer = csv.writer(csv_out)
@@ -31,7 +36,7 @@ def checkDuration(input):
 
                         if seconds <= 30:
                             row_additional[index] = cell + " [Video too short]"
-                        elif seconds <=45:
+                        elif seconds <= 45:
                             row_additional[index] = cell + "[Check Video Length!]"
                 else:
                     if (
@@ -42,18 +47,19 @@ def checkDuration(input):
                         video_link = cell
 
                         if video_link:
-                            
                             print(video_link)
-                            title, uploader, duration, date = data_pulling.check_withYtDlp(
-                                video_link=video_link
-                            )
-                            
+                            (
+                                title,
+                                uploader,
+                                duration,
+                                date,
+                            ) = data_pulling.check_withYtDlp(video_link=video_link)
 
                             seconds = int(duration)
 
                             if seconds <= 30:
                                 row_additional[index] = cell + " [Video too short]"
-                            elif seconds <=45:
+                            elif seconds <= 45:
                                 row_additional[index] = cell + "[Check Video Length!]"
                     else:
                         if cell.strip():
@@ -65,6 +71,4 @@ def checkDuration(input):
                                 else:
                                     row_additional.append(cell + "[Unsupported Host]")
 
-
             writer.writerow(row_additional)
-

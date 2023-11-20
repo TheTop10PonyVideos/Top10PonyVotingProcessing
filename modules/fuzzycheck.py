@@ -45,9 +45,12 @@ def linksToTitles(input):
                         video_link = cell
 
                         if video_link:
-                            title, uploader, duration, date = data_pulling.check_withYtDlp(
-                                video_link=video_link
-                            )
+                            (
+                                title,
+                                uploader,
+                                duration,
+                                date,
+                            ) = data_pulling.check_withYtDlp(video_link=video_link)
 
                             new_row_titles[index] = title
                             new_row_uploaders[index] = uploader
@@ -58,14 +61,16 @@ def linksToTitles(input):
             writer_durations.writerow(new_row_durations)
 
 
-
 output_titles = "outputs/titles_output.csv"
 output_uploaders = "outputs/uploaders_output.csv"
 output_durations = "outputs/durations_output.csv"
 
 
 def adapt_output_csv(
-    input_csv_file=output_titles, output_csv_file=input_file, uploader_csv_file=output_uploaders, duration_csv_file=output_durations
+    input_csv_file=output_titles,
+    output_csv_file=input_file,
+    uploader_csv_file=output_uploaders,
+    duration_csv_file=output_durations,
 ):
     with open(input_csv_file, "r", encoding="utf-8") as input_file:
         input_reader = csv.reader(input_file)
@@ -121,7 +126,7 @@ def adapt_output_csv(
                     )
                     adaptations_uploaders[(i, j)] = (input_row[j], similarity)
                     adaptations_uploaders[(i, k)] = (input_row[k], similarity)
-    
+
     for i, (input_row, existing_row) in enumerate(zip(duration_rows, existing_rows)):
         for j in range(1, len(input_row)):
             if not input_row[j]:
@@ -145,9 +150,14 @@ def adapt_output_csv(
         for i, existing_row in enumerate(existing_rows):
             adapted_row = []
             for j, cell in enumerate(existing_row):
-                if (i, j) in adaptations_titles and (i, j) in adaptations_uploaders and (i, j) in adaptations_durations:
+                if (
+                    (i, j) in adaptations_titles
+                    and (i, j) in adaptations_uploaders
+                    and (i, j) in adaptations_durations
+                ):
                     adapted_row.append(
-                        cell + f" [SIMILARITY DETECTED IN TITLES AND UPLOADER AND DURATION]"
+                        cell
+                        + f" [SIMILARITY DETECTED IN TITLES AND UPLOADER AND DURATION]"
                     )
                 elif (i, j) in adaptations_titles and (i, j) in adaptations_uploaders:
                     adapted_row.append(
@@ -157,23 +167,19 @@ def adapt_output_csv(
                     adapted_row.append(
                         cell + f" [SIMILARITY DETECTED IN TITLES AND DURATION]"
                     )
-                elif (i, j) in adaptations_uploaders and (i, j) in adaptations_durations:
+                elif (i, j) in adaptations_uploaders and (
+                    i,
+                    j,
+                ) in adaptations_durations:
                     adapted_row.append(
                         cell + f" [SIMILARITY DETECTED IN UPLOADER AND DURATION]"
                     )
                 elif (i, j) in adaptations_titles:
-                    adapted_row.append(
-                        cell + f" [SIMILARITY DETECTED IN TITLES]"
-                    )
+                    adapted_row.append(cell + f" [SIMILARITY DETECTED IN TITLES]")
                 elif (i, j) in adaptations_uploaders:
-                    adapted_row.append(
-                        cell + f" [SIMILARITY DETECTED IN UPLOADER]"
-                    )
+                    adapted_row.append(cell + f" [SIMILARITY DETECTED IN UPLOADER]")
                 elif (i, j) in adaptations_durations:
-                    adapted_row.append(
-                        cell + f" [SIMILARITY DETECTED IN DURATION]"
-                    )
+                    adapted_row.append(cell + f" [SIMILARITY DETECTED IN DURATION]")
                 else:
                     adapted_row.append(cell)
             output_writer.writerow(adapted_row)
-

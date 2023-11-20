@@ -3,15 +3,18 @@ from tkinter import ttk, filedialog
 from calculation import calc
 import os
 
+
 def browse_file():
     file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
     entry_var.set(file_path)
+
 
 def run_checks():
     csv = entry_var.get()
     calc.links_to_titles(csv)
     calc.analyze_and_write_titles_to_csv()
     os.remove("outputs/titles_output.csv")
+
 
 # This still breaks if you don't enable all checks
 root = tk.Tk()
