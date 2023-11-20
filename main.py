@@ -24,21 +24,17 @@ def run_checks():
     durationcheck.checkDuration(csv_file)
     fuzzycheck.adapt_output_csv()
 
-    if os.path.exists("outputs/processedblacklist.csv"):
-        os.remove("outputs/processedblacklist.csv")
-    if os.path.exists("outputs/processedduplicates.csv"):
-        os.remove("outputs/processedduplicates.csv")
-    if os.path.exists("outputs/processedfuzzlist.csv"):
-        os.remove("outputs/processedfuzzlist.csv")
-    if os.path.exists("outputs/processedDates.csv"):
-        os.remove("outputs/processedDates.csv")
-    if os.path.exists("outputs/durations_output.csv"):
-        os.remove("outputs/durations_output.csv")
-    if os.path.exists("outputs/titles_output.csv"):
-        os.remove("outputs/titles_output.csv")
-    if os.path.exists("outputs/uploaders_output.csv"):
-        os.remove("outputs/uploaders_output.csv")
+    delete_if_present("outputs/processedblacklist.csv")
+    delete_if_present("outputs/processedduplicates.csv")
+    delete_if_present("outputs/processedfuzzlist.csv")
+    delete_if_present("outputs/processedDates.csv")
+    delete_if_present("outputs/durations_output.csv")
+    delete_if_present("outputs/titles_output.csv")
+    delete_if_present("outputs/uploaders_output.csv")
 
+def delete_if_present(filepath):
+    if os.path.exists(filepath):
+        os.remove(filepath)
 
 root = tk.Tk()
 root.title("Check Script")
