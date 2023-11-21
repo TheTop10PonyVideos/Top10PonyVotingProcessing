@@ -24,26 +24,28 @@ def checkBlacklist(input):
                     video_id = data_pulling.extract_video_id(cell)
 
                     if video_id:
-                        title, uploader, seconds, date = data_pulling.ytAPI(video_id)
-
+                        title, uploader, seconds, upload_date_str = data_pulling.ytAPI(
+                            video_id
+                        )
                         if data_pulling.checkBlacklistedChannels(uploader):
-                            row_duplicates[index] = cell + " [BLACKLISTED]"
-                else:
-                    if (
-                        "pony.tube" in cell
-                        or "vimeo.com" in cell
-                        or "dailymotion.com" in cell
-                    ):
-                        video_link = cell
+                            row_duplicates[index] += " [BLACKLISTED]"
 
-                        if video_link:
-                            print(video_link)
-                            (
-                                title,
-                                uploader,
-                                seconds,
-                                date,
-                            ) = data_pulling.check_withYtDlp(video_link=video_link)
-                            if data_pulling.checkBlacklistedChannels(uploader):
-                                row_duplicates[index] = cell + " [BLACKLISTED]"
+                elif (
+                    "pony.tube" in cell
+                    or "vimeo.com" in cell
+                    or "dailymotion.com" in cell
+                ):
+                    video_link = cell
+
+                    if video_link:
+                        print(video_link)
+                        (
+                            title,
+                            uploader,
+                            seconds,
+                            upload_date_str,
+                        ) = data_pulling.check_withYtDlp(video_link=video_link)
+                        if data_pulling.checkBlacklistedChannels(uploader):
+                            row_duplicates[index] += " [BLACKLISTED]"
+
             writer.writerow(row_duplicates)
