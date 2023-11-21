@@ -61,7 +61,6 @@ def iso8601_converter(duration_str):
     if duration_str.startswith("PT"):
         duration_str = duration_str[2:]
 
-    total_seconds = 0
     hours = 0
     minutes = 0
     seconds = 0
