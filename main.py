@@ -23,6 +23,7 @@ def run_checks():
     upload_date.checkDates(csv_file)
     durationcheck.checkDuration(csv_file)
     fuzzycheck.adapt_output_csv()
+    fuzzycheck.deleteFirstCell()
 
     delete_if_present("outputs/processedblacklist.csv")
     delete_if_present("outputs/processedduplicates.csv")
@@ -32,9 +33,11 @@ def run_checks():
     delete_if_present("outputs/titles_output.csv")
     delete_if_present("outputs/uploaders_output.csv")
 
+
 def delete_if_present(filepath):
     if os.path.exists(filepath):
         os.remove(filepath)
+
 
 root = tk.Tk()
 root.title("Check Script")

@@ -2,28 +2,33 @@ import csv
 
 csv_file = "modules/csv/datalink.csv"
 output_file = "outputs/processedduplicates.csv"
+additional_file_path = "outputs/titles_output.csv"
 
 
-def markDuplicateCells(row):
+def markDuplicateCells(row, additional_row):
     seen = set()
     for i in range(len(row)):
         cell = row[i]
         if cell and cell in seen:
-            row[i] += " [Duplicate Video]"
+            additional_row[i] += " [Duplicate Video]"
         seen.add(cell)
-    return row
+    return additional_row
 
 
-def checkDuplicates(input):
-    with open(input, "r", newline="", encoding="utf-8") as file:
+def checkDuplicates(input_file):
+    with open(input_file, "r", newline="", encoding="utf-8") as file, open(
+        additional_file_path, "r", newline="", encoding="utf-8"
+    ) as additional_file:
         reader = csv.reader(file)
+        additional_reader = csv.reader(additional_file)
         rows = list(reader)
+        additional_rows = list(additional_reader)
 
     for i in range(len(rows)):
-        rows[i] = markDuplicateCells(rows[i])
+        additional_rows[i] = markDuplicateCells(rows[i], additional_rows[i])
 
     with open(output_file, "w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
-        writer.writerows(rows)
+        writer.writerows(additional_rows)
 
     print(f"Duplicates marked and saved to {output_file}")

@@ -11,9 +11,7 @@ def browse_file():
 
 def run_checks():
     csv = entry_var.get()
-    calc.links_to_titles(csv)
-    calc.analyze_and_write_titles_to_csv()
-    os.remove("outputs/titles_output.csv")
+    calc.analyze_and_write_titles_to_csv(csv)
 
 
 # This still breaks if you don't enable all checks
