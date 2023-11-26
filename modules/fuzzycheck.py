@@ -184,7 +184,10 @@ def adapt_output_csv(
                 else:
                     adapted_row.append(cell)
             output_writer.writerow(adapted_row)
+
+
 date_time_pattern = r"\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{1,2}:\d{1,2}"
+
 
 def is_date_time_match(cell):
     return bool(re.search(date_time_pattern, cell))

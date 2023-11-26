@@ -10,7 +10,7 @@ output_file = "outputs/processedDates.csv"
 today = datetime.today()
 zone = timezone("Etc/GMT-14")
 today = datetime.now(zone)
-limit_date = datetime(today.year, today.month -1, 1)
+limit_date = datetime(today.year, today.month - 1, 1)
 
 
 def parse_youtube_date(date_str):

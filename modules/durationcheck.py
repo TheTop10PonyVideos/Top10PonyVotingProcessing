@@ -65,5 +65,4 @@ def checkDuration(input):
                     else:
                         row_duration.append(cell + "[Unsupported Host]")
 
-
             writer.writerow(row_duration)
