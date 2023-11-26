@@ -20,7 +20,7 @@ def run_checks():
     fuzzycheck.links_to_titles(csv_file)
     duplicate.check_duplicates(csv_file)
     blacklist.check_blacklist(csv_file)
-    upload_date.checkDates(csv_file)
+    upload_date.check_dates(csv_file)
     durationcheck.checkDuration(csv_file)
     fuzzycheck.adapt_output_csv()
     fuzzycheck.deleteFirstCell()

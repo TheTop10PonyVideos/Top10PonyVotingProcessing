@@ -21,7 +21,7 @@ def parse_yt_dlp_date(date_str):
     return datetime.strptime(date_str, "%Y%m%d")
 
 
-def checkDates(input):
+def check_dates(input):
     with open(input, "r", encoding="utf-8") as csv_data_link, open(
         input_file_blacklist, "r", encoding="utf-8"
     ) as csv_blacklist, open(output_file, "w", newline="", encoding="utf-8") as csv_out:
