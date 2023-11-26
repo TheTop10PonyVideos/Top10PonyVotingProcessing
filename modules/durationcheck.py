@@ -52,7 +52,7 @@ def check_duration(input):
                             uploader,
                             seconds,
                             upload_date_str,
-                        ) = data_pulling.check_withYtDlp(video_link=video_link)
+                        ) = data_pulling.check_with_yt_dlp(video_link=video_link)
                         seconds = int(duration)
 
                         if seconds <= 30:

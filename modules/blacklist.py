@@ -44,7 +44,7 @@ def check_blacklist(input):
                             uploader,
                             seconds,
                             upload_date_str,
-                        ) = data_pulling.check_withYtDlp(video_link=video_link)
+                        ) = data_pulling.check_with_yt_dlp(video_link=video_link)
                         if data_pulling.checkBlacklistedChannels(uploader):
                             row_duplicates[index] += " [BLACKLISTED]"
 

@@ -51,7 +51,7 @@ def links_to_titles(input):
                                 uploader,
                                 duration,
                                 date,
-                            ) = data_pulling.check_withYtDlp(video_link=video_link)
+                            ) = data_pulling.check_with_yt_dlp(video_link=video_link)
 
                             new_row_titles[index] = title
                             new_row_uploaders[index] = uploader

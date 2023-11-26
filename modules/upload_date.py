@@ -58,7 +58,7 @@ def check_dates(input):
                             uploader,
                             seconds,
                             upload_date_str,
-                        ) = data_pulling.check_withYtDlp(video_link=video_link)
+                        ) = data_pulling.check_with_yt_dlp(video_link=video_link)
                         upload_date = parse_yt_dlp_date(upload_date_str)
                         if upload_date <= limit_date:
                             row_blacklist[index] += " [Video too old]"

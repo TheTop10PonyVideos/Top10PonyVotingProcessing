@@ -86,7 +86,7 @@ def iso8601_converter(duration_str):
 
 
 # The yt_dlp check. Same usage as yt_api.
-def check_withYtDlp(video_link):
+def check_with_yt_dlp(video_link):
     global links_processed_count
     try:
         ydl_opts = {
@@ -118,7 +118,7 @@ def check_withYtDlp(video_link):
         max_retry_count
         print(f"An error occurred: {e}")
         print("Retrying...")
-        return check_withYtDlp(video_link)
+        return check_with_yt_dlp(video_link)
 
 
 # YT API needs the video id not the link! Call this regex function to extract the video id (video_id = data_pulling.extract_video_id(cell))
