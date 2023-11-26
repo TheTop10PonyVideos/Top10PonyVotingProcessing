@@ -9,7 +9,7 @@ titles_file = "modules/csv/datalink.csv"
 SIMILARITY_THRESHOLD = 80  # Fuzzy threshhold (currently 80%)
 
 
-def linksToTitles(input):
+def links_to_titles(input):
     with open(input, "r", encoding="utf-8") as csv_in, open(
         output_titles, "w", newline="", encoding="utf-8"
     ) as csv_out_titles, open(
