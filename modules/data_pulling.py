@@ -15,7 +15,7 @@ links_processed_count = 0  # Used for percentage calculation
 max_retry_count = 0
 
 
-def setCount(input):
+def set_count(input):
     global links_count
     with open(input, "r") as file:
         csv_reader = csv.reader(file)

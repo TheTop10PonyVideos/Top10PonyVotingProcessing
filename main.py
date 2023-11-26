@@ -16,7 +16,7 @@ def browse_file():
 
 def run_checks():
     csv_file = entry_var.get()
-    data_pulling.setCount(csv_file)
+    data_pulling.set_count(csv_file)
     fuzzycheck.linksToTitles(csv_file)
     duplicate.checkDuplicates(csv_file)
     blacklist.checkBlacklist(csv_file)
