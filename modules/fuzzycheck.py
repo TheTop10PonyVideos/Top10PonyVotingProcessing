@@ -1,6 +1,7 @@
 import csv
 from modules import data_pulling
 from fuzzywuzzy import fuzz
+import re
 
 output_file = "outputs/processedfuzzlist.csv"
 input_file = "outputs/processed.csv"
@@ -183,3 +184,27 @@ def adapt_output_csv(
                 else:
                     adapted_row.append(cell)
             output_writer.writerow(adapted_row)
+date_time_pattern = r"\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{1,2}:\d{1,2}"
+
+def is_date_time_match(cell):
+    return bool(re.search(date_time_pattern, cell))
+
+
+def deleteFirstCell():
+    with open(input_file, "r", newline="", encoding="utf-8") as file:
+        reader = csv.reader(file)
+        rows = []
+
+        for row in reader:
+            if row and is_date_time_match(row[0]):
+                rows.append(row[1:])
+            else:
+                rows.append(row)
+
+    with open(input_file, "w", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerows(rows)
+
+    print(
+        f"First cell deleted from each row if it was a date and saved to {output_file}"
+    )
