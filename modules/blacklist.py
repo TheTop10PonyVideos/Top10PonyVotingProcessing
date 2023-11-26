@@ -6,7 +6,7 @@ input_file_processed_duplicates = "outputs/processedduplicates.csv"
 output_file = "outputs/processedblacklist.csv"
 
 
-def checkBlacklist(input):
+def check_blacklist(input):
     with open(input, "r", encoding="utf-8") as csv_data_link, open(
         input_file_processed_duplicates, "r", encoding="utf-8"
     ) as csv_duplicates, open(
