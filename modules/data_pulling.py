@@ -26,8 +26,8 @@ def set_count(input):
                     links_count += 4  # this will be updated to "1" after we only need one datapulling fetch soon TM
 
 
-# This is the API fetch through youtube. Usage: title, uploader, duration = data_pulling.ytAPI(video_id)
-def ytAPI(video_id):
+# This is the API fetch through youtube. Usage: title, uploader, duration = data_pulling.yt_api(video_id)
+def yt_api(video_id):
     global links_processed_count
     global max_retry_count
     try:
@@ -55,7 +55,7 @@ def ytAPI(video_id):
     except Exception as e:
         print(f"An error occurred: {e}")
         print("Retrying...")
-        return ytAPI(video_id=video_id)
+        return yt_api(video_id=video_id)
 
 
 # Converts ISO times into seconds (just don't touch it, if it works lol)
@@ -85,7 +85,7 @@ def iso8601_converter(duration_str):
     return total_seconds
 
 
-# The yt_dlp check. Same usage as ytAPI.
+# The yt_dlp check. Same usage as yt_api.
 def check_withYtDlp(video_link):
     global links_processed_count
     try:

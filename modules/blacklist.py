@@ -24,7 +24,7 @@ def check_blacklist(input):
                     video_id = data_pulling.extract_video_id(cell)
 
                     if video_id:
-                        title, uploader, seconds, upload_date_str = data_pulling.ytAPI(
+                        title, uploader, seconds, upload_date_str = data_pulling.yt_api(
                             video_id
                         )
                         if data_pulling.checkBlacklistedChannels(uploader):

@@ -32,7 +32,7 @@ def links_to_titles(input):
                     video_id = data_pulling.extract_video_id(cell)
 
                     if video_id:
-                        title, uploader, duration, date = data_pulling.ytAPI(video_id)
+                        title, uploader, duration, date = data_pulling.yt_api(video_id)
 
                         new_row_titles[index] = title
                         new_row_uploaders[index] = uploader
