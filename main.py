@@ -23,7 +23,7 @@ def run_checks():
     upload_date.check_dates(csv_file)
     durationcheck.check_duration(csv_file)
     fuzzycheck.adapt_output_csv()
-    fuzzycheck.deleteFirstCell()
+    fuzzycheck.delete_first_cell()
 
     delete_if_present("outputs/processedblacklist.csv")
     delete_if_present("outputs/processedduplicates.csv")

@@ -193,7 +193,7 @@ def is_date_time_match(cell):
     return bool(re.search(date_time_pattern, cell))
 
 
-def deleteFirstCell():
+def delete_first_cell():
     with open(input_file, "r", newline="", encoding="utf-8") as file:
         reader = csv.reader(file)
         rows = []
