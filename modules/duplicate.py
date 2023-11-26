@@ -5,7 +5,7 @@ output_file = "outputs/processedduplicates.csv"
 additional_file_path = "outputs/titles_output.csv"
 
 
-def markDuplicateCells(row, additional_row):
+def mark_duplicate_cells(row, additional_row):
     seen = set()
     for i in range(len(row)):
         cell = row[i]
@@ -25,7 +25,7 @@ def check_duplicates(input_file):
         additional_rows = list(additional_reader)
 
     for i in range(len(rows)):
-        additional_rows[i] = markDuplicateCells(rows[i], additional_rows[i])
+        additional_rows[i] = mark_duplicate_cells(rows[i], additional_rows[i])
 
     with open(output_file, "w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
