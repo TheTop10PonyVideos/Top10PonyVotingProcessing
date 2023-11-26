@@ -12,7 +12,7 @@ def is_date_time_match(cell):
     return bool(re.search(date_time_pattern, cell))
 
 
-def checkDuration(input):
+def check_duration(input):
     with open(input, "r", encoding="utf-8") as csv_data_link, open(
         input_file_additional_info, "r", encoding="utf-8"
     ) as csv_blacklist, open(output_file, "w", newline="", encoding="utf-8") as csv_out:

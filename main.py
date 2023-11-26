@@ -21,7 +21,7 @@ def run_checks():
     duplicate.check_duplicates(csv_file)
     blacklist.check_blacklist(csv_file)
     upload_date.check_dates(csv_file)
-    durationcheck.checkDuration(csv_file)
+    durationcheck.check_duration(csv_file)
     fuzzycheck.adapt_output_csv()
     fuzzycheck.deleteFirstCell()
 
