@@ -27,7 +27,7 @@ def check_blacklist(input):
                         title, uploader, seconds, upload_date_str = data_pulling.yt_api(
                             video_id
                         )
-                        if data_pulling.checkBlacklistedChannels(uploader):
+                        if data_pulling.check_blacklisted_channels(uploader):
                             row_duplicates[index] += " [BLACKLISTED]"
 
                 elif (
@@ -45,7 +45,7 @@ def check_blacklist(input):
                             seconds,
                             upload_date_str,
                         ) = data_pulling.check_with_yt_dlp(video_link=video_link)
-                        if data_pulling.checkBlacklistedChannels(uploader):
+                        if data_pulling.check_blacklisted_channels(uploader):
                             row_duplicates[index] += " [BLACKLISTED]"
 
             writer.writerow(row_duplicates)

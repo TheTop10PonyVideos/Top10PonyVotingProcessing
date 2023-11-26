@@ -135,7 +135,7 @@ def extract_video_id(url):
 checker_file = "modules/csv/blacklist.csv"
 
 
-def checkBlacklistedChannels(channel):
+def check_blacklisted_channels(channel):
     with open(checker_file, "r", encoding="utf-8") as check:
         checker = csv.reader(check)
 
