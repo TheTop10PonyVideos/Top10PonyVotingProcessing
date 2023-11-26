@@ -18,7 +18,7 @@ def run_checks():
     csv_file = entry_var.get()
     data_pulling.set_count(csv_file)
     fuzzycheck.links_to_titles(csv_file)
-    duplicate.checkDuplicates(csv_file)
+    duplicate.check_duplicates(csv_file)
     blacklist.checkBlacklist(csv_file)
     upload_date.checkDates(csv_file)
     durationcheck.checkDuration(csv_file)

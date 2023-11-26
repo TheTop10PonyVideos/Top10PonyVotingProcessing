@@ -15,7 +15,7 @@ def markDuplicateCells(row, additional_row):
     return additional_row
 
 
-def checkDuplicates(input_file):
+def check_duplicates(input_file):
     with open(input_file, "r", newline="", encoding="utf-8") as file, open(
         additional_file_path, "r", newline="", encoding="utf-8"
     ) as additional_file:
