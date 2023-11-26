@@ -28,9 +28,12 @@ def check_duration(input):
                     video_id = data_pulling.extract_video_id(cell)
 
                     if video_id:
-                        title, uploader, duration, upload_date_str = data_pulling.yt_api(
-                            video_id
-                        )
+                        (
+                            title,
+                            uploader,
+                            duration,
+                            upload_date_str,
+                        ) = data_pulling.yt_api(video_id)
                         seconds = int(duration)
 
                         if seconds <= 30:
