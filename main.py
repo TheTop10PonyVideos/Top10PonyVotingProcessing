@@ -25,7 +25,7 @@ def run_checks():
     fuzzycheck.adapt_output_csv()
     fuzzycheck.delete_first_cell()
 
-    delete_if_present("outputs/processedblacklist.csv")
+    delete_if_present("outputs/processed_blacklist.csv")
     delete_if_present("outputs/processedduplicates.csv")
     delete_if_present("outputs/processedfuzzlist.csv")
     delete_if_present("outputs/processedDates.csv")
