@@ -3,7 +3,7 @@ from modules import data_pulling
 import re
 
 input_file_duration = "modules/csv/data_link.csv"
-input_file_additional_info = "outputs/processedDates.csv"
+input_file_additional_info = "outputs/processed_dates.csv"
 output_file = "outputs/processed.csv"
 date_time_pattern = r"\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{1,2}:\d{1,2}"
 

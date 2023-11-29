@@ -28,7 +28,7 @@ def run_checks():
     delete_if_present("outputs/processed_blacklist.csv")
     delete_if_present("outputs/processed_duplicates.csv")
     delete_if_present("outputs/processed_fuzzlist.csv")
-    delete_if_present("outputs/processedDates.csv")
+    delete_if_present("outputs/processed_dates.csv")
     delete_if_present("outputs/durations_output.csv")
     delete_if_present("outputs/titles_output.csv")
     delete_if_present("outputs/uploaders_output.csv")
