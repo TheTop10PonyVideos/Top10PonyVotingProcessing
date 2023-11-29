@@ -3,7 +3,7 @@ from modules import data_pulling
 from fuzzywuzzy import fuzz
 import re
 
-output_file = "outputs/processedfuzzlist.csv"
+output_file = "outputs/processed_fuzzlist.csv"
 input_file = "outputs/processed.csv"
 titles_file = "modules/csv/data_link.csv"
 SIMILARITY_THRESHOLD = 80  # Fuzzy threshhold (currently 80%)
