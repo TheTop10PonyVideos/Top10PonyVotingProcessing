@@ -1,9 +1,9 @@
 import csv
 from modules import data_pulling
 
-input_file_data_link = "modules/csv/datalink.csv"
-input_file_processed_duplicates = "outputs/processedduplicates.csv"
-output_file = "outputs/processedblacklist.csv"
+input_file_data_link = "modules/csv/data_link.csv"
+input_file_processed_duplicates = "outputs/processed_duplicates.csv"
+output_file = "outputs/processed_blacklist.csv"
 
 
 def check_blacklist(input):

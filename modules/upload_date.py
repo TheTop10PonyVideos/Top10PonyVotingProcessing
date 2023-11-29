@@ -3,9 +3,9 @@ from datetime import datetime
 from pytz import timezone
 from modules import data_pulling
 
-input_file_data_link = "modules/csv/datalink.csv"
-input_file_blacklist = "outputs/processedblacklist.csv"
-output_file = "outputs/processedDates.csv"
+input_file_data_link = "modules/csv/data_link.csv"
+input_file_blacklist = "outputs/processed_blacklist.csv"
+output_file = "outputs/processed_dates.csv"
 
 today = datetime.today()
 zone = timezone("Etc/GMT-14")
