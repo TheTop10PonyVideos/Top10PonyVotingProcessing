@@ -1,6 +1,6 @@
 import csv
 
-csv_file = "modules/csv/datalink.csv"
+csv_file = "modules/csv/data_link.csv"
 output_file = "outputs/processedduplicates.csv"
 additional_file_path = "outputs/titles_output.csv"
 

@@ -5,7 +5,7 @@ import re
 
 output_file = "outputs/processedfuzzlist.csv"
 input_file = "outputs/processed.csv"
-titles_file = "modules/csv/datalink.csv"
+titles_file = "modules/csv/data_link.csv"
 SIMILARITY_THRESHOLD = 80  # Fuzzy threshhold (currently 80%)
 
 
