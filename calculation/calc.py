@@ -7,9 +7,7 @@ input_titles_path = "outputs/titles_output.csv"
 output_titles_path = "outputs/calculatedTop10.csv"
 
 
-def analyze_and_write_titles_to_csv(
-    input_file, output_file=output_titles_path
-):
+def analyze_and_write_titles_to_csv(input_file, output_file=output_titles_path):
     title_counts = {}
     total_title_count = 0
 
