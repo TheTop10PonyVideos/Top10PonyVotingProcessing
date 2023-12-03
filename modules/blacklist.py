@@ -30,7 +30,7 @@ def check_blacklist(input):
                         if data_pulling.check_blacklisted_channels(uploader):
                             row_duplicates[index] += " [BLACKLISTED]"
 
-                elif (data_pulling.contains_accepted_domain(cell)):
+                elif data_pulling.contains_accepted_domain(cell):
                     video_link = cell
 
                     if video_link:

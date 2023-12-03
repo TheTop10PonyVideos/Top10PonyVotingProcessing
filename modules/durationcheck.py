@@ -41,7 +41,7 @@ def check_duration(input):
                         elif seconds <= 45:
                             row_duration[index] += " [Video maybe too short]"
 
-                elif (data_pulling.contains_accepted_domain(cell)):
+                elif data_pulling.contains_accepted_domain(cell):
                     video_link = cell
 
                     if video_link:
