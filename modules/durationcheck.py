@@ -41,11 +41,7 @@ def check_duration(input):
                         elif seconds <= 45:
                             row_duration[index] += " [Video maybe too short]"
 
-                elif (
-                    "pony.tube" in cell
-                    or "vimeo.com" in cell
-                    or "dailymotion.com" in cell
-                ):
+                elif data_pulling.contains_accepted_domain(cell):
                     video_link = cell
 
                     if video_link:

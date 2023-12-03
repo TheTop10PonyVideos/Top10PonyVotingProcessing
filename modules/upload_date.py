@@ -44,11 +44,7 @@ def check_dates(input):
                         if upload_date <= limit_date:
                             row_blacklist[index] += " [Video too old]"
 
-                elif (
-                    "pony.tube" in cell
-                    or "vimeo.com" in cell
-                    or "dailymotion.com" in cell
-                ):
+                elif data_pulling.contains_accepted_domain(cell):
                     video_link = cell
 
                     if video_link:

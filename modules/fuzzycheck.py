@@ -38,11 +38,7 @@ def links_to_titles(input):
                         new_row_uploaders[index] = uploader
                         new_row_durations[index] = duration
                 else:
-                    if (
-                        "pony.tube" in cell
-                        or "vimeo.com" in cell
-                        or "dailymotion.com" in cell
-                    ):
+                    if data_pulling.contains_accepted_domain(cell):
                         video_link = cell
 
                         if video_link:
