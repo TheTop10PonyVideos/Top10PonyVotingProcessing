@@ -144,3 +144,14 @@ def check_blacklisted_channels(channel):
                 if channel in cell:
                     return True
     return False
+
+
+with open("modules/csv/accepted_domains.csv", 'r') as csvfile:
+    reader = csv.reader(csvfile)
+    accepted_domains = [row[0] for row in reader] # Initialize list of accepted domains for checks later
+
+
+def contains_accepted_domain(cell):
+    # Returns true if cell contains the name of an accepted domain
+    # The list of accepted domains are in modules/csv/accepted_domains.csv
+    return any(domain in cell for domain in accepted_domains)

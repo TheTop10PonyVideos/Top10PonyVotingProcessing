@@ -30,11 +30,7 @@ def check_blacklist(input):
                         if data_pulling.check_blacklisted_channels(uploader):
                             row_duplicates[index] += " [BLACKLISTED]"
 
-                elif (
-                    "pony.tube" in cell
-                    or "vimeo.com" in cell
-                    or "dailymotion.com" in cell
-                ):
+                elif (data_pulling.contains_accepted_domain(cell)):
                     video_link = cell
 
                     if video_link:
