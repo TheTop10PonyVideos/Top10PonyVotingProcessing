@@ -7,13 +7,15 @@ input_file_additional_info = "outputs/processed_dates.csv"
 output_file = "outputs/processed.csv"
 date_time_pattern = r"\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{1,2}:\d{1,2}"
 
+# Checks for length
 
-def is_date_time_match(cell):
+
+def is_date_time_match(cell):  # Checks if two dates are identical
     return bool(re.search(date_time_pattern, cell))
 
 
 def check_duration(input):
-    with open(input, "r", encoding="utf-8") as csv_data_link, open(
+    with open(input, "r", encoding="utf-8") as csv_data_link, open(  # Checks CSV
         input_file_additional_info, "r", encoding="utf-8"
     ) as csv_blacklist, open(output_file, "w", newline="", encoding="utf-8") as csv_out:
         reader_data_link = csv.reader(csv_data_link)
@@ -24,7 +26,9 @@ def check_duration(input):
             new_row = row_data_link
 
             for index, cell in enumerate(row_data_link):
-                if "youtube.com" in cell or "youtu.be" in cell:
+                if (
+                    "youtube.com" in cell or "youtu.be" in cell
+                ):  # Checks youtube with the Google API
                     video_id = data_pulling.extract_video_id(cell)
 
                     if video_id:
@@ -36,12 +40,16 @@ def check_duration(input):
                         ) = data_pulling.yt_api(video_id)
                         seconds = int(duration)
 
-                        if seconds <= 30:
+                        if (
+                            seconds <= 30
+                        ):  # Checks videos for possible for possible or definite duration problem
                             row_duration[index] += " [Video too short]"
                         elif seconds <= 45:
                             row_duration[index] += " [Video maybe too short]"
 
-                elif data_pulling.contains_accepted_domain(cell):
+                elif data_pulling.contains_accepted_domain(
+                    cell
+                ):  # Checks for other links comparing to the accepted_domains.csv file
                     video_link = cell
 
                     if video_link:
@@ -54,7 +62,9 @@ def check_duration(input):
                         ) = data_pulling.check_with_yt_dlp(video_link=video_link)
                         seconds = int(duration)
 
-                        if seconds <= 30:
+                        if (
+                            seconds <= 30
+                        ):  # Checks videos for possible for possible or definite duration problem
                             row_duration[index] += " [Video too short]"
                         elif seconds <= 45:
                             row_duration[index] += " [Video maybe too short]"
