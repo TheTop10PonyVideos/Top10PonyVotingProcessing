@@ -175,8 +175,6 @@ def adapt_output_csv(
                     adapted_row.append(cell + f" [SIMILARITY DETECTED IN TITLES]")
                 elif (i, j) in adaptations_uploaders:
                     adapted_row.append(cell + f" [SIMILARITY DETECTED IN UPLOADER]")
-                elif (i, j) in adaptations_durations:
-                    adapted_row.append(cell + f" [SIMILARITY DETECTED IN DURATION]")
                 else:
                     adapted_row.append(cell)
             output_writer.writerow(adapted_row)
@@ -207,3 +205,14 @@ def delete_first_cell():
     print(
         f"First cell deleted from each row if it was a date and saved to {output_file}"
     )
+
+def add_empty_cells(input_file, output_file="outputs/shifted_cells.csv"):
+    with open(input_file, 'r') as file:
+        with open(output_file, 'w', newline='') as new_file:
+            reader = csv.reader(file)
+            writer = csv.writer(new_file)
+            for row in reader:
+                new_row = []
+                for cell in row:
+                    new_row.extend([cell, ''])  # Adds an empty cell after each content cell
+                writer.writerow(new_row)

@@ -15,8 +15,10 @@ def browse_file():
 
 
 def run_checks():
-    csv_file = entry_var.get()
-    data_pulling.set_count(csv_file)
+    start_csv_file = entry_var.get()
+    csv_file = "outputs/shifted_cells.csv"
+    data_pulling.set_count(start_csv_file)
+    fuzzycheck.add_empty_cells(start_csv_file)
     fuzzycheck.links_to_titles(csv_file)
     duplicate.check_duplicates(csv_file)
     blacklist.check_blacklist(csv_file)

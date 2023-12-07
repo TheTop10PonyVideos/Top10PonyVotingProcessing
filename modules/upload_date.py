@@ -30,33 +30,30 @@ def check_dates(input):
         writer = csv.writer(csv_out)
 
         for row_data_link, row_blacklist in zip(reader_data_link, reader_blacklist):
-            new_row = row_data_link
+            updated_blacklist_row = list(row_blacklist)  # Preserve original content
 
-            for index, cell in enumerate(row_data_link):
-                if "youtube.com" in cell or "youtu.be" in cell:
-                    video_id = data_pulling.extract_video_id(cell)
+            for index, cell in enumerate(row_blacklist):
+                if index % 2 == 0:  # Process every other cell
+                    if index // 2 < len(row_data_link):
+                        link = row_data_link[index // 2]
+                        if "youtube.com" in link or "youtu.be" in link:
+                            video_id = data_pulling.extract_video_id(link)
 
-                    if video_id:
-                        title, uploader, seconds, upload_date_str = data_pulling.yt_api(
-                            video_id
-                        )
-                        upload_date = parse_youtube_date(upload_date_str)
-                        if upload_date <= limit_date:
-                            row_blacklist[index] += " [Video too old]"
+                            if video_id:
+                                title, uploader, seconds, upload_date_str = data_pulling.yt_api(video_id)
+                                upload_date = parse_youtube_date(upload_date_str)
+                                if upload_date <= limit_date:
+                                    updated_blacklist_row[index + 1] = "Video too old"
 
-                elif data_pulling.contains_accepted_domain(cell):
-                    video_link = cell
+                        elif data_pulling.contains_accepted_domain(link):
+                            (
+                                title,
+                                uploader,
+                                seconds,
+                                upload_date_str,
+                            ) = data_pulling.check_with_yt_dlp(video_link=link)
+                            upload_date = parse_yt_dlp_date(upload_date_str)
+                            if upload_date <= limit_date:
+                                updated_blacklist_row[index + 1] = "Video too old"
 
-                    if video_link:
-                        print(video_link)
-                        (
-                            title,
-                            uploader,
-                            seconds,
-                            upload_date_str,
-                        ) = data_pulling.check_with_yt_dlp(video_link=video_link)
-                        upload_date = parse_yt_dlp_date(upload_date_str)
-                        if upload_date <= limit_date:
-                            row_blacklist[index] += " [Video too old]"
-
-            writer.writerow(row_blacklist)
+            writer.writerow(updated_blacklist_row)
