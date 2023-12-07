@@ -8,9 +8,11 @@ input_file = "outputs/processed.csv"
 titles_file = "modules/csv/data_link.csv"
 SIMILARITY_THRESHOLD = 80  # Fuzzy threshhold (currently 80%)
 
+# Checks for similarities in Titles, Uploaders and Video Length.
 
-def links_to_titles(input):
-    with open(input, "r", encoding="utf-8") as csv_in, open(
+
+def links_to_titles(input):  # Converts links to titles using Google API or yt_dlp
+    with open(input, "r", encoding="utf-8") as csv_in, open(  # Opens relevant files
         output_titles, "w", newline="", encoding="utf-8"
     ) as csv_out_titles, open(
         output_uploaders, "w", newline="", encoding="utf-8"
@@ -28,7 +30,9 @@ def links_to_titles(input):
             new_row_durations = row.copy()
 
             for index, cell in enumerate(row):
-                if "youtube.com" in cell or "youtu.be" in cell:
+                if (
+                    "youtube.com" in cell or "youtu.be" in cell
+                ):  # Checks youtube with the Google API
                     video_id = data_pulling.extract_video_id(cell)
 
                     if video_id:
@@ -38,7 +42,9 @@ def links_to_titles(input):
                         new_row_uploaders[index] = uploader
                         new_row_durations[index] = duration
                 else:
-                    if data_pulling.contains_accepted_domain(cell):
+                    if data_pulling.contains_accepted_domain(
+                        cell
+                    ):  # Checks for other links comparing to the accepted_domains.csv file
                         video_link = cell
 
                         if video_link:

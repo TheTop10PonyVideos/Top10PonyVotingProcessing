@@ -5,18 +5,23 @@ from modules import blacklist
 from modules import durationcheck
 from modules import fuzzycheck
 from modules import upload_date
-from modules import data_pulling
+from modules import (
+    data_pulling,
+)  # Import of all the necesary functions from the modules folder
 import os
 
 
-def browse_file():
+# Mane program to be run
+
+
+def browse_file():  # Function that asks for a CSV file
     file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
     entry_var.set(file_path)
 
 
-def run_checks():
+def run_checks():  # Function that runs all the rule
     csv_file = entry_var.get()
-    data_pulling.set_count(csv_file)
+    data_pulling.set_count(csv_file)  # Checks everything
     fuzzycheck.links_to_titles(csv_file)
     duplicate.check_duplicates(csv_file)
     blacklist.check_blacklist(csv_file)
@@ -25,7 +30,9 @@ def run_checks():
     fuzzycheck.adapt_output_csv()
     fuzzycheck.delete_first_cell()
 
-    delete_if_present("outputs/processed_blacklist.csv")
+    delete_if_present(
+        "outputs/processed_blacklist.csv"
+    )  # Calls deleting outputs if present
     delete_if_present("outputs/processed_duplicates.csv")
     delete_if_present("outputs/processed_fuzzlist.csv")
     delete_if_present("outputs/processed_dates.csv")
@@ -34,12 +41,12 @@ def run_checks():
     delete_if_present("outputs/uploaders_output.csv")
 
 
-def delete_if_present(filepath):
+def delete_if_present(filepath):  # Deletes functions if present
     if os.path.exists(filepath):
         os.remove(filepath)
 
 
-root = tk.Tk()
+root = tk.Tk()  # Creating the GUI
 root.title("Check Script")
 
 entry_var = tk.StringVar()
