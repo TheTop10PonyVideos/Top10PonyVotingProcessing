@@ -3,13 +3,13 @@ from modules import data_pulling
 from fuzzywuzzy import fuzz
 import re
 
-output_file = "outputs/processedfuzzlist.csv"
+output_file = "outputs/processed_fuzzlist.csv"
 input_file = "outputs/processed.csv"
-titles_file = "modules/csv/datalink.csv"
+titles_file = "modules/csv/data_link.csv"
 SIMILARITY_THRESHOLD = 80  # Fuzzy threshhold (currently 80%)
 
 
-def linksToTitles(input):
+def links_to_titles(input):
     with open(input, "r", encoding="utf-8") as csv_in, open(
         output_titles, "w", newline="", encoding="utf-8"
     ) as csv_out_titles, open(
@@ -32,17 +32,13 @@ def linksToTitles(input):
                     video_id = data_pulling.extract_video_id(cell)
 
                     if video_id:
-                        title, uploader, duration, date = data_pulling.ytAPI(video_id)
+                        title, uploader, duration, date = data_pulling.yt_api(video_id)
 
                         new_row_titles[index] = title
                         new_row_uploaders[index] = uploader
                         new_row_durations[index] = duration
                 else:
-                    if (
-                        "pony.tube" in cell
-                        or "vimeo.com" in cell
-                        or "dailymotion.com" in cell
-                    ):
+                    if data_pulling.contains_accepted_domain(cell):
                         video_link = cell
 
                         if video_link:
@@ -51,7 +47,7 @@ def linksToTitles(input):
                                 uploader,
                                 duration,
                                 date,
-                            ) = data_pulling.check_withYtDlp(video_link=video_link)
+                            ) = data_pulling.check_with_yt_dlp(video_link=video_link)
 
                             new_row_titles[index] = title
                             new_row_uploaders[index] = uploader
@@ -184,13 +180,16 @@ def adapt_output_csv(
                 else:
                     adapted_row.append(cell)
             output_writer.writerow(adapted_row)
+
+
 date_time_pattern = r"\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{1,2}:\d{1,2}"
+
 
 def is_date_time_match(cell):
     return bool(re.search(date_time_pattern, cell))
 
 
-def deleteFirstCell():
+def delete_first_cell():
     with open(input_file, "r", newline="", encoding="utf-8") as file:
         reader = csv.reader(file)
         rows = []

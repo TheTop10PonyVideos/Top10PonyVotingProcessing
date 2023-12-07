@@ -3,14 +3,14 @@ from datetime import datetime
 from pytz import timezone
 from modules import data_pulling
 
-input_file_data_link = "modules/csv/datalink.csv"
-input_file_blacklist = "outputs/processedblacklist.csv"
-output_file = "outputs/processedDates.csv"
+input_file_data_link = "modules/csv/data_link.csv"
+input_file_blacklist = "outputs/processed_blacklist.csv"
+output_file = "outputs/processed_dates.csv"
 
 today = datetime.today()
 zone = timezone("Etc/GMT-14")
 today = datetime.now(zone)
-limit_date = datetime(today.year, today.month -1, 1)
+limit_date = datetime(today.year, today.month - 1, 1)
 
 
 def parse_youtube_date(date_str):
@@ -21,7 +21,7 @@ def parse_yt_dlp_date(date_str):
     return datetime.strptime(date_str, "%Y%m%d")
 
 
-def checkDates(input):
+def check_dates(input):
     with open(input, "r", encoding="utf-8") as csv_data_link, open(
         input_file_blacklist, "r", encoding="utf-8"
     ) as csv_blacklist, open(output_file, "w", newline="", encoding="utf-8") as csv_out:
@@ -37,18 +37,14 @@ def checkDates(input):
                     video_id = data_pulling.extract_video_id(cell)
 
                     if video_id:
-                        title, uploader, seconds, upload_date_str = data_pulling.ytAPI(
+                        title, uploader, seconds, upload_date_str = data_pulling.yt_api(
                             video_id
                         )
                         upload_date = parse_youtube_date(upload_date_str)
                         if upload_date <= limit_date:
                             row_blacklist[index] += " [Video too old]"
 
-                elif (
-                    "pony.tube" in cell
-                    or "vimeo.com" in cell
-                    or "dailymotion.com" in cell
-                ):
+                elif data_pulling.contains_accepted_domain(cell):
                     video_link = cell
 
                     if video_link:
@@ -58,7 +54,7 @@ def checkDates(input):
                             uploader,
                             seconds,
                             upload_date_str,
-                        ) = data_pulling.check_withYtDlp(video_link=video_link)
+                        ) = data_pulling.check_with_yt_dlp(video_link=video_link)
                         upload_date = parse_yt_dlp_date(upload_date_str)
                         if upload_date <= limit_date:
                             row_blacklist[index] += " [Video too old]"

@@ -2,8 +2,8 @@ import csv
 from modules import data_pulling
 import re
 
-input_file_duration = "modules/csv/datalink.csv"
-input_file_additional_info = "outputs/processedDates.csv"
+input_file_duration = "modules/csv/data_link.csv"
+input_file_additional_info = "outputs/processed_dates.csv"
 output_file = "outputs/processed.csv"
 date_time_pattern = r"\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{1,2}:\d{1,2}"
 
@@ -12,7 +12,7 @@ def is_date_time_match(cell):
     return bool(re.search(date_time_pattern, cell))
 
 
-def checkDuration(input):
+def check_duration(input):
     with open(input, "r", encoding="utf-8") as csv_data_link, open(
         input_file_additional_info, "r", encoding="utf-8"
     ) as csv_blacklist, open(output_file, "w", newline="", encoding="utf-8") as csv_out:
@@ -28,9 +28,12 @@ def checkDuration(input):
                     video_id = data_pulling.extract_video_id(cell)
 
                     if video_id:
-                        title, uploader, duration, upload_date_str = data_pulling.ytAPI(
-                            video_id
-                        )
+                        (
+                            title,
+                            uploader,
+                            duration,
+                            upload_date_str,
+                        ) = data_pulling.yt_api(video_id)
                         seconds = int(duration)
 
                         if seconds <= 30:
@@ -38,11 +41,7 @@ def checkDuration(input):
                         elif seconds <= 45:
                             row_duration[index] += " [Video maybe too short]"
 
-                elif (
-                    "pony.tube" in cell
-                    or "vimeo.com" in cell
-                    or "dailymotion.com" in cell
-                ):
+                elif data_pulling.contains_accepted_domain(cell):
                     video_link = cell
 
                     if video_link:
@@ -52,7 +51,7 @@ def checkDuration(input):
                             uploader,
                             seconds,
                             upload_date_str,
-                        ) = data_pulling.check_withYtDlp(video_link=video_link)
+                        ) = data_pulling.check_with_yt_dlp(video_link=video_link)
                         seconds = int(duration)
 
                         if seconds <= 30:
@@ -64,6 +63,5 @@ def checkDuration(input):
                         row_duration[index] = cell + "[Unsupported Host]"
                     else:
                         row_duration.append(cell + "[Unsupported Host]")
-
 
             writer.writerow(row_duration)

@@ -1,15 +1,13 @@
 import csv
 
-titles_file = "modules/csv/datalink.csv"
+titles_file = "modules/csv/data_link.csv"
 output_titles = "outputs/titles_output.csv"
 output_file = "outputs/processed_titles.csv"
 input_titles_path = "outputs/titles_output.csv"
-output_titles_path = "outputs/calculatedTop10.csv"
+output_titles_path = "outputs/calculated_top_10.csv"
 
 
-def analyze_and_write_titles_to_csv(
-    input_file, output_file=output_titles_path
-):
+def analyze_and_write_titles_to_csv(input_file, output_file=output_titles_path):
     title_counts = {}
     total_title_count = 0
 
