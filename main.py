@@ -1,25 +1,32 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
-from modules import duplicate
-from modules import blacklist
-from modules import durationcheck
-from modules import fuzzycheck
-from modules import upload_date
-from modules import data_pulling
-from modules import init
+from modules import (
+    data_pulling,
+    init,
+    duplicate,
+    blacklist,
+    durationcheck,
+    fuzzycheck,
+    upload_date
+)  # Import of all the necesary functions from the modules folder
 import os
 
 
-def browse_file():
+# Mane program to be run
+
+
+def browse_file():  # Function that asks for a CSV file
     file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
     entry_var.set(file_path)
 
 
-def run_checks():
+
+def run_checks(): # Function that runs all the rules
     start_csv_file = entry_var.get()
     csv_file = "outputs/shifted_cells.csv"
     data_pulling.set_count(start_csv_file)
-    init.add_empty_cells(start_csv_file)
+    init.add_empty_cells(start_csv_file) # Add the empty cells
+
     fuzzycheck.links_to_titles(csv_file)
     duplicate.check_duplicates(csv_file)
     blacklist.check_blacklist(csv_file)
@@ -28,7 +35,9 @@ def run_checks():
     fuzzycheck.fuzzy_match()
     fuzzycheck.delete_first_cell()
 
-    delete_if_present("outputs/processed_blacklist.csv")
+    delete_if_present(
+        "outputs/processed_blacklist.csv"
+    )  # Calls deleting outputs if present
     delete_if_present("outputs/processed_duplicates.csv")
     delete_if_present("outputs/processed_fuzzlist.csv")
     delete_if_present("outputs/processed_dates.csv")
@@ -38,12 +47,12 @@ def run_checks():
     delete_if_present("outputs/shifted_cells.csv")
 
 
-def delete_if_present(filepath):
+def delete_if_present(filepath):  # Deletes functions if present
     if os.path.exists(filepath):
         os.remove(filepath)
 
 
-root = tk.Tk()
+root = tk.Tk()  # Creating the GUI
 root.title("Check Script")
 
 entry_var = tk.StringVar()
