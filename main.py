@@ -6,6 +6,7 @@ from modules import durationcheck
 from modules import fuzzycheck
 from modules import upload_date
 from modules import data_pulling
+from modules import init
 import os
 
 
@@ -18,13 +19,14 @@ def run_checks():
     start_csv_file = entry_var.get()
     csv_file = "outputs/shifted_cells.csv"
     data_pulling.set_count(start_csv_file)
-    fuzzycheck.add_empty_cells(start_csv_file)
+    init.add_empty_cells(start_csv_file)
     fuzzycheck.links_to_titles(csv_file)
     duplicate.check_duplicates(csv_file)
     blacklist.check_blacklist(csv_file)
     upload_date.check_dates(csv_file)
     durationcheck.check_duration(csv_file)
-    fuzzycheck.adapt_output_csv()
+    fuzzycheck.fuzzy_match()
+    fuzzycheck.delete_first_cell()
     fuzzycheck.delete_first_cell()
 
     delete_if_present("outputs/processed_blacklist.csv")
@@ -34,6 +36,7 @@ def run_checks():
     delete_if_present("outputs/durations_output.csv")
     delete_if_present("outputs/titles_output.csv")
     delete_if_present("outputs/uploaders_output.csv")
+    delete_if_present("outputs/shifted_cells.csv")
 
 
 def delete_if_present(filepath):

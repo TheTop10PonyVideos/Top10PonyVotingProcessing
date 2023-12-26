@@ -63,7 +63,7 @@ output_uploaders = "outputs/uploaders_output.csv"
 output_durations = "outputs/durations_output.csv"
 
 
-def adapt_output_csv(
+def fuzzy_match(
     input_csv_file=output_titles,
     output_csv_file=input_file,
     uploader_csv_file=output_uploaders,
@@ -147,36 +147,34 @@ def adapt_output_csv(
         for i, existing_row in enumerate(existing_rows):
             adapted_row = []
             for j, cell in enumerate(existing_row):
+                similarity_note = None  # Initialize to None if no similarity detected
+
                 if (
                     (i, j) in adaptations_titles
                     and (i, j) in adaptations_uploaders
                     and (i, j) in adaptations_durations
                 ):
-                    adapted_row.append(
-                        cell
-                        + f" [SIMILARITY DETECTED IN TITLES AND UPLOADER AND DURATION]"
-                    )
+                    similarity_note = f" [SIMILARITY DETECTED IN TITLES AND UPLOADER AND DURATION]"
                 elif (i, j) in adaptations_titles and (i, j) in adaptations_uploaders:
-                    adapted_row.append(
-                        cell + f" [SIMILARITY DETECTED IN TITLES AND UPLOADERS]"
-                    )
+                    similarity_note = f" [SIMILARITY DETECTED IN TITLES AND UPLOADERS]"
                 elif (i, j) in adaptations_titles and (i, j) in adaptations_durations:
-                    adapted_row.append(
-                        cell + f" [SIMILARITY DETECTED IN TITLES AND DURATION]"
-                    )
+                    similarity_note = f" [SIMILARITY DETECTED IN TITLES AND DURATION]"
                 elif (i, j) in adaptations_uploaders and (
                     i,
                     j,
                 ) in adaptations_durations:
-                    adapted_row.append(
-                        cell + f" [SIMILARITY DETECTED IN UPLOADER AND DURATION]"
-                    )
+                    similarity_note = f" [SIMILARITY DETECTED IN UPLOADER AND DURATION]"
                 elif (i, j) in adaptations_titles:
-                    adapted_row.append(cell + f" [SIMILARITY DETECTED IN TITLES]")
+                    similarity_note = f" [SIMILARITY DETECTED IN TITLES]"
                 elif (i, j) in adaptations_uploaders:
-                    adapted_row.append(cell + f" [SIMILARITY DETECTED IN UPLOADER]")
+                    similarity_note = f" [SIMILARITY DETECTED IN UPLOADER]"
+
+                if similarity_note is not None:
+                    adapted_row.append(cell)
+                    adapted_row.append(similarity_note)
                 else:
                     adapted_row.append(cell)
+
             output_writer.writerow(adapted_row)
 
 
@@ -205,14 +203,3 @@ def delete_first_cell():
     print(
         f"First cell deleted from each row if it was a date and saved to {output_file}"
     )
-
-def add_empty_cells(input_file, output_file="outputs/shifted_cells.csv"):
-    with open(input_file, 'r') as file:
-        with open(output_file, 'w', newline='') as new_file:
-            reader = csv.reader(file)
-            writer = csv.writer(new_file)
-            for row in reader:
-                new_row = []
-                for cell in row:
-                    new_row.extend([cell, ''])  # Adds an empty cell after each content cell
-                writer.writerow(new_row)
