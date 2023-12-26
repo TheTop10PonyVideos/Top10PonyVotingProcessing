@@ -27,7 +27,6 @@ def run_checks():
     durationcheck.check_duration(csv_file)
     fuzzycheck.fuzzy_match()
     fuzzycheck.delete_first_cell()
-    fuzzycheck.delete_first_cell()
 
     delete_if_present("outputs/processed_blacklist.csv")
     delete_if_present("outputs/processed_duplicates.csv")
