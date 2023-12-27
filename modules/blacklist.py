@@ -22,19 +22,21 @@ def check_blacklist(input):
             new_row = row_data_link
 
             for index, cell in enumerate(row_data_link):
-                if (
-                    "youtube.com" in cell or "youtu.be" in cell
-                ):  # Checks youtube with the Google API
+
+                if index % 2 == 0:  # Process every other cell
+                    if index // 2 < len(row_data_link):
+                        link = row_data_link[index // 2]
+                if "youtube.com" in cell or "youtu.be" in cell: # Checks youtube with the Google API
+
                     video_id = data_pulling.extract_video_id(cell)
 
                     if video_id:
                         title, uploader, seconds, upload_date_str = data_pulling.yt_api(
                             video_id
                         )
-                        if data_pulling.check_blacklisted_channels(
-                            uploader
-                        ):  # Checks blacklisted channels
-                            row_duplicates[index] += " [BLACKLISTED]"
+                        if data_pulling.check_blacklisted_channels(uploader): # Checks blacklisted channels
+                            row_duplicates[index + 1] += " [BLACKLISTED]"
+
 
                 elif data_pulling.contains_accepted_domain(
                     cell
@@ -49,9 +51,9 @@ def check_blacklist(input):
                             seconds,
                             upload_date_str,
                         ) = data_pulling.check_with_yt_dlp(video_link=video_link)
-                        if data_pulling.check_blacklisted_channels(
-                            uploader
-                        ):  # Checks blacklisted channels
-                            row_duplicates[index] += " [BLACKLISTED]"
+
+                        if data_pulling.check_blacklisted_channels(uploader): # Checks blacklisted channels
+                            row_duplicates[index + 1] += " [BLACKLISTED]"
+
 
             writer.writerow(row_duplicates)

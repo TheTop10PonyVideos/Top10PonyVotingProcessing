@@ -12,7 +12,7 @@ def mark_duplicate_cells(row, additional_row):  # Marks identical matches in a n
     for i in range(len(row)):
         cell = row[i]
         if cell and cell in seen:
-            additional_row[i] += " [Duplicate Video]"
+            additional_row[i + 1] += " [Duplicate Video]"
         seen.add(cell)
     return additional_row
 
