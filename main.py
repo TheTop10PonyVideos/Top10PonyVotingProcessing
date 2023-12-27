@@ -5,6 +5,7 @@ from modules import blacklist
 from modules import durationcheck
 from modules import fuzzycheck
 from modules import upload_date
+from modules import uploader_occurence
 from modules import (
     data_pulling,
 )  # Import of all the necesary functions from the modules folder
@@ -29,6 +30,7 @@ def run_checks():  # Function that runs all the rule
     durationcheck.check_duration(csv_file)
     fuzzycheck.adapt_output_csv()
     fuzzycheck.delete_first_cell()
+    uploader_occurence.check_uploader_occurence()
 
     delete_if_present(
         "outputs/processed_blacklist.csv"
@@ -39,6 +41,7 @@ def run_checks():  # Function that runs all the rule
     delete_if_present("outputs/durations_output.csv")
     delete_if_present("outputs/titles_output.csv")
     delete_if_present("outputs/uploaders_output.csv")
+    delete_if_present("outputs/processed_uploaders.csv")
 
 
 def delete_if_present(filepath):  # Deletes functions if present
