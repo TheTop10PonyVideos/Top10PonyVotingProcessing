@@ -1,5 +1,11 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
+from modules import duplicate
+from modules import blacklist
+from modules import durationcheck
+from modules import fuzzycheck
+from modules import upload_date
+from modules import uploader_occurence
 from modules import (
     data_pulling,
     init,
@@ -35,10 +41,12 @@ def run_checks():  # Function that runs all the rules
     durationcheck.check_duration(csv_file)
     fuzzycheck.fuzzy_match()
     fuzzycheck.delete_first_cell()
+    uploader_occurence.check_uploader_occurence()
 
     delete_if_present(
         "outputs/temp_outputs/processed_blacklist.csv"
     )  # Calls deleting outputs if present
+    
     delete_if_present("outputs/temp_outputs/processed_duplicates.csv")
     delete_if_present("outputs/temp_outputs/processed_fuzzlist.csv")
     delete_if_present("outputs/temp_outputs/processed_dates.csv")
