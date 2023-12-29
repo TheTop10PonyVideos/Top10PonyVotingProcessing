@@ -29,7 +29,7 @@ def check_uploader_occurence():
                     for i in range(1, len(row)):
                         rows[line_number - 1][
                             i
-                        ] += " [SUBMISSION CONTAINS > 2 INDIVIDUAL VOTES]"
+                        ] += " [DUPLICATE CREATOR]"
 
     # Write the processed data to processed_uploaders.csv
     with open(
@@ -43,5 +43,5 @@ def check_uploader_occurence():
         print("Invalid submissions:")
         for line_number in invalid_submissions:
             print(
-                f"Line {line_number  - 1}: [SUBMISSION CONTAINS > 2 INDIVIDUAL VOTES] appended to uploader names"
+                f"Line {line_number  - 1}: [DUPLICATE CREATOR] appended to uploader names"
             )
