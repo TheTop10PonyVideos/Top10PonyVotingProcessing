@@ -7,12 +7,14 @@ from modules import (
     blacklist,
     durationcheck,
     fuzzycheck,
-    upload_date
+    upload_date,
 )  # Import of all the necesary functions from the modules folder
 import os
 
 
 # Mane program to be run
+
+debugging = 1  # Change to 0 for only final output
 
 
 def browse_file():  # Function that asks for a CSV file
@@ -20,12 +22,11 @@ def browse_file():  # Function that asks for a CSV file
     entry_var.set(file_path)
 
 
-
-def run_checks(): # Function that runs all the rules
+def run_checks():  # Function that runs all the rules
     start_csv_file = entry_var.get()
-    csv_file = "outputs/shifted_cells.csv"
+    csv_file = "outputs/temp_outputs/shifted_cells.csv"
     data_pulling.set_count(start_csv_file)
-    init.add_empty_cells(start_csv_file) # Add the empty cells
+    init.add_empty_cells(start_csv_file)  # Add the empty cells
 
     fuzzycheck.links_to_titles(csv_file)
     duplicate.check_duplicates(csv_file)
@@ -36,19 +37,20 @@ def run_checks(): # Function that runs all the rules
     fuzzycheck.delete_first_cell()
 
     delete_if_present(
-        "outputs/processed_blacklist.csv"
+        "outputs/temp_outputs/processed_blacklist.csv"
     )  # Calls deleting outputs if present
-    delete_if_present("outputs/processed_duplicates.csv")
-    delete_if_present("outputs/processed_fuzzlist.csv")
-    delete_if_present("outputs/processed_dates.csv")
-    delete_if_present("outputs/durations_output.csv")
-    delete_if_present("outputs/titles_output.csv")
-    delete_if_present("outputs/uploaders_output.csv")
-    delete_if_present("outputs/shifted_cells.csv")
+    delete_if_present("outputs/temp_outputs/processed_duplicates.csv")
+    delete_if_present("outputs/temp_outputs/processed_fuzzlist.csv")
+    delete_if_present("outputs/temp_outputs/processed_dates.csv")
+    delete_if_present("outputs/temp_outputs/durations_output.csv")
+    delete_if_present("outputs/temp_outputs/titles_output.csv")
+    delete_if_present("outputs/temp_outputs/uploaders_output.csv")
+    delete_if_present("outputs/temp_outputs/shifted_cells.csv")
+    delete_if_present("outputs/temp_outputs/processed.csv")
 
 
 def delete_if_present(filepath):  # Deletes functions if present
-    if os.path.exists(filepath):
+    if os.path.exists(filepath) and debugging == 0:
         os.remove(filepath)
 
 

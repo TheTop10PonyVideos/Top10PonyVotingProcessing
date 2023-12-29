@@ -3,8 +3,8 @@ from modules import data_pulling
 import re
 
 input_file_duration = "modules/csv/data_link.csv"
-input_file_additional_info = "outputs/processed_dates.csv"
-output_file = "outputs/processed.csv"
+input_file_additional_info = "outputs/temp_outputs/processed_dates.csv"
+output_file = "outputs/temp_outputs/processed.csv"
 date_time_pattern = r"\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{1,2}:\d{1,2}"
 
 # Checks for length
@@ -26,12 +26,12 @@ def check_duration(input):
             new_row = row_data_link
 
             for index, cell in enumerate(row_data_link):
-
                 if index % 2 == 0:  # Process every other cell
                     if index // 2 < len(row_data_link):
                         link = row_data_link[index // 2]
-                if "youtube.com" in cell or "youtu.be" in cell: # Checks youtube with the Google API
-
+                if (
+                    "youtube.com" in cell or "youtu.be" in cell
+                ):  # Checks youtube with the Google API
                     video_id = data_pulling.extract_video_id(cell)
 
                     if video_id:
@@ -43,8 +43,9 @@ def check_duration(input):
                         ) = data_pulling.yt_api(video_id)
                         seconds = int(duration)
 
-
-                        if seconds <= 30: # Checks videos for possible for possible or definite duration problem
+                        if (
+                            seconds <= 30
+                        ):  # Checks videos for possible for possible or definite duration problem
                             row_duration[index + 1] += " [Video too short]"
 
                         elif seconds <= 45:
@@ -65,12 +66,13 @@ def check_duration(input):
                         ) = data_pulling.check_with_yt_dlp(video_link=video_link)
                         seconds = int(duration)
 
-
-                        if seconds <= 30: # Checks videos for possible for possible or definite duration problem
+                        if (
+                            seconds <= 30
+                        ):  # Checks videos for possible for possible or definite duration problem
                             row_duration[index + 1] += " [Video too short]"
 
                         elif seconds <= 45:
-                            row_duration[index +1] += " [Video maybe too short]"
+                            row_duration[index + 1] += " [Video maybe too short]"
                 elif cell.strip():
                     if index < len(row_duration):
                         row_duration[index + 1] = cell + "[Unsupported Host]"
