@@ -20,7 +20,7 @@ import os
 
 # Mane program to be run
 
-debugging = 1  # Change to 0 for only final output
+debugging = True  # Change to False for only final output
 
 
 def browse_file():  # Function that asks for a CSV file
@@ -46,7 +46,7 @@ def run_checks():  # Function that runs all the rules
     delete_if_present(
         "outputs/temp_outputs/processed_blacklist.csv"
     )  # Calls deleting outputs if present
-    
+
     delete_if_present("outputs/temp_outputs/processed_duplicates.csv")
     delete_if_present("outputs/temp_outputs/processed_fuzzlist.csv")
     delete_if_present("outputs/temp_outputs/processed_dates.csv")
@@ -58,7 +58,7 @@ def run_checks():  # Function that runs all the rules
 
 
 def delete_if_present(filepath):  # Deletes functions if present
-    if os.path.exists(filepath) and debugging == 0:
+    if os.path.exists(filepath) and debugging == False:
         os.remove(filepath)
 
 
