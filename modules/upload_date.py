@@ -4,8 +4,8 @@ from pytz import timezone
 from modules import data_pulling
 
 input_file_data_link = "modules/csv/data_link.csv"
-input_file_blacklist = "outputs/processed_blacklist.csv"
-output_file = "outputs/processed_dates.csv"
+input_file_blacklist = "outputs/temp_outputs/processed_blacklist.csv"
+output_file = "outputs/temp_outputs/processed_dates.csv"
 
 # Checks upload date (must be in the last month)
 
@@ -53,9 +53,7 @@ def check_dates(input):  # Compares dates with limit date
                         if (
                             upload_date <= limit_date
                         ):  # Compares dates and adds note if relevant
-
                             row_blacklist[index + 1] += " [Video too old]"
-
 
                 elif data_pulling.contains_accepted_domain(
                     cell
@@ -74,8 +72,6 @@ def check_dates(input):  # Compares dates with limit date
                         if (
                             upload_date <= limit_date
                         ):  # Compares dates and adds note if relevant
-
                             row_blacklist[index + 1] += " [Video too old]"
-
 
             writer.writerow(row_blacklist)
