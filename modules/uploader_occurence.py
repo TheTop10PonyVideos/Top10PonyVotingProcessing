@@ -11,7 +11,7 @@ def check_uploader_occurence():
         reader = csv.reader(csvfile)
         rows = list(reader)
 
-        for line_number, row in enumerate(rows, start = 1):
+        for line_number, row in enumerate(rows, start=1):
             # Extract uploader names from the row
             uploaders = [uploader.strip() for uploader in row[1:-1] if uploader.strip()]
 
@@ -27,9 +27,7 @@ def check_uploader_occurence():
                     # Append the substring to each uploader in the row
                     # Start from 1 to avoid adding tag to timestamp
                     for i in range(1, len(row)):
-                        rows[line_number - 1][
-                            i
-                        ] += " [DUPLICATE CREATOR]"
+                        rows[line_number - 1][i] += " [DUPLICATE CREATOR]"
 
     # Write the processed data to processed_uploaders.csv
     with open(
