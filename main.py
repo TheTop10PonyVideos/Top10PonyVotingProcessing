@@ -43,22 +43,23 @@ def run_checks():  # Function that runs all the rules
     fuzzycheck.delete_first_cell()
     uploader_occurence.check_uploader_occurence()
 
-    delete_if_present(
-        "outputs/temp_outputs/processed_blacklist.csv"
-    )  # Calls deleting outputs if present
+    if not debugging:
+        delete_if_present(
+            "outputs/temp_outputs/processed_blacklist.csv"
+        )  # Calls deleting outputs if present
 
-    delete_if_present("outputs/temp_outputs/processed_duplicates.csv")
-    delete_if_present("outputs/temp_outputs/processed_fuzzlist.csv")
-    delete_if_present("outputs/temp_outputs/processed_dates.csv")
-    delete_if_present("outputs/temp_outputs/durations_output.csv")
-    delete_if_present("outputs/temp_outputs/titles_output.csv")
-    delete_if_present("outputs/temp_outputs/uploaders_output.csv")
-    delete_if_present("outputs/temp_outputs/shifted_cells.csv")
-    delete_if_present("outputs/temp_outputs/processed.csv")
+        delete_if_present("outputs/temp_outputs/processed_duplicates.csv")
+        delete_if_present("outputs/temp_outputs/processed_fuzzlist.csv")
+        delete_if_present("outputs/temp_outputs/processed_dates.csv")
+        delete_if_present("outputs/temp_outputs/durations_output.csv")
+        delete_if_present("outputs/temp_outputs/titles_output.csv")
+        delete_if_present("outputs/temp_outputs/uploaders_output.csv")
+        delete_if_present("outputs/temp_outputs/shifted_cells.csv")
+        delete_if_present("outputs/temp_outputs/processed.csv")
 
 
 def delete_if_present(filepath):  # Deletes functions if present
-    if os.path.exists(filepath) and debugging == False:
+    if os.path.exists(filepath):
         os.remove(filepath)
 
 
