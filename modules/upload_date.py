@@ -15,11 +15,15 @@ zone = timezone(
     "Etc/GMT-14"
 )  # We use the earliest possible timezone to define the month. Once it is say, "January" somewhere in the world it is for everyone in respects to this script
 today = datetime.now(zone)
-if today.month == 1: # If the current month is January
-    limit_date = datetime(today.year - 1, 12, 1) # Set limit date to December of the previous year
+if today.month == 1:  # If the current month is January
+    limit_date = datetime(
+        today.year - 1, 12, 1
+    )  # Set limit date to December of the previous year
 else:
-    limit_date = datetime(today.year, today.month - 1, 1) # The limit date is defined as the beginning of last month and not current (since the vote for January is done in February and so on)
-print(limit_date)
+    limit_date = datetime(
+        today.year, today.month - 1, 1
+    )  # The limit date is defined as the beginning of last month and not current (since the vote for January is done in February and so on)
+
 
 def parse_youtube_date(date_str):  # returns upload date for youtube
     return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ")
