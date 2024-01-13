@@ -43,11 +43,8 @@ def run_checks():  # Function that runs all the rules
     fuzzycheck.delete_first_cell()
     uploader_occurence.check_uploader_occurence()
 
-    if not debugging:
-        delete_if_present(
-            "outputs/temp_outputs/processed_blacklist.csv"
-        )  # Calls deleting outputs if present
-
+    if not debugging:   # Calls deleting outputs if present
+        delete_if_present("outputs/temp_outputs/processed_blacklist.csv")
         delete_if_present("outputs/temp_outputs/processed_duplicates.csv")
         delete_if_present("outputs/temp_outputs/processed_fuzzlist.csv")
         delete_if_present("outputs/temp_outputs/processed_dates.csv")
