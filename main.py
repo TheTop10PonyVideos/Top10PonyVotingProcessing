@@ -32,7 +32,7 @@ def run_checks():  # Function that runs all the rules
     start_csv_file = entry_var.get()
     csv_file = "outputs/temp_outputs/shifted_cells.csv"
     data_pulling.set_count(start_csv_file)
-    init.add_empty_cells(start_csv_file)  # Add the empty cells
+    init.add_empty_cells(start_csv_file)
 
     fuzzycheck.links_to_titles(csv_file)
     duplicate.check_duplicates(csv_file)
@@ -55,7 +55,7 @@ def run_checks():  # Function that runs all the rules
         delete_if_present("outputs/temp_outputs/processed.csv")
 
 
-def delete_if_present(filepath):  # Deletes functions if present
+def delete_if_present(filepath):
     if os.path.exists(filepath):
         os.remove(filepath)
 

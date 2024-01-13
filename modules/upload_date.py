@@ -25,11 +25,11 @@ else:
     )  # The limit date is defined as the beginning of last month and not current (since the vote for January is done in February and so on)
 
 
-def parse_youtube_date(date_str):  # returns upload date for youtube
+def parse_youtube_date(date_str):  # Returns upload date for youtube
     return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ")
 
 
-def parse_yt_dlp_date(date_str):  # returns upload date for yt_dlp
+def parse_yt_dlp_date(date_str):  # Returns upload date for yt_dlp
     return datetime.strptime(date_str, "%Y%m%d")
 
 

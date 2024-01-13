@@ -5,10 +5,8 @@ input_file_data_link = "modules/csv/data_link.csv"
 input_file_processed_duplicates = "outputs/temp_outputs/processed_duplicates.csv"
 output_file = "outputs/temp_outputs/processed_blacklist.csv"
 
-# Check for blacklisted channels
 
-
-def check_blacklist(input):
+def check_blacklist(input): # Check for blacklisted channels
     with open(input, "r", encoding="utf-8") as csv_data_link, open(  # Opens CSV
         input_file_processed_duplicates, "r", encoding="utf-8"
     ) as csv_duplicates, open(
@@ -36,7 +34,7 @@ def check_blacklist(input):
                         )
                         if data_pulling.check_blacklisted_channels(
                             uploader
-                        ):  # Checks blacklisted channels
+                        ):
                             row_duplicates[index + 1] += " [BLACKLISTED]"
 
                 elif data_pulling.contains_accepted_domain(
@@ -55,7 +53,7 @@ def check_blacklist(input):
 
                         if data_pulling.check_blacklisted_channels(
                             uploader
-                        ):  # Checks blacklisted channels
+                        ):
                             row_duplicates[index + 1] += " [BLACKLISTED]"
 
             writer.writerow(row_duplicates)
