@@ -4,7 +4,7 @@ from calculation import calc
 import os
 
 
-def browse_file():
+def browse_file():  # Function that asks for a CSV file
     file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
     entry_var.set(file_path)
 
@@ -15,7 +15,7 @@ def run_checks():
 
 
 # This still breaks if you don't enable all checks
-root = tk.Tk()
+root = tk.Tk()  # Creating the GUI
 root.title("Calc Script")
 
 entry_var = tk.StringVar()
