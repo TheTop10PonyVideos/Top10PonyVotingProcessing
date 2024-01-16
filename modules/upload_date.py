@@ -4,8 +4,8 @@ from pytz import timezone
 from modules import data_pulling
 
 input_file_data_link = "modules/csv/data_link.csv"
-input_file_blacklist = "outputs/processed_blacklist.csv"
-output_file = "outputs/processed_dates.csv"
+input_file_blacklist = "outputs/temp_outputs/processed_blacklist.csv"
+output_file = "outputs/temp_outputs/processed_dates.csv"
 
 # Checks upload date (must be in the last month)
 
@@ -15,9 +15,14 @@ zone = timezone(
     "Etc/GMT-14"
 )  # We use the earliest possible timezone to define the month. Once it is say, "January" somewhere in the world it is for everyone in respects to this script
 today = datetime.now(zone)
-limit_date = datetime(
-    today.year, today.month - 1, 1
-)  # The limit date is defined as the beginning of last month and not current (since the vote for January is done in February and so on)
+if today.month == 1:  # If the current month is January
+    limit_date = datetime(
+        today.year - 1, 12, 1
+    )  # Set limit date to December of the previous year
+else:
+    limit_date = datetime(
+        today.year, today.month - 1, 1
+    )  # The limit date is defined as the beginning of last month and not current (since the vote for January is done in February and so on)
 
 
 def parse_youtube_date(date_str):  # returns upload date for youtube
@@ -53,9 +58,7 @@ def check_dates(input):  # Compares dates with limit date
                         if (
                             upload_date <= limit_date
                         ):  # Compares dates and adds note if relevant
-
                             row_blacklist[index + 1] += " [Video too old]"
-
 
                 elif data_pulling.contains_accepted_domain(
                     cell
@@ -74,8 +77,6 @@ def check_dates(input):  # Compares dates with limit date
                         if (
                             upload_date <= limit_date
                         ):  # Compares dates and adds note if relevant
-
                             row_blacklist[index + 1] += " [Video too old]"
-
 
             writer.writerow(row_blacklist)

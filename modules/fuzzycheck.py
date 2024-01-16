@@ -3,8 +3,8 @@ from modules import data_pulling
 from fuzzywuzzy import fuzz
 import re
 
-output_file = "outputs/processed_fuzzlist.csv"
-input_file = "outputs/processed.csv"
+output_file = "outputs/temp_outputs/processed_fuzzlist.csv"
+input_file = "outputs/temp_outputs/processed.csv"
 titles_file = "modules/csv/data_link.csv"
 SIMILARITY_THRESHOLD = 80  # Fuzzy threshhold (currently 80%)
 
@@ -64,9 +64,9 @@ def links_to_titles(input):  # Converts links to titles using Google API or yt_d
             writer_durations.writerow(new_row_durations)
 
 
-output_titles = "outputs/titles_output.csv"
-output_uploaders = "outputs/uploaders_output.csv"
-output_durations = "outputs/durations_output.csv"
+output_titles = "outputs/temp_outputs/titles_output.csv"
+output_uploaders = "outputs/temp_outputs/uploaders_output.csv"
+output_durations = "outputs/temp_outputs/durations_output.csv"
 
 
 def fuzzy_match(
@@ -147,11 +147,10 @@ def fuzzy_match(
                     adaptations_durations[(i, j)] = (input_row[j], similarity)
                     adaptations_durations[(i, k)] = (input_row[k], similarity)
 
-    with open(output_csv_file, "w", newline="", encoding="utf-8") as output_file:
+    with open("outputs/processed.csv", "w", newline="", encoding="utf-8") as output_file:
         output_writer = csv.writer(output_file)
 
         for i, existing_row in enumerate(existing_rows):
-            adapted_row = []
             for j, cell in enumerate(existing_row):
                 similarity_note = None  # Initialize to None if no similarity detected
 
@@ -159,8 +158,10 @@ def fuzzy_match(
                     (i, j) in adaptations_titles
                     and (i, j) in adaptations_uploaders
                     and (i, j) in adaptations_durations
-                ):
-                    similarity_note = f" [SIMILARITY DETECTED IN TITLES AND UPLOADER AND DURATION]"
+                    ):
+                    similarity_note = (
+                        f" [SIMILARITY DETECTED IN TITLES AND UPLOADER AND DURATION]"
+                    )
                 elif (i, j) in adaptations_titles and (i, j) in adaptations_uploaders:
                     similarity_note = f" [SIMILARITY DETECTED IN TITLES AND UPLOADERS]"
                 elif (i, j) in adaptations_titles and (i, j) in adaptations_durations:
@@ -176,12 +177,10 @@ def fuzzy_match(
                     similarity_note = f" [SIMILARITY DETECTED IN UPLOADER]"
 
                 if similarity_note is not None:
-                    adapted_row.append(cell)
-                    adapted_row.append(similarity_note)
-                else:
-                    adapted_row.append(cell)
+                    existing_row[j + 1] += similarity_note  # Add the similarity note to the next cell
 
-            output_writer.writerow(adapted_row)
+            output_writer.writerow(existing_row)  # Write the modified row to the output file
+
 
 
 date_time_pattern = r"\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{1,2}:\d{1,2}"

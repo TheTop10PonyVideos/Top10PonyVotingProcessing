@@ -1,8 +1,8 @@
 import csv
 
 csv_file = "modules/csv/data_link.csv"
-output_file = "outputs/processed_duplicates.csv"
-additional_file_path = "outputs/titles_output.csv"
+output_file = "outputs/temp_outputs/processed_duplicates.csv"
+additional_file_path = "outputs/temp_outputs/titles_output.csv"
 
 # Check for duplicates
 
