@@ -2,8 +2,8 @@ import tkinter as tk
 from tkinter import ttk, filedialog
 from modules import duplicate
 from modules import blacklist
-from modules import durationcheck
-from modules import fuzzycheck
+from modules import duration_check
+from modules import fuzzy_check
 from modules import upload_date
 from modules import uploader_occurence
 from modules import (
@@ -11,8 +11,8 @@ from modules import (
     init,
     duplicate,
     blacklist,
-    durationcheck,
-    fuzzycheck,
+    duration_check,
+    fuzzy_check,
     upload_date,
 )  # Import of all the necesary functions from the modules folder
 import os
@@ -32,22 +32,19 @@ def run_checks():  # Function that runs all the rules
     start_csv_file = entry_var.get()
     csv_file = "outputs/temp_outputs/shifted_cells.csv"
     data_pulling.set_count(start_csv_file)
-    init.add_empty_cells(start_csv_file)  # Add the empty cells
+    init.add_empty_cells(start_csv_file)
 
-    fuzzycheck.links_to_titles(csv_file)
+    fuzzy_check.links_to_titles(csv_file)
     duplicate.check_duplicates(csv_file)
     blacklist.check_blacklist(csv_file)
     upload_date.check_dates(csv_file)
-    durationcheck.check_duration(csv_file)
-    fuzzycheck.fuzzy_match()
-    fuzzycheck.delete_first_cell()
+    duration_check.check_duration(csv_file)
+    fuzzy_check.fuzzy_match()
+    fuzzy_check.delete_first_cell()
     uploader_occurence.check_uploader_occurence()
 
-    if not debugging:
-        delete_if_present(
-            "outputs/temp_outputs/processed_blacklist.csv"
-        )  # Calls deleting outputs if present
-
+    if not debugging:   # Calls deleting outputs if present
+        delete_if_present("outputs/temp_outputs/processed_blacklist.csv")
         delete_if_present("outputs/temp_outputs/processed_duplicates.csv")
         delete_if_present("outputs/temp_outputs/processed_fuzzlist.csv")
         delete_if_present("outputs/temp_outputs/processed_dates.csv")
@@ -58,7 +55,7 @@ def run_checks():  # Function that runs all the rules
         delete_if_present("outputs/temp_outputs/processed.csv")
 
 
-def delete_if_present(filepath):  # Deletes functions if present
+def delete_if_present(filepath):
     if os.path.exists(filepath):
         os.remove(filepath)
 
