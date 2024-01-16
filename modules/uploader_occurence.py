@@ -10,8 +10,8 @@ def check_uploader_occurence():
     with open(input_file, "r", encoding="utf-8") as csvfile, open(main_file, "r", encoding="utf-8") as mainfile:
         reader = csv.reader(csvfile)
         rows = list(reader)
-        mainReader = csv.reader(mainfile)
-        mainRows = list(mainReader)
+        main_reader = csv.reader(mainfile)
+        main_rows = list(main_reader)
 
         for line_number, row in enumerate(rows, start=1):
                 # Extract uploader names from the row
@@ -29,14 +29,14 @@ def check_uploader_occurence():
                         # Append the substring to each uploader in the row
                         # Start from 1 to avoid adding tag to timestamp
                         for i in range(1, len(row)):
-                            mainRows[line_number - 1][i] += " [DUPLICATE CREATOR]"
+                            main_rows[line_number - 1][i] += " [DUPLICATE CREATOR]"
 
     # Write the processed data to processed_uploaders.csv
     with open(
         main_file, "w", newline="", encoding="utf-8"
     ) as processed_uploaders_csv:
         writer = csv.writer(processed_uploaders_csv)
-        writer.writerows(mainRows)
+        writer.writerows(main_rows)
 
     if invalid_submissions:
         print(f"Processed data written to {output_file}")
