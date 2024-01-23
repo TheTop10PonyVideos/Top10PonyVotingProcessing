@@ -12,7 +12,7 @@ API_KEY = os.getenv("apikey")  # may replace this
 youtube = build("youtube", "v3", developerKey=API_KEY)
 links_count = 0  # Used for percentage calculation
 links_processed_count = 0  # Used for percentage calculation
-max_retry_count = 0
+max_retry_count = 5
 
 
 def set_count(input):
