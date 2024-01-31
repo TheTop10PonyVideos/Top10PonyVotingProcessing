@@ -61,7 +61,7 @@ def check_duration(input):
                         (
                             title,
                             uploader,
-                            seconds,
+                            duration,
                             upload_date_str,
                         ) = data_pulling.check_with_yt_dlp(video_link=video_link)
                         seconds = int(duration)
