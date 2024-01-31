@@ -1,10 +1,11 @@
 import csv
 from modules import data_pulling
 import re
-
+import os
+import shutil
 input_file_duration = "modules/csv/data_link.csv"
-input_file_additional_info = "outputs/temp_outputs/processed_dates.csv"
-output_file = "outputs/temp_outputs/processed.csv"
+input_file_additional_info = "outputs/temp_outputs/processed.csv"
+output_file = "outputs/temp_outputs/processed_duration.csv"
 date_time_pattern = r"\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{1,2}:\d{1,2}"
 
 # Checks for length
@@ -80,3 +81,5 @@ def check_duration(input):
                         row_duration.append(cell + "[Unsupported Host]")
 
             writer.writerow(row_duration)
+    os.remove("outputs/temp_outputs/processed.csv")
+    os.rename(output_file, "outputs/temp_outputs/processed.csv")
