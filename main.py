@@ -6,6 +6,7 @@ from modules import duration_check
 from modules import fuzzy_check
 from modules import upload_date
 from modules import uploader_occurence
+from modules import uploader_diversity
 from modules import (
     data_pulling,
     init,
@@ -42,8 +43,9 @@ def run_checks():  # Function that runs all the rules
     fuzzy_check.fuzzy_match()
     fuzzy_check.delete_first_cell()
     uploader_occurence.check_uploader_occurence()
+    uploader_diversity.check_uploader_diversity()
 
-    if not debugging:   # Calls deleting outputs if present
+    if not debugging:  # Calls deleting outputs if present
         delete_if_present("outputs/temp_outputs/processed_blacklist.csv")
         delete_if_present("outputs/temp_outputs/processed_duplicates.csv")
         delete_if_present("outputs/temp_outputs/processed_fuzzlist.csv")
