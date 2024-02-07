@@ -6,6 +6,10 @@ output_file_path = "outputs/processed.csv"
 # output_file_path = "outputs/processed_test_delete.csv"
 
 def check_uploader_diversity():
+    # Checks the names of all uploaders within every submission.
+    # If a submission contains < 5 unique uploaders, each cell of 
+    # the submission in processed.csv is flagged with the "[DUPLICATE CREATOR]" 
+    # tag to signify that the entire submission is invalidated. 
     with open(input_file_path, 'r', newline='', encoding='utf-8') as input_file, open(output_file_path, 'r+', newline='', encoding='utf-8') as output_file:
         uploader_reader = csv.reader(input_file)
         uploader_rows = list(uploader_reader)

@@ -5,6 +5,10 @@ output_file = "outputs/processed_uploaders.csv"
 main_file = "outputs/processed.csv"
 
 def check_uploader_occurence():
+    # Checks the names of all uploaders within every submission.
+    # If a particular uploader shows up 3 times or more in a submission,
+    # each cell of the submission in processed.csv is flagged with the 
+    # "[DUPLICATE CREATOR]" tag to signify that the entire submission is invalidated. 
     invalid_submissions = []
 
     with open(input_file, "r", encoding="utf-8") as csvfile, open(main_file, "r", encoding="utf-8") as mainfile:
