@@ -6,7 +6,7 @@ input_file_processed_duplicates = "outputs/temp_outputs/processed_duplicates.csv
 output_file = "outputs/temp_outputs/processed_blacklist.csv"
 
 
-def check_blacklist(input): # Check for blacklisted channels
+def check_blacklist(input):  # Check for blacklisted channels
     with open(input, "r", encoding="utf-8") as csv_data_link, open(  # Opens CSV
         input_file_processed_duplicates, "r", encoding="utf-8"
     ) as csv_duplicates, open(
@@ -32,9 +32,7 @@ def check_blacklist(input): # Check for blacklisted channels
                         title, uploader, seconds, upload_date_str = data_pulling.yt_api(
                             video_id
                         )
-                        if data_pulling.check_blacklisted_channels(
-                            uploader
-                        ):
+                        if data_pulling.check_blacklisted_channels(uploader):
                             row_duplicates[index + 1] += " [BLACKLISTED]"
 
                 elif data_pulling.contains_accepted_domain(
@@ -51,9 +49,7 @@ def check_blacklist(input): # Check for blacklisted channels
                             upload_date_str,
                         ) = data_pulling.check_with_yt_dlp(video_link=video_link)
 
-                        if data_pulling.check_blacklisted_channels(
-                            uploader
-                        ):
+                        if data_pulling.check_blacklisted_channels(uploader):
                             row_duplicates[index + 1] += " [BLACKLISTED]"
 
             writer.writerow(row_duplicates)

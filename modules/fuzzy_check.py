@@ -147,7 +147,9 @@ def fuzzy_match(
                     adaptations_durations[(i, j)] = (input_row[j], similarity)
                     adaptations_durations[(i, k)] = (input_row[k], similarity)
 
-    with open("outputs/processed.csv", "w", newline="", encoding="utf-8") as output_file:
+    with open(
+        "outputs/processed.csv", "w", newline="", encoding="utf-8"
+    ) as output_file:
         output_writer = csv.writer(output_file)
 
         for i, existing_row in enumerate(existing_rows):
@@ -158,9 +160,7 @@ def fuzzy_match(
                     (i, j) in adaptations_titles
                     and (i, j) in adaptations_uploaders
                     and (i, j) in adaptations_durations
-
-                    ):
-
+                ):
                     similarity_note = (
                         f" [SIMILARITY DETECTED IN TITLES AND UPLOADER AND DURATION]"
                     )
@@ -179,11 +179,13 @@ def fuzzy_match(
                     similarity_note = f" [SIMILARITY DETECTED IN UPLOADER]"
 
                 if similarity_note is not None:
+                    existing_row[
+                        j + 1
+                    ] += similarity_note  # Add the similarity note to the next cell
 
-                    existing_row[j + 1] += similarity_note  # Add the similarity note to the next cell
-
-            output_writer.writerow(existing_row)  # Write the modified row to the output file
-
+            output_writer.writerow(
+                existing_row
+            )  # Write the modified row to the output file
 
 
 date_time_pattern = r"\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{1,2}:\d{1,2}"
