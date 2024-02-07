@@ -119,7 +119,7 @@ def check_with_yt_dlp(video_link):
         max_retry_count
         print(f"An error occurred: {e}")
         print("Retrying...")
-        retry_count +=1
+        retry_count += 1
         if max_retry_count == retry_count:
             return
         return check_with_yt_dlp(video_link)
