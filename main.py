@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
+
 from modules import (# Import all the neccesary modules lol
     duplicate,
     duration_check,
@@ -43,8 +44,12 @@ def run_checks():  # Function that runs selected rules
     if uploader_occurrence_var.get():
         uploader_occurence.check_uploader_occurrence()
     fuzzy_check.delete_first_cell()
-    if not debugging:
-        # Delete outputs if present
+
+    uploader_occurence.check_uploader_occurence()
+    uploader_diversity.check_uploader_diversity()
+
+    if not debugging:  # Calls deleting outputs if present
+
         delete_if_present("outputs/temp_outputs/processed_blacklist.csv")
         delete_if_present("outputs/temp_outputs/processed_duplicates.csv")
         delete_if_present("outputs/temp_outputs/processed_fuzzlist.csv")

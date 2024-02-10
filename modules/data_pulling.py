@@ -49,7 +49,7 @@ def yt_api(video_id):
         percentage_processed = (links_processed_count / links_count) * 100
         formatted_percentage = "{:.2f}%".format(percentage_processed)
         print(f"{formatted_percentage} done ({links_count}/{links_processed_count})")
-        max_retry_count = 0
+        max_retry_count = 5
         return title, uploader, seconds, upload_date
 
     except Exception as e:
