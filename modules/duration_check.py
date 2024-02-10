@@ -76,9 +76,9 @@ def check_duration(input):
                             row_duration[index + 1] += " [Video maybe too short]"
                 elif cell.strip():
                     if index < len(row_duration):
-                        row_duration[index + 1] = cell + "[Unsupported Host]"
-                    else:
-                        row_duration.append(cell + "[Unsupported Host]")
+                        row_duration[index + 1] += "[Unsupported Host]"
+
+                        
 
             writer.writerow(row_duration)
     os.remove("outputs/temp_outputs/processed.csv")
