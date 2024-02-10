@@ -2,9 +2,9 @@ import csv
 from datetime import datetime
 from pytz import timezone
 from modules import data_pulling
-
+import os
 input_file_data_link = "modules/csv/data_link.csv"
-input_file_blacklist = "outputs/temp_outputs/processed_blacklist.csv"
+input_file_blacklist = "outputs/temp_outputs/processed.csv"
 output_file = "outputs/temp_outputs/processed_dates.csv"
 
 # Checks upload date (must be in the last month)
@@ -80,3 +80,5 @@ def check_dates(input):  # Compares dates with limit date
                             row_blacklist[index + 1] += " [Video too old]"
 
             writer.writerow(row_blacklist)
+    os.remove("outputs/temp_outputs/processed.csv")
+    os.rename(output_file, "outputs/temp_outputs/processed.csv")
