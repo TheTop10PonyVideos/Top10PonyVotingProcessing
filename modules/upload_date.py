@@ -3,6 +3,7 @@ from datetime import datetime
 from pytz import timezone
 from modules import data_pulling
 import os
+
 input_file_data_link = "modules/csv/data_link.csv"
 input_file_blacklist = "outputs/temp_outputs/processed.csv"
 output_file = "outputs/temp_outputs/processed_dates.csv"
