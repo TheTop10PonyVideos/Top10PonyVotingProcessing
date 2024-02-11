@@ -3,16 +3,12 @@ from modules import data_pulling
 import re
 import os
 import shutil
+
 input_file_duration = "modules/csv/data_link.csv"
 input_file_additional_info = "outputs/temp_outputs/processed.csv"
 output_file = "outputs/temp_outputs/processed_duration.csv"
-date_time_pattern = r"\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{1,2}:\d{1,2}"
 
 # Checks for length
-
-
-def is_date_time_match(cell):  # Checks if two dates are identical
-    return bool(re.search(date_time_pattern, cell))
 
 
 def check_duration(input):
@@ -77,8 +73,6 @@ def check_duration(input):
                 elif cell.strip():
                     if index < len(row_duration):
                         row_duration[index + 1] += "[Unsupported Host]"
-
-                        
 
             writer.writerow(row_duration)
     os.remove("outputs/temp_outputs/processed.csv")
