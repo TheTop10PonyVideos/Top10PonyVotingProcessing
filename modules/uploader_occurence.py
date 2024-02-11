@@ -34,7 +34,6 @@ def check_uploader_occurence():
                 if count >= 3:
                     invalid_submissions.append(line_number)
                     # Append the substring to each uploader in the row
-                    # Start from 2 to ignore first two columns
                     for i in range(0, len(row)):
                         # For each corresponding cell in processed.csv
                         if main_rows[line_number - 1][i] != "":
