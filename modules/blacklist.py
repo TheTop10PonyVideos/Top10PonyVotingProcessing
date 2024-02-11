@@ -1,17 +1,15 @@
 import csv
 from modules import data_pulling
-
+import os
 input_file_data_link = "modules/csv/data_link.csv"
-input_file_processed_duplicates = "outputs/temp_outputs/processed_duplicates.csv"
+input_file_processed_duplicates = "outputs/temp_outputs/processed.csv"
 output_file = "outputs/temp_outputs/processed_blacklist.csv"
 
 
 def check_blacklist(input):  # Check for blacklisted channels
     with open(input, "r", encoding="utf-8") as csv_data_link, open(  # Opens CSV
-        input_file_processed_duplicates, "r", encoding="utf-8"
-    ) as csv_duplicates, open(
-        output_file, "w", newline="", encoding="utf-8"
-    ) as csv_out:
+        input_file_processed_duplicates, "r", encoding="utf-8") as csv_duplicates, open(
+        output_file, "w", newline="", encoding="utf-8") as csv_out:
         reader_data_link = csv.reader(csv_data_link)
         reader_duplicates = csv.reader(csv_duplicates)
         writer = csv.writer(csv_out)
@@ -53,3 +51,5 @@ def check_blacklist(input):  # Check for blacklisted channels
                             row_duplicates[index + 1] += " [BLACKLISTED]"
 
             writer.writerow(row_duplicates)
+    os.remove("outputs/temp_outputs/processed.csv")
+    os.rename(output_file, "outputs/temp_outputs/processed.csv")
