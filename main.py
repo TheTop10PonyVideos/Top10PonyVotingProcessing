@@ -176,31 +176,31 @@ debug_var = tk.BooleanVar()
 debug_checkbox = ttk.Checkbutton(main_frame, text="Enable Debug Files (Broken LOL)", variable=debug_var)
 debug_checkbox.pack(pady=40)
 
-duplicate_var = tk.BooleanVar()
+duplicate_var = tk.BooleanVar(value=True)
 duplicate_checkbox = ttk.Checkbutton(main_frame, text="Duplicate Check", variable=duplicate_var)
 duplicate_checkbox.pack()
 
-blacklist_var = tk.BooleanVar()
+blacklist_var = tk.BooleanVar(value=True)
 blacklist_checkbox = ttk.Checkbutton(main_frame, text="Blacklist Check", variable=blacklist_var)
 blacklist_checkbox.pack()
 
-upload_date_var = tk.BooleanVar()
+upload_date_var = tk.BooleanVar(value=True)
 upload_date_checkbox = ttk.Checkbutton(main_frame, text="Upload Date Check", variable=upload_date_var)
 upload_date_checkbox.pack()
 
-duration_var = tk.BooleanVar()
+duration_var = tk.BooleanVar(value=True)
 duration_checkbox = ttk.Checkbutton(main_frame, text="Duration Check", variable=duration_var)
 duration_checkbox.pack()
 
-fuzzy_var = tk.BooleanVar()
+fuzzy_var = tk.BooleanVar(value=True)
 fuzzy_checkbox = ttk.Checkbutton(main_frame, text="Fuzzy Check", variable=fuzzy_var)
 fuzzy_checkbox.pack()
 
-uploader_occurrence_var = tk.BooleanVar()
+uploader_occurrence_var = tk.BooleanVar(value=True)
 uploader_occurrence_checkbox = ttk.Checkbutton(main_frame, text="Uploader Occurrence Check", variable=uploader_occurrence_var)
 uploader_occurrence_checkbox.pack()
 
-uploader_diversity_var = tk.BooleanVar()
+uploader_diversity_var = tk.BooleanVar(value=True)
 uploader_diversity_checkbox = ttk.Checkbutton(main_frame, text="Uploader Diversity Check", variable=uploader_diversity_var)
 uploader_diversity_checkbox.pack()
 
