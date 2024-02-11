@@ -34,8 +34,8 @@ def check_uploader_occurence():
                 if count >= 3:
                     invalid_submissions.append(line_number)
                     # Append the substring to each uploader in the row
-                    # Start from 1 to avoid adding tag to timestamp
-                    for i in range(1, len(row)):
+                    # Start from 2 to ignore first two columns
+                    for i in range(2, len(row)):
                         # For each corresponding cell in processed.csv
                         if main_rows[line_number - 1][i] != "":
                             # If current cell is not empty
