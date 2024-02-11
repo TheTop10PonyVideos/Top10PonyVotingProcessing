@@ -2,6 +2,7 @@ import csv
 from modules import data_pulling
 from fuzzywuzzy import fuzz
 import re
+
 output_file = "outputs/temp_outputs/processed_fuzzlist.csv"
 input_file = "outputs/temp_outputs/processed.csv"
 titles_file = "modules/csv/data_link.csv"
@@ -12,9 +13,12 @@ SIMILARITY_THRESHOLD = 80  # Fuzzy threshhold (currently 80%)
 
 def links_to_titles(input):  # Converts links to titles using Google API or yt_dlp
     with open(input, "r", encoding="utf-8") as csv_in, open(  # Opens relevant files
-        output_titles, "w", newline="", encoding="utf-8") as csv_out_titles, open(
-        output_uploaders, "w", newline="", encoding="utf-8") as csv_out_uploaders, open(
-        output_durations, "w", newline="", encoding="utf-8") as csv_out_durations:
+        output_titles, "w", newline="", encoding="utf-8"
+    ) as csv_out_titles, open(
+        output_uploaders, "w", newline="", encoding="utf-8"
+    ) as csv_out_uploaders, open(
+        output_durations, "w", newline="", encoding="utf-8"
+    ) as csv_out_durations:
         reader = csv.reader(csv_in)
         writer_titles = csv.writer(csv_out_titles)
         writer_uploaders = csv.writer(csv_out_uploaders)
@@ -63,6 +67,7 @@ def links_to_titles(input):  # Converts links to titles using Google API or yt_d
 output_titles = "outputs/temp_outputs/titles_output.csv"
 output_uploaders = "outputs/temp_outputs/uploaders_output.csv"
 output_durations = "outputs/temp_outputs/durations_output.csv"
+
 
 def fuzzy_match(
     input_csv_file=output_titles,
@@ -181,30 +186,3 @@ def fuzzy_match(
             output_writer.writerow(
                 existing_row
             )  # Write the modified row to the output file
-
-
-date_time_pattern = r"\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{1,2}:\d{1,2}"
-
-
-def is_date_time_match(cell):
-    return bool(re.search(date_time_pattern, cell))
-
-
-def delete_first_cell():
-    with open(input_file, "r", newline="", encoding="utf-8") as file:
-        reader = csv.reader(file)
-        rows = []
-
-        for row in reader:
-            if row and is_date_time_match(row[0]):
-                rows.append(row[1:])
-            else:
-                rows.append(row)
-
-    with open(input_file, "w", newline="", encoding="utf-8") as file:
-        writer = csv.writer(file)
-        writer.writerows(rows)
-
-    print(
-        f"First cell deleted from each row if it was a date and saved to {output_file}"
-    )
