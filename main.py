@@ -124,16 +124,21 @@ class CSVEditor(tk.Frame):
         self.load_csv(processed_csv_file)
 
     def display_csv(self):
-        # Clear existing widgets
+    # Clear existing widgets
         for widget in self.inner_frame.winfo_children():
             widget.destroy()
 
-        # Display CSV data
+    # Display CSV data
         for row_idx, row in enumerate(self.data):
             for col_idx, value in enumerate(row):
                 entry = tk.Entry(self.inner_frame, width=50)
                 entry.grid(row=row_idx, column=col_idx, padx=5, pady=5)
                 entry.insert(tk.END, value)
+                entry.config(fg='green')
+                if "[SIMILARITY DETECTED" in value or "[DUPLICATE CREATOR]" in value or "[Video too old]" in value:
+                    entry.config(fg='orange')
+                if "[5 CHANNEL RULE]" in value or "[Unsupported Host]" in value or "[Video too short]" in value or "[BLACKLISTED]" in value:
+                    entry.config(fg='red')
                 
 
     def save_changes(self):
@@ -159,6 +164,8 @@ main_frame = tk.Frame(root)
 main_frame.pack(expand=True, fill="both", padx=10, pady=10)
 
 entry_var = tk.StringVar()
+entry = ttk.Entry(main_frame, textvariable=entry_var)
+entry.pack(padx=10, pady=10)
 
 browse_button = ttk.Button(main_frame, text="Browse", command=browse_file_csv)
 browse_button.pack(pady=10)
