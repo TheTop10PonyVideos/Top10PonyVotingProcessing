@@ -30,7 +30,7 @@ def check_uploader_diversity():
 
             if len(set(uploaders)) < 5:
                 # If this submission has < 5 unique uploaders
-                for cell_number in range(0, len(processed_rows[line_number])):
+                for cell_number in range(2, len(processed_rows[line_number])):
                     # For each corresponding cell in processed.csv
                     if processed_rows[line_number][cell_number] != "":
                         # If current cell is not empty
