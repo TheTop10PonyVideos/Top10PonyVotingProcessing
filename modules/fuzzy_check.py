@@ -162,21 +162,21 @@ def fuzzy_match(
                     and (i, j) in adaptations_durations
                 ):
                     similarity_note = (
-                        f" [SIMILARITY DETECTED IN TITLES AND UPLOADER AND DURATION]"
+                        f"[SIMILARITY DETECTED IN TITLES AND UPLOADER AND DURATION]"
                     )
                 elif (i, j) in adaptations_titles and (i, j) in adaptations_uploaders:
-                    similarity_note = f" [SIMILARITY DETECTED IN TITLES AND UPLOADERS]"
+                    similarity_note = f"[SIMILARITY DETECTED IN TITLES AND UPLOADERS]"
                 elif (i, j) in adaptations_titles and (i, j) in adaptations_durations:
-                    similarity_note = f" [SIMILARITY DETECTED IN TITLES AND DURATION]"
+                    similarity_note = f"[SIMILARITY DETECTED IN TITLES AND DURATION]"
                 elif (i, j) in adaptations_uploaders and (
                     i,
                     j,
                 ) in adaptations_durations:
-                    similarity_note = f" [SIMILARITY DETECTED IN UPLOADER AND DURATION]"
+                    similarity_note = f"[SIMILARITY DETECTED IN UPLOADER AND DURATION]"
                 elif (i, j) in adaptations_titles:
-                    similarity_note = f" [SIMILARITY DETECTED IN TITLES]"
+                    similarity_note = f"[SIMILARITY DETECTED IN TITLES]"
                 elif (i, j) in adaptations_uploaders:
-                    similarity_note = f" [SIMILARITY DETECTED IN UPLOADER]"
+                    similarity_note = f"[SIMILARITY DETECTED IN UPLOADER]"
 
                 if similarity_note is not None:
                     existing_row[

@@ -63,7 +63,6 @@ def delete_if_present(filepath):  # Deletes file if present
     if os.path.exists(filepath):
         os.remove(filepath)
 
-
 class CSVEditor(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
@@ -153,13 +152,13 @@ class CSVEditor(tk.Frame):
                 if (
                     "[SIMILARITY DETECTED" in value
                     or "[DUPLICATE CREATOR]" in value
-                    or "[Video too old]" in value
+                    or "[VIDEO TOO OLD]" in value
                 ):
                     entry.config(fg="orange")
                 if (
                     "[5 CHANNEL RULE]" in value
-                    or "[Unsupported Host]" in value
-                    or "[Video too short]" in value
+                    or "[UNSUPPORTED HOST]" in value
+                    or "[VIDEO TOO SHORT]" in value
                     or "[BLACKLISTED]" in value
                 ):
                     entry.config(fg="red")

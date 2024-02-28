@@ -36,9 +36,12 @@ def check_uploader_occurence():
                     # Append the substring to each uploader in the row
                     for i in range(2, len(row)):
                         # For each corresponding cell in processed.csv
-                        if main_rows[line_number - 1][i] != "":
-                            # If current cell is not empty
-                            main_rows[line_number - 1][i] += " [DUPLICATE CREATOR]"
+                        cell = main_rows[line_number - 1][i]
+                        if cell != "" and not contains_note(cell):
+                        # If cell is a video title
+                            main_rows[line_number - 1][i + 1] += "[DUPLICATE CREATOR]"
+                            # Append note to notes column
+                                    
 
     # Write the processed data to processed_uploaders.csv
     with open(main_file, "w", newline="", encoding="utf-8") as processed_uploaders_csv:
@@ -52,3 +55,13 @@ def check_uploader_occurence():
             print(
                 f"Line {line_number  - 1}: [DUPLICATE CREATOR] appended to uploader names"
             )
+
+with open("modules/csv/possible_notes.csv", "r") as csvfile:
+    notes = []
+    reader = csv.reader(csvfile)
+    for row in reader:
+        notes.extend(row)
+    # Initialize list of notes for contains_note() check.
+
+def contains_note(cell): # Returns true if cell contains at least one note, e.g. [DUPLICATE CREATOR]
+    return any(domain in cell for domain in notes)
