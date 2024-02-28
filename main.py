@@ -22,6 +22,7 @@ def browse_file_csv():  # Function that asks for a CSV file
     file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
     entry_var.set(file_path)
 
+
 def run_checks():  # Function that runs selected checks
     start_csv_file = entry_var.get()
     csv_file = "outputs/temp_outputs/shifted_cells.csv"
@@ -62,6 +63,7 @@ def run_checks():  # Function that runs selected checks
 def delete_if_present(filepath):  # Deletes file if present
     if os.path.exists(filepath):
         os.remove(filepath)
+
 
 class CSVEditor(tk.Frame):
     def __init__(self, master):
