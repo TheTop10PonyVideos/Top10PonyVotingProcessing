@@ -34,7 +34,7 @@ def check_uploader_diversity():
                     # For each corresponding cell in processed.csv
                     if processed_rows[line_number][cell_number] != "":
                         # If current cell is not empty
-                        processed_rows[line_number][cell_number] += " [5 CHANNEL RULE]"
+                        processed_rows[line_number][cell_number] += "[5 CHANNEL RULE]"
                         # Append note to cell
 
         output_file.seek(0)

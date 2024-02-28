@@ -38,7 +38,7 @@ def check_uploader_occurence():
                         # For each corresponding cell in processed.csv
                         if main_rows[line_number - 1][i] != "":
                             # If current cell is not empty
-                            main_rows[line_number - 1][i] += " [DUPLICATE CREATOR]"
+                            main_rows[line_number - 1][i] += "[DUPLICATE CREATOR]"
 
     # Write the processed data to processed_uploaders.csv
     with open(main_file, "w", newline="", encoding="utf-8") as processed_uploaders_csv:

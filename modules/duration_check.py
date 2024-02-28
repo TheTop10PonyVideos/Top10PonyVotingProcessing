@@ -43,10 +43,10 @@ def check_duration(input):
                         if (
                             seconds <= 30
                         ):  # Checks videos for possible for possible or definite duration problem
-                            row_duration[index + 3] += " [Video too short]"
+                            row_duration[index + 3] += "[VIDEO TOO SHORT]"
 
                         elif seconds <= 45:
-                            row_duration[index + 3] += " [Video maybe too short]"
+                            row_duration[index + 3] += "[VIDEO MAYBE TOO SHORT]"
 
                 elif data_pulling.contains_accepted_domain(
                     cell
@@ -66,13 +66,13 @@ def check_duration(input):
                         if (
                             seconds <= 30
                         ):  # Checks videos for possible for possible or definite duration problem
-                            row_duration[index + 3] += " [Video too short]"
+                            row_duration[index + 3] += "[VIDEO TOO SHORT]"
 
                         elif seconds <= 45:
-                            row_duration[index + 3] += " [Video maybe too short]"
+                            row_duration[index + 3] += "[VIDEO MAYBE TOO SHORT]"
                 elif cell.strip():
                     if index < len(row_duration):
-                        row_duration[index + 3] += "[Unsupported Host]"
+                        row_duration[index + 3] += "[UNSUPPORTED HOST]"
 
             writer.writerow(row_duration)
     os.remove("outputs/temp_outputs/processed.csv")

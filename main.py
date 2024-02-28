@@ -23,24 +23,6 @@ def browse_file_csv():  # Function that asks for a CSV file
     entry_var.set(file_path)
 
 
-def delete_timestamp_column():
-    # Deletes the first two columns of processed.csv
-    input_file = "outputs/processed.csv"
-
-    with open(input_file, "r", newline="", encoding="utf-8") as read_file:
-        reader = csv.reader(read_file)
-        rows = []
-
-        for row in reader:
-            rows.append(row[2:])
-
-        with open(input_file, "w", newline="", encoding="utf-8") as write_file:
-            writer = csv.writer(write_file)
-            writer.writerows(rows)
-
-    print(f"Timestamp column deleted.")
-
-
 def run_checks():  # Function that runs selected checks
     start_csv_file = entry_var.get()
     csv_file = "outputs/temp_outputs/shifted_cells.csv"
@@ -76,9 +58,6 @@ def run_checks():  # Function that runs selected checks
         delete_if_present("outputs/temp_outputs/uploaders_output.csv")
         delete_if_present("outputs/temp_outputs/shifted_cells.csv")
         delete_if_present("outputs/temp_outputs/processed.csv")
-
-
-# delete_timestamp_column()
 
 
 def delete_if_present(filepath):  # Deletes file if present
@@ -175,13 +154,13 @@ class CSVEditor(tk.Frame):
                 if (
                     "[SIMILARITY DETECTED" in value
                     or "[DUPLICATE CREATOR]" in value
-                    or "[Video too old]" in value
+                    or "[VIDEO TOO OLD]" in value
                 ):
                     entry.config(fg="orange")
                 if (
                     "[5 CHANNEL RULE]" in value
-                    or "[Unsupported Host]" in value
-                    or "[Video too short]" in value
+                    or "[UNSUPPORTED HOST]" in value
+                    or "[VIDEO TOO SHORT]" in value
                     or "[BLACKLISTED]" in value
                 ):
                     entry.config(fg="red")

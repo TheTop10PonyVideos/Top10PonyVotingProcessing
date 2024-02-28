@@ -34,7 +34,7 @@ def check_blacklist(input):  # Check for blacklisted channels
                             video_id
                         )
                         if data_pulling.check_blacklisted_channels(uploader):
-                            row_duplicates[index + 1] += " [BLACKLISTED]"
+                            row_duplicates[index + 1] += "[BLACKLISTED]"
 
                 elif data_pulling.contains_accepted_domain(
                     cell
@@ -51,7 +51,7 @@ def check_blacklist(input):  # Check for blacklisted channels
                         ) = data_pulling.check_with_yt_dlp(video_link=video_link)
 
                         if data_pulling.check_blacklisted_channels(uploader):
-                            row_duplicates[index + 1] += " [BLACKLISTED]"
+                            row_duplicates[index + 1] += "[BLACKLISTED]"
 
             writer.writerow(row_duplicates)
     os.remove("outputs/temp_outputs/processed.csv")
