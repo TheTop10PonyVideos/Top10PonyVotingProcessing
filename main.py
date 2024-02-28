@@ -77,7 +77,8 @@ def run_checks():  # Function that runs selected checks
         delete_if_present("outputs/temp_outputs/shifted_cells.csv")
         delete_if_present("outputs/temp_outputs/processed.csv")
 
-    delete_timestamp_column()
+
+# delete_timestamp_column()
 
 
 def delete_if_present(filepath):  # Deletes file if present
