@@ -59,7 +59,7 @@ def check_dates(input):  # Compares dates with limit date
                         if (
                             upload_date <= limit_date
                         ):  # Compares dates and adds note if relevant
-                            row_blacklist[index + 1] += " [Video too old]"
+                            row_blacklist[index + 1] += "[VIDEO TOO OLD]"
 
                 elif data_pulling.contains_accepted_domain(
                     cell
@@ -78,7 +78,7 @@ def check_dates(input):  # Compares dates with limit date
                         if (
                             upload_date <= limit_date
                         ):  # Compares dates and adds note if relevant
-                            row_blacklist[index + 1] += " [Video too old]"
+                            row_blacklist[index + 1] += "[VIDEO TOO OLD]"
 
             writer.writerow(row_blacklist)
     os.remove("outputs/temp_outputs/processed.csv")
