@@ -1,5 +1,4 @@
 import csv
-from modules import uploader_occurence
 
 input_file_path = "outputs/temp_outputs/uploaders_output.csv"
 # input_file_path = "outputs/temp_outputs/test_input_delete.csv"
@@ -34,10 +33,21 @@ def check_uploader_diversity():
                 for cell_number in range(2, len(processed_rows[line_number])):
                     # For each corresponding cell in processed.csv
                     cell = processed_rows[line_number][cell_number]
-                    if cell != "" and not uploader_occurence.contains_note(cell):
+                    if cell != "" and not contains_note(cell):
                     # If cell is a video title
                         processed_rows[line_number][cell_number + 1] += "[5 CHANNEL RULE]"
                         # Append note to notes column
 
         output_file.seek(0)
         processed_writer.writerows(processed_rows)
+
+with open("modules/csv/possible_notes.csv", "r") as csvfile:
+    notes = []
+    reader = csv.reader(csvfile)
+    for row in reader:
+        notes.extend(row)
+    # Initialize list of notes for contains_note() check.
+
+def contains_note(cell): 
+# Returns true if cell contains at least one note, e.g. [DUPLICATE CREATOR]
+    return any(domain in cell for domain in notes)

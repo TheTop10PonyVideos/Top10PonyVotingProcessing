@@ -4,10 +4,10 @@ input_file = "outputs/temp_outputs/uploaders_output.csv"
 main_file = "outputs/processed.csv"
 
 def check_uploader_occurence():
-# Checks the names of all uploaders within every submission.
+# Checks the names of all uploaders for every submission.
 # If a particular uploader shows up 3 times or more in a submission,
-# each cell of the submission in processed.csv is flagged with the
-# "[DUPLICATE CREATOR]" tag to signify that the entire submission is invalidated.
+# the note "[DUPLICATE CREATOR]" is appended to the notes column
+# of every video uploaded by the duplicate creator in processed.csv
 
     with open(input_file, "r", encoding="utf-8") as csvfile, open(
         main_file, "r", encoding="utf-8"
@@ -31,25 +31,13 @@ def check_uploader_occurence():
                 if count >= 3:
                 # If this uploader appears 3 times or more
                     for i in range(2, len(row)):
-                        # For each corresponding cell in processed.csv
-                        cell = main_rows[line_number - 1][i]
-                        if cell != "" and not contains_note(cell):
-                        # If cell is a video title
+                    # For each cell
+                        if (rows[line_number - 1][i] == uploader):
+                        # If this cell in uploaders_output.csv is the duplicate creator
                             main_rows[line_number - 1][i + 1] += "[DUPLICATE CREATOR]"
-                            # Append note to notes column
+                            # Append note to notes column for corresponding cell in processed.csv
 
     # Write to processed.csv
     with open(main_file, "w", newline="", encoding="utf-8") as processed_uploaders_csv:
         writer = csv.writer(processed_uploaders_csv)
         writer.writerows(main_rows)
-
-with open("modules/csv/possible_notes.csv", "r") as csvfile:
-    notes = []
-    reader = csv.reader(csvfile)
-    for row in reader:
-        notes.extend(row)
-    # Initialize list of notes for contains_note() check.
-
-def contains_note(cell): 
-# Returns true if cell contains at least one note, e.g. [DUPLICATE CREATOR]
-    return any(domain in cell for domain in notes)
