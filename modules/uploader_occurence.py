@@ -52,3 +52,13 @@ def check_uploader_occurence():
             print(
                 f"Line {line_number  - 1}: [DUPLICATE CREATOR] appended to uploader names"
             )
+
+with open("modules/csv/possible_notes.csv", "r") as csvfile:
+    notes = []
+    reader = csv.reader(csvfile)
+    for row in reader:
+        notes.extend(row)
+    # Initialize list of notes for contains_note() check.
+
+def contains_note(cell): # Returns true if cell contains at least one note, e.g. [DUPLICATE CREATOR]
+    return any(domain in cell for domain in notes)

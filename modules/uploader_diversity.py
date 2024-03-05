@@ -1,4 +1,5 @@
 import csv
+from modules import uploader_occurence
 
 input_file_path = "outputs/temp_outputs/uploaders_output.csv"
 # input_file_path = "outputs/temp_outputs/test_input_delete.csv"
@@ -32,10 +33,11 @@ def check_uploader_diversity():
                 # If this submission has < 5 unique uploaders
                 for cell_number in range(2, len(processed_rows[line_number])):
                     # For each corresponding cell in processed.csv
-                    if processed_rows[line_number][cell_number] != "":
-                        # If current cell is not empty
-                        processed_rows[line_number][cell_number] += "[5 CHANNEL RULE]"
-                        # Append note to cell
+                    cell = processed_rows[line_number][cell_number]
+                    if cell != "" and not uploader_occurence.contains_note(cell):
+                    # If cell is a video title
+                        processed_rows[line_number][cell_number + 1] += "[5 CHANNEL RULE]"
+                        # Append note to notes column
 
         output_file.seek(0)
         processed_writer.writerows(processed_rows)
