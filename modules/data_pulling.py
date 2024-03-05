@@ -13,18 +13,7 @@ youtube = build("youtube", "v3", developerKey=API_KEY)
 links_count = 0  # Used for percentage calculation
 links_processed_count = 0  # Used for percentage calculation
 max_retry_count = 5
-
-
-def set_count(input):
-    global links_count
-    with open(input, "r") as file:
-        csv_reader = csv.reader(file)
-
-        for row in csv_reader:
-            for cell in row:
-                if "http" in cell:
-                    links_count += 4  # this will be updated to "1" after we only need one datapulling fetch soon TM
-
+current_try = 0
 
 # This is the API fetch through youtube. Usage: title, uploader, duration = data_pulling.yt_api(video_id)
 def yt_api(video_id):
@@ -36,27 +25,42 @@ def yt_api(video_id):
             .list(part="status,snippet, contentDetails", id=video_id)
             .execute()
         )
+        if video_data is not None:
+            if video_data["items"]:
 
-        title = video_data["items"][0]["snippet"]["title"]
-        uploader = video_data["items"][0]["snippet"]["channelTitle"]
-        duration = video_data["items"][0]["contentDetails"]["duration"]
-        upload_date = video_data["items"][0]["snippet"]["publishedAt"]
-        durationString = str(duration)
-        upload_date = video_data["items"][0]["snippet"]["publishedAt"]
+                title = video_data["items"][0]["snippet"]["title"]
+                uploader = video_data["items"][0]["snippet"]["channelTitle"]
+                duration = video_data["items"][0]["contentDetails"]["duration"]
+                upload_date = video_data["items"][0]["snippet"]["publishedAt"]
+                durationString = str(duration)
+                upload_date = video_data["items"][0]["snippet"]["publishedAt"]
 
-        seconds = iso8601_converter(duration_str=durationString)
-        links_processed_count += 1
-        percentage_processed = (links_processed_count / links_count) * 100
-        formatted_percentage = "{:.2f}%".format(percentage_processed)
-        print(f"{formatted_percentage} done ({links_count}/{links_processed_count})")
-        max_retry_count = 5
-        return title, uploader, seconds, upload_date
+                seconds = iso8601_converter(duration_str=durationString)
+                links_processed_count += 1
+                #percentage_processed = (links_processed_count / links_count) * 100
+                #formatted_percentage = "{:.2f}%".format(percentage_processed)
+                #print(f"{formatted_percentage} done ({links_count}/{links_processed_count})")
+                max_retry_count = 5
+         
+                return title, uploader, seconds, upload_date
+            else:
+                print("[DATAPULLING] ERROR: VIDEO UNAVAILABLE")
+                print(video_data)
+                title = None
+                uploader = None
+                seconds = 0
+                upload_date = None
+                return title, uploader, seconds, upload_date
 
     except Exception as e:
         print(f"An error occurred: {e}")
         print("Retrying...")
-
-        return yt_api(video_id=video_id)
+        print(video_data)
+        current_try =+ 1
+        return
+        if current_try == max_retry_count:
+            return
+        #return yt_api(video_id=video_id)
 
 
 # Converts ISO times into seconds (just don't touch it, if it works lol)
@@ -105,15 +109,14 @@ def check_with_yt_dlp(video_link):
             duration = info.get("duration")
             upload_date = info.get("upload_date")
             durationString = str(duration)
-            seconds = iso8601_converter(duration_str=durationString)
             upload_date = info.get("upload_date")
-            links_processed_count += 1
-            percentage_processed = (links_processed_count / links_count) * 100
-            formatted_percentage = "{:.2f}%".format(percentage_processed)
-            print(
-                f"{formatted_percentage} done ({links_count}/{links_processed_count})"
-            )
-            return title, uploader, seconds, upload_date
+            #links_processed_count += 1
+            #percentage_processed = (links_processed_count / links_count) * 100
+            #formatted_percentage = "{:.2f}%".format(percentage_processed)
+            #print(
+                #f"{formatted_percentage} done ({links_count}/{links_processed_count})"
+            #)
+            return title, uploader, duration, upload_date
 
     except Exception as e:
         max_retry_count
@@ -145,8 +148,12 @@ def check_blacklisted_channels(channel):
 
         for row in checker:
             for cell in row:
-                if channel in cell:
-                    return True
+                try:
+                    if channel in cell:
+                        return True
+                except Exception as e:
+                    print(f"ERROR: {e}")
+                    return False
     return False
 
 

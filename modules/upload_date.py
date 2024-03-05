@@ -55,11 +55,16 @@ def check_dates(input):  # Compares dates with limit date
                         title, uploader, seconds, upload_date_str = data_pulling.yt_api(
                             video_id
                         )
-                        upload_date = parse_youtube_date(upload_date_str)
-                        if (
-                            upload_date <= limit_date
-                        ):  # Compares dates and adds note if relevant
-                            row_blacklist[index + 1] += "[VIDEO TOO OLD]"
+                        if upload_date_str is not None:
+                            upload_date = parse_youtube_date(upload_date_str)
+
+                            if (
+                                upload_date <= limit_date
+                            ):  # Compares dates and adds note if relevant
+                                row_blacklist[index + 1] += "[VIDEO TOO OLD]"
+                        else:
+                            print("[UPLOAD DATE] ERROR: VIDEO DATA IS NONE PROCEEDING WITHOUT")
+                            return
 
                 elif data_pulling.contains_accepted_domain(
                     cell
@@ -75,6 +80,7 @@ def check_dates(input):  # Compares dates with limit date
                             upload_date_str,
                         ) = data_pulling.check_with_yt_dlp(video_link=video_link)
                         upload_date = parse_yt_dlp_date(upload_date_str)
+                        
                         if (
                             upload_date <= limit_date
                         ):  # Compares dates and adds note if relevant
