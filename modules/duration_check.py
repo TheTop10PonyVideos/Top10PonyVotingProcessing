@@ -42,7 +42,7 @@ def check_duration(input):
                         if int(duration):
                             seconds = int(duration)
                         else:
-                            print("[DARATION CHECK] ERROR NO VIDEO DATA PROCEEDING WITH '0'")
+                            print("[DURATION CHECK] ERROR NO VIDEO DATA PROCEEDING WITH '0'")
                             continue
 
 
