@@ -37,10 +37,16 @@ def links_to_titles(input):  # Converts links to titles using Google API or yt_d
 
                     if video_id:
                         title, uploader, duration, date = data_pulling.yt_api(video_id)
+                        if title and uploader and duration:
 
-                        new_row_titles[index] = title
-                        new_row_uploaders[index] = uploader
-                        new_row_durations[index] = duration
+                            new_row_titles[index] = title
+                            new_row_uploaders[index] = uploader
+                            new_row_durations[index] = duration
+                        else: 
+                            print("ERROR NO DATA")
+                            new_row_titles[index] = "VIDEO PRIVATE"
+                            new_row_uploaders[index] = "VIDEO PRIVATE"
+                            new_row_durations[index] = "VIDEO PRIVATE"
                 else:
                     if data_pulling.contains_accepted_domain(
                         cell
@@ -54,10 +60,16 @@ def links_to_titles(input):  # Converts links to titles using Google API or yt_d
                                 duration,
                                 date,
                             ) = data_pulling.check_with_yt_dlp(video_link=video_link)
+                            if title and uploader and duration:
+                                new_row_titles[index] = title
+                                new_row_uploaders[index] = uploader
+                                new_row_durations[index] = duration
 
-                            new_row_titles[index] = title
-                            new_row_uploaders[index] = uploader
-                            new_row_durations[index] = duration
+                            else:
+                                print("ERROR: VIDEO DATA NOT ACCESSABLE PROCEEDING WITHOUT IT")
+                                new_row_titles[index] = "VIDEO PRIVATE"
+                                new_row_uploaders[index] = "VIDEO PRIVATE"
+                                new_row_durations[index] = "VIDEO PRIVATE"
 
             writer_titles.writerow(new_row_titles)
             writer_uploaders.writerow(new_row_uploaders)
