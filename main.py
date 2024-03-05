@@ -26,7 +26,6 @@ def browse_file_csv():  # Function that asks for a CSV file
 def run_checks():  # Function that runs selected checks
     start_csv_file = entry_var.get()
     csv_file = "outputs/temp_outputs/shifted_cells.csv"
-    data_pulling.set_count(start_csv_file)
     init.add_empty_cells(start_csv_file)  # Add the empty cells
     fuzzy_check.links_to_titles(csv_file)
     if duplicate_var.get() == False:

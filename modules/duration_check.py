@@ -38,7 +38,11 @@ def check_duration(input):
                             duration,
                             upload_date_str,
                         ) = data_pulling.yt_api(video_id)
-                        seconds = int(duration)
+                        if seconds:
+                            seconds = int(duration)
+                        else:
+                            print("[DARATION CHECK] ERROR NO VIDEO DATA PROCEEDING WITH '0'")
+                            return
 
                         if (
                             seconds <= 30
