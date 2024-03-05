@@ -69,7 +69,7 @@ def links_to_titles(input):  # Converts links to titles using Google API or yt_d
                                 print("ERROR: VIDEO DATA NOT ACCESSABLE PROCEEDING WITHOUT IT")
                                 new_row_titles[index] = "VIDEO PRIVATE"
                                 new_row_uploaders[index] = "VIDEO PRIVATE"
-                                new_row_durations[index] = "VIDEO PRIVATE"
+                                new_row_durations[index] = 0
 
             writer_titles.writerow(new_row_titles)
             writer_uploaders.writerow(new_row_uploaders)
