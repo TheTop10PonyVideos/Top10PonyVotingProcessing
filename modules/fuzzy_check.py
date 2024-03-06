@@ -42,7 +42,7 @@ def links_to_titles(input):  # Converts links to titles using Google API or yt_d
                             new_row_titles[index] = title
                             new_row_uploaders[index] = uploader
                             new_row_durations[index] = duration
-                        else: 
+                        else:
                             print("ERROR NO DATA")
                             new_row_titles[index] = "VIDEO PRIVATE"
                             new_row_uploaders[index] = "VIDEO PRIVATE"
@@ -66,7 +66,9 @@ def links_to_titles(input):  # Converts links to titles using Google API or yt_d
                                 new_row_durations[index] = duration
 
                             else:
-                                print("ERROR: VIDEO DATA NOT ACCESSABLE PROCEEDING WITHOUT IT")
+                                print(
+                                    "ERROR: VIDEO DATA NOT ACCESSABLE PROCEEDING WITHOUT IT"
+                                )
                                 new_row_titles[index] = "VIDEO PRIVATE"
                                 new_row_uploaders[index] = "VIDEO PRIVATE"
                                 new_row_durations[index] = 0

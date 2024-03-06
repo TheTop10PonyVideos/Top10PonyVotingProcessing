@@ -1,7 +1,6 @@
 import csv, re, os
 from datetime import datetime
 from googleapiclient.discovery import build
-from googleapiclient.discovery_cache.file_cache import Cache
 from yt_dlp import YoutubeDL
 from dotenv import load_dotenv
 from classes.caching import FileCache
@@ -15,26 +14,29 @@ load_dotenv()
 API_KEY = os.getenv("apikey")  # may replace this
 
 # Caching
-response_cache_type = os.getenv('response_cache_type')
-response_cache_file = os.getenv('response_cache_file')
+response_cache_type = os.getenv("response_cache_type")
+response_cache_file = os.getenv("response_cache_file")
 
 response_cache = None
-if response_cache_type == 'memory':
+if response_cache_type == "memory":
     response_cache = {}
-elif response_cache_type == 'file':
+elif response_cache_type == "file":
     if response_cache_file is None:
-        raise Exception(f'response_cache_type environment variable was set to "{response_cache_type}", but no response_cache_file was specified')
+        raise Exception(
+            f'response_cache_type environment variable was set to "{response_cache_type}", but no response_cache_file was specified'
+        )
     response_cache = FileCache(response_cache_file)
 
 # Create the YouTube Data API service.
 yt_service = build("youtube", "v3", developerKey=API_KEY)
 
 # Global variables for tracking progress.
-links_count = 0
-links_processed_count = 0
+links_count = 0  # Used for percentage calculation
+links_processed_count = 0  # Used for percentage calculation
 retry_count = 0
 max_retry_count = 5
 current_try = 0
+
 
 def yt_api(video_id: str) -> tuple:
     """Return a tuple of metadata for the given YouTube video id. The metadata
@@ -44,9 +46,8 @@ def yt_api(video_id: str) -> tuple:
     global links_processed_count
     global max_retry_count
 
-    request = (
-        yt_service.videos()
-        .list(part="status,snippet,contentDetails", id=video_id)
+    request = yt_service.videos().list(
+        part="status,snippet,contentDetails", id=video_id
     )
 
     video_data = None
@@ -80,11 +81,11 @@ def yt_api(video_id: str) -> tuple:
 
                 seconds = iso8601_converter(duration_str=duration_string)
                 links_processed_count += 1
-                #percentage_processed = (links_processed_count / links_count) * 100
-                #formatted_percentage = "{:.2f}%".format(percentage_processed)
-                #print(f"{formatted_percentage} done ({links_count}/{links_processed_count})")
+                # percentage_processed = (links_processed_count / links_count) * 100
+                # formatted_percentage = "{:.2f}%".format(percentage_processed)
+                # print(f"{formatted_percentage} done ({links_count}/{links_processed_count})")
                 max_retry_count = 5
-         
+
                 return title, uploader, seconds, upload_date
             else:
                 print("[DATAPULLING] ERROR: VIDEO UNAVAILABLE")
@@ -103,7 +104,7 @@ def yt_api(video_id: str) -> tuple:
         return
         if current_try == max_retry_count:
             return
-        #return yt_api(video_id=video_id)
+        # return yt_api(video_id=video_id)
 
 
 # Converts ISO times into seconds (just don't touch it, if it works lol)
@@ -161,12 +162,12 @@ def check_with_yt_dlp(video_link: str) -> tuple:
             upload_date = info.get("upload_date")
             durationString = str(duration)
             upload_date = info.get("upload_date")
-            #links_processed_count += 1
-            #percentage_processed = (links_processed_count / links_count) * 100
-            #formatted_percentage = "{:.2f}%".format(percentage_processed)
-            #print(
-                #f"{formatted_percentage} done ({links_count}/{links_processed_count})"
-            #)
+            # links_processed_count += 1
+            # percentage_processed = (links_processed_count / links_count) * 100
+            # formatted_percentage = "{:.2f}%".format(percentage_processed)
+            # print(
+            # f"{formatted_percentage} done ({links_count}/{links_processed_count})"
+            # )
             return title, uploader, duration, upload_date
 
     except Exception as e:
@@ -207,12 +208,14 @@ def check_blacklisted_channels(channel: str) -> bool:
                     return False
     return False
 
+
 def contains_accepted_domain(cell: str) -> bool:
     """Return True if cell contains the name of an accepted domain. The list of
     accepted domains is in `modules/csv/accepted_domains.csv`.
     """
 
     return any(domain in cell for domain in accepted_domains)
+
 
 # why is this here :P hmmmmmmmmmmmmmmm anyways don't touch it :D
 checker_file = "modules/csv/blacklist.csv"
@@ -222,5 +225,3 @@ with open("modules/csv/accepted_domains.csv", "r") as csvfile:
     accepted_domains = [
         row[0] for row in reader
     ]  # Initialize list of accepted domains for checks later
-
-
