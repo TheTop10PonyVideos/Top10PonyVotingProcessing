@@ -63,8 +63,8 @@ def check_dates(input):  # Compares dates with limit date
                             ):  # Compares dates and adds note if relevant
                                 row_blacklist[index + 1] += "[VIDEO TOO OLD]"
                         else:
-                            print("[UPLOAD DATE] ERROR: VIDEO DATA IS NONE PROCEEDING WITHOUT")
-                            return
+                            print("[UPLOAD DATE] ERROR: VIDEO DATA IS NONE PROCEEDING WITHOUT IT")
+                            continue
 
                 elif data_pulling.contains_accepted_domain(
                     cell
