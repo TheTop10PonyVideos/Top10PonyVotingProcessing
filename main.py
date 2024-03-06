@@ -14,16 +14,26 @@ from modules import (  # Import all the neccesary modules lol
 import os
 import shutil
 import csv
+import sys
 
 # Main program to be run
 
 
-def browse_file_csv():  # Function that asks for a CSV file
+def browse_file_csv():
+    """Handler for the "Browse" button. Opens a file dialog and sets the global
+    variable `entry_var` to the selected file.
+    """
     file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
     entry_var.set(file_path)
 
 
-def run_checks():  # Function that runs selected checks
+def run_checks():
+    """Handler for the "Run Checks" button.
+
+    TODO: Handle the scenario where `entry_var` is empty (ie. no file was
+    selected), eg. by showing an error message in the UI.
+    """
+
     start_csv_file = entry_var.get()
     csv_file = "outputs/temp_outputs/shifted_cells.csv"
     init.add_empty_cells(start_csv_file)  # Add the empty cells
@@ -59,7 +69,8 @@ def run_checks():  # Function that runs selected checks
         delete_if_present("outputs/temp_outputs/processed.csv")
 
 
-def delete_if_present(filepath):  # Deletes file if present
+def delete_if_present(filepath):
+    """Delete the given file, if it exists on the filesystem."""
     if os.path.exists(filepath):
         os.remove(filepath)
 
@@ -178,15 +189,17 @@ class CSVEditor(tk.Frame):
             writer.writerows(self.data)
 
 
-# Creating the GUI
-
-
+# Create GUI
 root = tk.Tk()
 root.title("Top 10 Pony Video Squeezer 3000")
 root.geometry("800x600")
-root.iconbitmap("images/icon.ico")
 
-# Main Object Frame
+# .ico files unfortunately don't work on Linux due to a known Tkinter issue.
+# Current fix is simply to not use the icon on Linux.
+if not sys.platform.startswith("linux"):
+    root.iconbitmap("images/icon.ico")
+
+# Create Main Object Frame
 main_frame = tk.Frame(root)
 main_frame.pack(expand=True, fill="both", padx=10, pady=10)
 
@@ -197,8 +210,7 @@ entry.pack(padx=10, pady=10)
 browse_button = ttk.Button(main_frame, text="Browse", command=browse_file_csv)
 browse_button.pack(pady=10)
 
-# Checkboxes
-
+# Create checkboxes
 debug_var = tk.BooleanVar()
 debug_checkbox = ttk.Checkbutton(
     main_frame, text="Enable Debug Files (Broken LOL)", variable=debug_var
