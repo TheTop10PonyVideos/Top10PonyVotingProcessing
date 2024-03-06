@@ -1,16 +1,13 @@
 import csv
 
 input_file = "outputs/temp_outputs/uploaders_output.csv"
-output_file = "outputs/processed_uploaders.csv"
 main_file = "outputs/processed.csv"
 
-
 def check_uploader_occurence():
-    # Checks the names of all uploaders within every submission.
-    # If a particular uploader shows up 3 times or more in a submission,
-    # each cell of the submission in processed.csv is flagged with the
-    # "[DUPLICATE CREATOR]" tag to signify that the entire submission is invalidated.
-    invalid_submissions = []
+# Checks the names of all uploaders for every submission.
+# If a particular uploader shows up 3 times or more in a submission,
+# the note "[DUPLICATE CREATOR]" is appended to the notes column
+# of every video uploaded by the duplicate creator in processed.csv
 
     with open(input_file, "r", encoding="utf-8") as csvfile, open(
         main_file, "r", encoding="utf-8"
@@ -29,26 +26,18 @@ def check_uploader_occurence():
             for uploader in uploaders:
                 uploader_count[uploader] = uploader_count.get(uploader, 0) + 1
 
-            # Check if any uploader appears 3 or more times
             for uploader, count in uploader_count.items():
+            # For each uploader
                 if count >= 3:
-                    invalid_submissions.append(line_number)
-                    # Append the substring to each uploader in the row
+                # If this uploader appears 3 times or more
                     for i in range(2, len(row)):
-                        # For each corresponding cell in processed.csv
-                        if main_rows[line_number - 1][i] != "":
-                            # If current cell is not empty
-                            main_rows[line_number - 1][i] += "[DUPLICATE CREATOR]"
+                    # For each cell
+                        if (rows[line_number - 1][i] == uploader):
+                        # If this cell in uploaders_output.csv is the duplicate creator
+                            main_rows[line_number - 1][i + 1] += "[DUPLICATE CREATOR]"
+                            # Append note to notes column for corresponding cell in processed.csv
 
-    # Write the processed data to processed_uploaders.csv
+    # Write to processed.csv
     with open(main_file, "w", newline="", encoding="utf-8") as processed_uploaders_csv:
         writer = csv.writer(processed_uploaders_csv)
         writer.writerows(main_rows)
-
-    if invalid_submissions:
-        print(f"Processed data written to {output_file}")
-        print("Invalid submissions:")
-        for line_number in invalid_submissions:
-            print(
-                f"Line {line_number  - 1}: [DUPLICATE CREATOR] appended to uploader names"
-            )
