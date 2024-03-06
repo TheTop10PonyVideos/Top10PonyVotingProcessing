@@ -8,7 +8,6 @@ from classes.caching import FileCache
 
 # TODO: Use pathlib for path abstraction
 # TODO: Don't use global variables
-# TODO: Add file cache location to `.env` configuration
 
 # Load environment configuration from a `.env` file if present.
 load_dotenv()
@@ -33,32 +32,9 @@ yt_service = build("youtube", "v3", developerKey=API_KEY)
 # Global variables for tracking progress.
 links_count = 0
 links_processed_count = 0
+retry_count = 0
 max_retry_count = 5
 current_try = 0
-
-
-def set_count(csv_file_path: str):
-    """Set the global variable `links_count` to the number of links found in the
-    given CSV file. A link is defined as a cell defined beginning with the
-    string "http".
-
-    TODO: This function is doing 3 things: opening a file, counting links, and
-    setting a global variable. Consider separating all of these concerns.
-
-    TODO: This function returns an incorrect count if you don't reset
-    `links_count` to 0 between calls, which is currently the case when you use
-    the "Run Checks" button multiple times. This could be avoided by not using
-    global variables.
-    """
-    global links_count
-
-    with open(csv_file_path, "r") as csv_file:
-        csv_reader = csv.reader(csv_file)
-
-        for row in csv_reader:
-            for cell in row:
-                if "http" in cell:
-                    links_count += 4  # this will be updated to "1" after we only need one datapulling fetch soon TM
 
 def yt_api(video_id: str) -> tuple:
     """Return a tuple of metadata for the given YouTube video id. The metadata
@@ -68,25 +44,29 @@ def yt_api(video_id: str) -> tuple:
     global links_processed_count
     global max_retry_count
 
-    try:
-        request = (
-            yt_service.videos()
-            .list(part="status,snippet,contentDetails", id=video_id)
-        )
+    request = (
+        yt_service.videos()
+        .list(part="status,snippet,contentDetails", id=video_id)
+    )
 
-        video_data = None
-        if response_cache is not None and request.uri in response_cache:
-            video_data = response_cache[request.uri]
-        else:
+    video_data = None
+
+    # If using the response cache, check for a cached response first and use
+    # that if available.
+    if response_cache is not None and request.uri in response_cache:
+        video_data = response_cache[request.uri]
+    else:
+        try:
             video_data = request.execute()
-            if response_cache is not None:
-                response_cache[request.uri] = video_data
+        except Exception as e:
+            print(f"An error occurred while querying the YouTube Data API: {e}")
+            print("Retrying...")
+            current_try += 1
+            return
 
-    except Exception as e:
-        print(f"An error occurred while querying the YouTube Data API: {e}")
-        print("Retrying...")
-        current_try += 1
-        return
+        # Cache the response if using the response cache.
+        if response_cache is not None:
+            response_cache[request.uri] = video_data
 
     try:
         if video_data is not None:
@@ -190,16 +170,15 @@ def check_with_yt_dlp(video_link: str) -> tuple:
             return title, uploader, duration, upload_date
 
     except Exception as e:
-        max_retry_count
         print(f"An error occurred: {e}")
         print("Retrying...")
         retry_count += 1
-        if max_retry_count == retry_count:
+        if retry_count > max_retry_count:
             return
         return check_with_yt_dlp(video_link)
 
 
-def extract_video_id(url):
+def extract_video_id(url: str) -> str:
     """Given a YouTube video URL, extract the video id from it."""
 
     video_id_regex = r"(?:\?v=|/embed/|/watch\?v=|/youtu.be/)([a-zA-Z0-9_-]+)"
@@ -212,7 +191,9 @@ def extract_video_id(url):
     return None
 
 
-def check_blacklisted_channels(channel):
+def check_blacklisted_channels(channel: str) -> bool:
+    """Return true if the blacklist file contains the given channel. The list of
+    blacklisted channels is in `modules/csv/blacklist.csv`"""
     with open(checker_file, "r", encoding="utf-8") as check:
         checker = csv.reader(check)
 
@@ -225,7 +206,6 @@ def check_blacklisted_channels(channel):
                     print(f"ERROR: {e}")
                     return False
     return False
-
 
 def contains_accepted_domain(cell: str) -> bool:
     """Return True if cell contains the name of an accepted domain. The list of
