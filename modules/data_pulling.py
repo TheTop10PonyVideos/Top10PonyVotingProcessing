@@ -56,7 +56,7 @@ def yt_api(video_id):
         print(f"An error occurred: {e}")
         print("Retrying...")
         print(video_data)
-        current_try =+ 1
+        current_try += 1
         return
         if current_try == max_retry_count:
             return
