@@ -38,7 +38,6 @@ def links_to_titles(input):  # Converts links to titles using Google API or yt_d
                     if video_id:
                         title, uploader, duration, date = data_pulling.yt_api(video_id)
                         if title and uploader and duration:
-
                             new_row_titles[index] = title
                             new_row_uploaders[index] = uploader
                             new_row_durations[index] = duration
