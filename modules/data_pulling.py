@@ -55,9 +55,11 @@ def yt_api(video_id: str) -> tuple:
     # If using the response cache, check for a cached response first and use
     # that if available.
     if response_cache is not None and request.uri in response_cache:
+        print("USED CACHE")
         video_data = response_cache[request.uri]
     else:
         try:
+            print("USED API")
             video_data = request.execute()
         except Exception as e:
             print(f"An error occurred while querying the YouTube Data API: {e}")
@@ -172,11 +174,11 @@ def check_with_yt_dlp(video_link: str) -> tuple:
 
     except Exception as e:
         print(f"An error occurred: {e}")
-        print("Retrying...")
-        retry_count += 1
-        if retry_count > max_retry_count:
-            return
-        return check_with_yt_dlp(video_link)
+        # print("Retrying...")
+        # retry_count += 1
+        # if retry_count > max_retry_count:
+        #    return
+        # return check_with_yt_dlp(video_link)
 
 
 def extract_video_id(url: str) -> str:
