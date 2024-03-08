@@ -42,10 +42,10 @@ def links_to_titles(input):  # Converts links to titles using Google API or yt_d
                             new_row_uploaders[index] = uploader
                             new_row_durations[index] = duration
                         else:
-                            print("ERROR NO DATA")
-                            new_row_titles[index] = "VIDEO PRIVATE"
-                            new_row_uploaders[index] = "VIDEO PRIVATE"
-                            new_row_durations[index] = "VIDEO PRIVATE"
+                            print("ERROR: VIDEO UNAVAILABLE; NO DATA")
+                            new_row_titles[index] = cell
+                            new_row_uploaders[index] = cell
+                            new_row_durations[index] = cell
                 else:
                     if data_pulling.contains_accepted_domain(
                         cell
