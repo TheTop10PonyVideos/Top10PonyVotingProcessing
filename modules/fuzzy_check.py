@@ -56,9 +56,9 @@ def links_to_titles(input_file_name: str):
                             print(
                                 f"ERROR: Could not obtain video data from YouTube Data API for video id {video_id}. Marking video as private."
                             )
-                            new_row_titles[index] = "VIDEO PRIVATE"
-                            new_row_uploaders[index] = "VIDEO PRIVATE"
-                            new_row_durations[index] = "VIDEO PRIVATE"
+                            new_row_titles[index] = cell
+                            new_row_uploaders[index] = cell
+                            new_row_durations[index] = cell
 
                 # For non-YouTube videos, attempt to obtain metadata via yt-dlp.
                 # The application only permits videos from whitelisted domains;

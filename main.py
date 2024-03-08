@@ -67,6 +67,8 @@ def run_checks():
         delete_if_present("outputs/temp_outputs/shifted_cells.csv")
         delete_if_present("outputs/temp_outputs/processed.csv")
 
+    tk.messagebox.showinfo("Processing Completed", "Processing Completed")
+
 
 def delete_if_present(filepath):
     """Delete the given file, if it exists on the filesystem."""
