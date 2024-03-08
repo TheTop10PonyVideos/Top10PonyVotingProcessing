@@ -1,24 +1,35 @@
-import csv
+"""Fuzzy matching functions. Checks for similarities in Titles, Uploaders and
+Video Length to identify potential duplicate videos.
+"""
+
+import csv, re
 from modules import data_pulling
 from fuzzywuzzy import fuzz
-import re
 
-output_file = "outputs/temp_outputs/processed_fuzzlist.csv"
+# This file is used as the input to the fuzzy check. It should, at the point the
+# fuzzy check is made, contain the set of URLs uploaded by the user, with an
+# annotation column to the right of each URL column.
 input_file = "outputs/temp_outputs/processed.csv"
-titles_file = "modules/csv/data_link.csv"
-SIMILARITY_THRESHOLD = 80  # Fuzzy threshhold (currently 80%)
 
-# Checks for similarities in Titles, Uploaders and Video Length.
+# Fuzzy threshold percentage
+SIMILARITY_THRESHOLD = 80
 
 
-def links_to_titles(input):  # Converts links to titles using Google API or yt_dlp
-    with open(input, "r", encoding="utf-8") as csv_in, open(  # Opens relevant files
-        output_titles, "w", newline="", encoding="utf-8"
-    ) as csv_out_titles, open(
-        output_uploaders, "w", newline="", encoding="utf-8"
-    ) as csv_out_uploaders, open(
-        output_durations, "w", newline="", encoding="utf-8"
-    ) as csv_out_durations:
+def links_to_titles(input_file_name: str):
+    """Given a CSV file containing video URLs, output 3 new CSV files in which
+    each URL is replaced by the video title, uploader, and duration
+    respectively. The video metadata is obtained via a lookup to the Google API
+    or yt-dlp.
+
+    The 3 output CSV files are specified by setting the global variables
+    `output_titles`, `output_uploaders`, and `output_durations`.
+    """
+    with (
+        open(input_file_name, "r", encoding="utf-8") as csv_in,
+        open(output_titles, "w", newline="", encoding="utf-8") as csv_out_titles,
+        open(output_uploaders, "w", newline="", encoding="utf-8") as csv_out_uploaders,
+        open(output_durations, "w", newline="", encoding="utf-8") as csv_out_durations,
+    ):
         reader = csv.reader(csv_in)
         writer_titles = csv.writer(csv_out_titles)
         writer_uploaders = csv.writer(csv_out_uploaders)
@@ -30,9 +41,9 @@ def links_to_titles(input):  # Converts links to titles using Google API or yt_d
             new_row_durations = row.copy()
 
             for index, cell in enumerate(row):
-                if (
-                    "youtube.com" in cell or "youtu.be" in cell
-                ):  # Checks youtube with the Google API
+                # For YouTube videos, use the YouTube Data API to obtain video
+                # metadata.
+                if "youtube.com" in cell or "youtu.be" in cell:
                     video_id = data_pulling.extract_video_id(cell)
 
                     if video_id:
@@ -42,35 +53,35 @@ def links_to_titles(input):  # Converts links to titles using Google API or yt_d
                             new_row_uploaders[index] = uploader
                             new_row_durations[index] = duration
                         else:
-                            print("ERROR: VIDEO UNAVAILABLE; NO DATA")
+                            print(
+                                f"ERROR: Could not obtain video data from YouTube Data API for video id {video_id}. Marking video as private."
+                            )
                             new_row_titles[index] = cell
                             new_row_uploaders[index] = cell
                             new_row_durations[index] = cell
-                else:
-                    if data_pulling.contains_accepted_domain(
-                        cell
-                    ):  # Checks for other links comparing to the accepted_domains.csv file
-                        video_link = cell
 
-                        if video_link:
-                            (
-                                title,
-                                uploader,
-                                duration,
-                                date,
-                            ) = data_pulling.check_with_yt_dlp(video_link=video_link)
-                            if title and uploader and duration:
-                                new_row_titles[index] = title
-                                new_row_uploaders[index] = uploader
-                                new_row_durations[index] = duration
+                # For non-YouTube videos, attempt to obtain metadata via yt-dlp.
+                # The application only permits videos from whitelisted domains;
+                # these are defined in `accepted_domains.csv`.
+                elif data_pulling.contains_accepted_domain(cell):
+                    video_link = cell
 
-                            else:
-                                print(
-                                    "ERROR: VIDEO DATA NOT ACCESSABLE PROCEEDING WITHOUT IT"
-                                )
-                                new_row_titles[index] = "VIDEO PRIVATE"
-                                new_row_uploaders[index] = "VIDEO PRIVATE"
-                                new_row_durations[index] = 0
+                    if video_link:
+                        title, uploader, duration, date = (
+                            data_pulling.check_with_yt_dlp(video_link=video_link)
+                        )
+                        if title and uploader and duration:
+                            new_row_titles[index] = title
+                            new_row_uploaders[index] = uploader
+                            new_row_durations[index] = duration
+                        else:
+                            print(
+                                f"ERROR: Could not obtain video data via yt-dlp for video id {video_id}. Marking video as private."
+                            )
+                            new_row_titles[index] = "VIDEO PRIVATE"
+                            new_row_uploaders[index] = "VIDEO PRIVATE"
+                            # TODO: This isn't consistent with the treatment for the YouTube Data API above. Should it be 0 or "VIDEO PRIVATE"?
+                            new_row_durations[index] = 0
 
             writer_titles.writerow(new_row_titles)
             writer_uploaders.writerow(new_row_uploaders)
@@ -82,120 +93,116 @@ output_uploaders = "outputs/temp_outputs/uploaders_output.csv"
 output_durations = "outputs/temp_outputs/durations_output.csv"
 
 
+def check_similar_values(
+    values: list[str], similarity_threshold: int, start_offset: int = 0
+) -> list:
+    """Given a list of string values, return a list of tuples (i, j, s), where i
+    and j are the indices of two values that are considered to be "similar",
+    and s is their similarity percentage. The similarity metric is the
+    Levenshtein distance, calculated by the fuzzywuzzy library.
+
+    If `start_offset` is given, values with indices lower than that will not be
+    considered in the similarity check (ie. use `start_offset=1` to skip the
+    first value).
+    """
+
+    similar_values = []
+
+    for i in range(start_offset, len(values)):
+        if values[i] == "":
+            continue
+        for j in range(i + 1, len(values)):
+            if values[j] == "":
+                continue
+            similarity = fuzz.ratio(values[i], values[j])
+            if similarity >= similarity_threshold:
+                similar_values.append((i, j, similarity))
+
+    return similar_values
+
+
+def check_similarities(rows: list[str]) -> dict[tuple[int, int], tuple[str, float]]:
+    """Check each row in `rows` for similarities, and return a dictionary
+    mapping (r, c) tuples to (v, s) tuples, where
+
+        r = row index
+        c = column index
+        v = cell value
+        s = similarity percentage
+
+    The first column is not included in the similarity check. Cells that are
+    below the similarity threshold are not included in the results.
+    """
+
+    similarities = {}
+
+    for row_index, row in enumerate(rows):
+        similar_values = check_similar_values(row, SIMILARITY_THRESHOLD, 1)
+
+        for col_index_a, col_index_b, similarity in similar_values:
+            print(
+                f"Similarity in row {row_index+1} between columns {col_index_a+1} and {col_index_b+1}: {similarity}%"
+            )
+            similarities[(row_index, col_index_a)] = (row[col_index_a], similarity)
+            similarities[(row_index, col_index_b)] = (row[col_index_b], similarity)
+
+    return similarities
+
+
 def fuzzy_match(
-    input_csv_file=output_titles,
-    output_csv_file=input_file,
-    uploader_csv_file=output_uploaders,
-    duration_csv_file=output_durations,
+    output_csv_filename=input_file,
+    titles_csv_filename=output_titles,
+    uploader_csv_filename=output_uploaders,
+    duration_csv_filename=output_durations,
 ):
-    with open(input_csv_file, "r", encoding="utf-8") as input_file:
-        input_reader = csv.reader(input_file)
-        input_rows = [row for row in input_reader]
+    """Given an input CSV file containing video URLs, and 3 CSV files containing
+    corresponding titles, uploaders, and durations for each cell in the input
+    CSV, check each of those 3 CSV files for similar entries in each row; then,
+    for each cell of the input CSV, update the cell to its right with
+    annotations describing the categories in which it is similar to other cells.
+    Write the resulting CSV to `outputs/processed.csv`.
+    """
 
-    with open(output_csv_file, "r", encoding="utf-8") as existing_file:
-        existing_reader = csv.reader(existing_file)
-        existing_rows = [row for row in existing_reader]
+    csv_file_names = {
+        "titles": titles_csv_filename,
+        "uploader": uploader_csv_filename,
+        "duration": duration_csv_filename,
+        "existing": output_csv_filename,
+    }
 
-    with open(uploader_csv_file, "r", encoding="utf-8") as uploader_file:
-        uploader_reader = csv.reader(uploader_file)
-        uploader_rows = [row for row in uploader_reader]
-    with open(duration_csv_file, "r", encoding="utf-8") as duration_file:
-        duration_reader = csv.reader(duration_file)
-        duration_rows = [row for row in duration_reader]
+    rows = {}
+    for category, csv_file_name in csv_file_names.items():
+        with open(csv_file_name, "r", encoding="utf-8") as file:
+            reader = csv.reader(file)
+            rows[category] = [row for row in reader]
 
-    adaptations_titles = {}
-    adaptations_uploaders = {}
-    adaptations_durations = {}
+    category_order = ["titles", "uploader", "duration"]
 
-    # Check for similarities in titles
-    for i, (input_row, existing_row) in enumerate(zip(input_rows, existing_rows)):
-        for j in range(1, len(input_row)):
-            if not input_row[j]:
-                continue
-
-            for k in range(j + 1, len(input_row)):
-                if not input_row[k]:
-                    continue
-
-                similarity = fuzz.ratio(input_row[j], input_row[k])
-                if similarity >= SIMILARITY_THRESHOLD:
-                    print(
-                        f"Similarity in row {i+1} between titles {j} and {k}: {similarity}%"
-                    )
-                    adaptations_titles[(i, j)] = (input_row[j], similarity)
-                    adaptations_titles[(i, k)] = (input_row[k], similarity)
-
-    # Check for similarities in uploaders
-    for i, (input_row, existing_row) in enumerate(zip(uploader_rows, existing_rows)):
-        for j in range(1, len(input_row)):
-            if not input_row[j]:
-                continue
-
-            for k in range(j + 1, len(input_row)):
-                if not input_row[k]:
-                    continue
-
-                similarity = fuzz.ratio(input_row[j], input_row[k])
-                if similarity >= SIMILARITY_THRESHOLD:
-                    print(
-                        f"Similarity in row {i+1} between uploaders {j} and {k}: {similarity}%"
-                    )
-                    adaptations_uploaders[(i, j)] = (input_row[j], similarity)
-                    adaptations_uploaders[(i, k)] = (input_row[k], similarity)
-
-    for i, (input_row, existing_row) in enumerate(zip(duration_rows, existing_rows)):
-        for j in range(1, len(input_row)):
-            if not input_row[j]:
-                continue
-
-            for k in range(j + 1, len(input_row)):
-                if not input_row[k]:
-                    continue
-
-                similarity = fuzz.ratio(input_row[j], input_row[k])
-                if similarity >= SIMILARITY_THRESHOLD:
-                    print(
-                        f"Similarity in row {i+1} between duration {j} and {k}: {similarity}%"
-                    )
-                    adaptations_durations[(i, j)] = (input_row[j], similarity)
-                    adaptations_durations[(i, k)] = (input_row[k], similarity)
+    adaptations = {
+        category: check_similarities(rows[category]) for category in category_order
+    }
 
     with open(
         "outputs/processed.csv", "w", newline="", encoding="utf-8"
     ) as output_file:
         output_writer = csv.writer(output_file)
 
-        for i, existing_row in enumerate(existing_rows):
+        for i, existing_row in enumerate(rows["existing"]):
             for j, cell in enumerate(existing_row):
-                similarity_note = None  # Initialize to None if no similarity detected
+                cell_coord = (i, j)
 
-                if (
-                    (i, j) in adaptations_titles
-                    and (i, j) in adaptations_uploaders
-                    and (i, j) in adaptations_durations
-                ):
-                    similarity_note = (
-                        f"[SIMILARITY DETECTED IN TITLES AND UPLOADER AND DURATION]"
-                    )
-                elif (i, j) in adaptations_titles and (i, j) in adaptations_uploaders:
-                    similarity_note = f"[SIMILARITY DETECTED IN TITLES AND UPLOADERS]"
-                elif (i, j) in adaptations_titles and (i, j) in adaptations_durations:
-                    similarity_note = f"[SIMILARITY DETECTED IN TITLES AND DURATION]"
-                elif (i, j) in adaptations_uploaders and (
-                    i,
-                    j,
-                ) in adaptations_durations:
-                    similarity_note = f"[SIMILARITY DETECTED IN UPLOADER AND DURATION]"
-                elif (i, j) in adaptations_titles:
-                    similarity_note = f"[SIMILARITY DETECTED IN TITLES]"
-                elif (i, j) in adaptations_uploaders:
-                    similarity_note = f"[SIMILARITY DETECTED IN UPLOADER]"
+                # Get the list of categories for which the given cell was found to be similar to other cells in its row.
+                adaptations_containing_cell = [
+                    category.upper()
+                    for category in category_order
+                    if cell_coord in adaptations[category]
+                ]
 
-                if similarity_note is not None:
-                    existing_row[
-                        j + 1
-                    ] += similarity_note  # Add the similarity note to the next cell
+                if len(adaptations_containing_cell) > 0:
+                    similarity_note = f"[SIMILARITY DETECTED IN {' AND '.join(adaptations_containing_cell)}]"
 
-            output_writer.writerow(
-                existing_row
-            )  # Write the modified row to the output file
+                    # Add the similarity note to the next cell
+                    existing_row[j + 1] += similarity_note
+
+            # Write the modified row to the output file
+            output_writer.writerow(existing_row)
