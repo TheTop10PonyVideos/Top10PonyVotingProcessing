@@ -1,45 +1,57 @@
 from unittest import TestCase
 from modules.fuzzy_check import check_similar_values, check_similarities
 
+
 class TestFuzzyCheck(TestCase):
     def test_check_similar_values(self):
         values = []
         similar_values = check_similar_values(values, 100)
         self.assertEqual(0, len(similar_values))
 
-        values = ['Value']
+        values = ["Value"]
         similar_values = check_similar_values(values, 100)
         self.assertEqual(0, len(similar_values))
 
-        values = ['Value', 'Value']
+        values = ["Value", "Value"]
         similar_values = check_similar_values(values, 100)
         self.assertEqual(1, len(similar_values))
         self.assertEqual(0, similar_values[0][0])
         self.assertEqual(1, similar_values[0][1])
         self.assertEqual(100, similar_values[0][2])
 
-        values = ['Value', '', 'Value']
+        values = ["Value", "", "Value"]
         similar_values = check_similar_values(values, 100)
         self.assertEqual(1, len(similar_values))
         self.assertEqual(0, similar_values[0][0])
         self.assertEqual(2, similar_values[0][1])
         self.assertEqual(100, similar_values[0][2])
 
-        values = ['Value A', '', 'Value A', 'Value B']
+        values = ["Value A", "", "Value A", "Value B"]
         similar_values = check_similar_values(values, 100)
         self.assertEqual(1, len(similar_values))
         self.assertEqual(0, similar_values[0][0])
         self.assertEqual(2, similar_values[0][1])
         self.assertEqual(100, similar_values[0][2])
 
-        values = ['Value A', '', 'Value A', 'Value B', 'Value B']
+        values = ["Value A", "", "Value A", "Value B", "Value B"]
         similar_values = check_similar_values(values, 100, 1)
         self.assertEqual(1, len(similar_values))
         self.assertEqual(3, similar_values[0][0])
         self.assertEqual(4, similar_values[0][1])
         self.assertEqual(100, similar_values[0][2])
 
-        values = ['Value A', '', 'Value A', 'Value B', 'Value B', 'Value C', '', '', 'Value B', 'Value C']
+        values = [
+            "Value A",
+            "",
+            "Value A",
+            "Value B",
+            "Value B",
+            "Value C",
+            "",
+            "",
+            "Value B",
+            "Value C",
+        ]
         similar_values = check_similar_values(values, 100, 2)
         self.assertEqual(4, len(similar_values))
         self.assertEqual(3, similar_values[0][0])
@@ -55,7 +67,6 @@ class TestFuzzyCheck(TestCase):
         self.assertEqual(9, similar_values[3][1])
         self.assertEqual(100, similar_values[3][2])
 
-
     def test_check_similarities(self):
         # Test empty CSV
         rows = []
@@ -63,24 +74,18 @@ class TestFuzzyCheck(TestCase):
         self.assertEqual(0, len(similarities))
 
         # Test single value CSV
-        rows = [['Value 1']]
+        rows = [["Value 1"]]
         similarities = check_similarities(rows)
         self.assertEqual(0, len(similarities))
-        
+
         # Test single column CSV
-        rows = [
-            ['Value 1'],
-            ['Value 2']
-        ]
+        rows = [["Value 1"], ["Value 2"]]
         similarities = check_similarities(rows)
         self.assertEqual(0, len(similarities))
-        
+
         # Test 2x2 CSV: should produce no results, as the first column isn't
         # included in similarity checks.
-        rows = [
-            ['Value 1', 'Value 2'],
-            ['Value 3', 'Value 4']
-        ]
+        rows = [["Value 1", "Value 2"], ["Value 3", "Value 4"]]
         similarities = check_similarities(rows)
         self.assertEqual(0, len(similarities))
 

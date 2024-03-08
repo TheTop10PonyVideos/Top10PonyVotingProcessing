@@ -1,6 +1,7 @@
 """Fuzzy matching functions. Checks for similarities in Titles, Uploaders and
 Video Length to identify potential duplicate videos.
 """
+
 import csv, re
 from modules import data_pulling
 from fuzzywuzzy import fuzz
@@ -27,7 +28,7 @@ def links_to_titles(input_file_name: str):
         open(input_file_name, "r", encoding="utf-8") as csv_in,
         open(output_titles, "w", newline="", encoding="utf-8") as csv_out_titles,
         open(output_uploaders, "w", newline="", encoding="utf-8") as csv_out_uploaders,
-        open(output_durations, "w", newline="", encoding="utf-8") as csv_out_durations
+        open(output_durations, "w", newline="", encoding="utf-8") as csv_out_durations,
     ):
         reader = csv.reader(csv_in)
         writer_titles = csv.writer(csv_out_titles)
@@ -52,7 +53,9 @@ def links_to_titles(input_file_name: str):
                             new_row_uploaders[index] = uploader
                             new_row_durations[index] = duration
                         else:
-                            print(f'ERROR: Could not obtain video data from YouTube Data API for video id {video_id}. Marking video as private.')
+                            print(
+                                f"ERROR: Could not obtain video data from YouTube Data API for video id {video_id}. Marking video as private."
+                            )
                             new_row_titles[index] = "VIDEO PRIVATE"
                             new_row_uploaders[index] = "VIDEO PRIVATE"
                             new_row_durations[index] = "VIDEO PRIVATE"
@@ -64,13 +67,17 @@ def links_to_titles(input_file_name: str):
                     video_link = cell
 
                     if video_link:
-                        title, uploader, duration, date = data_pulling.check_with_yt_dlp(video_link=video_link)
+                        title, uploader, duration, date = (
+                            data_pulling.check_with_yt_dlp(video_link=video_link)
+                        )
                         if title and uploader and duration:
                             new_row_titles[index] = title
                             new_row_uploaders[index] = uploader
                             new_row_durations[index] = duration
                         else:
-                            print(f'ERROR: Could not obtain video data via yt-dlp for video id {video_id}. Marking video as private.')
+                            print(
+                                f"ERROR: Could not obtain video data via yt-dlp for video id {video_id}. Marking video as private."
+                            )
                             new_row_titles[index] = "VIDEO PRIVATE"
                             new_row_uploaders[index] = "VIDEO PRIVATE"
                             # TODO: This isn't consistent with the treatment for the YouTube Data API above. Should it be 0 or "VIDEO PRIVATE"?
@@ -85,7 +92,10 @@ output_titles = "outputs/temp_outputs/titles_output.csv"
 output_uploaders = "outputs/temp_outputs/uploaders_output.csv"
 output_durations = "outputs/temp_outputs/durations_output.csv"
 
-def check_similar_values(values: list[str], similarity_threshold: int, start_offset: int = 0) -> list:
+
+def check_similar_values(
+    values: list[str], similarity_threshold: int, start_offset: int = 0
+) -> list:
     """Given a list of string values, return a list of tuples (i, j, s), where i
     and j are the indices of two values that are considered to be "similar",
     and s is their similarity percentage. The similarity metric is the
@@ -99,16 +109,17 @@ def check_similar_values(values: list[str], similarity_threshold: int, start_off
     similar_values = []
 
     for i in range(start_offset, len(values)):
-        if values[i] == '':
+        if values[i] == "":
             continue
-        for j in range(i+1, len(values)):
-            if values[j] == '':
+        for j in range(i + 1, len(values)):
+            if values[j] == "":
                 continue
             similarity = fuzz.ratio(values[i], values[j])
             if similarity >= similarity_threshold:
                 similar_values.append((i, j, similarity))
 
     return similar_values
+
 
 def check_similarities(rows: list[str]) -> dict[tuple[int, int], tuple[str, float]]:
     """Check each row in `rows` for similarities, and return a dictionary
@@ -125,7 +136,7 @@ def check_similarities(rows: list[str]) -> dict[tuple[int, int], tuple[str, floa
 
     similarities = {}
 
-    for row_index, row  in enumerate(rows):
+    for row_index, row in enumerate(rows):
         similar_values = check_similar_values(row, SIMILARITY_THRESHOLD, 1)
 
         for col_index_a, col_index_b, similarity in similar_values:
@@ -142,7 +153,7 @@ def fuzzy_match(
     output_csv_filename=input_file,
     titles_csv_filename=output_titles,
     uploader_csv_filename=output_uploaders,
-    duration_csv_filename=output_durations
+    duration_csv_filename=output_durations,
 ):
     """Given an input CSV file containing video URLs, and 3 CSV files containing
     corresponding titles, uploaders, and durations for each cell in the input
@@ -153,10 +164,10 @@ def fuzzy_match(
     """
 
     csv_file_names = {
-        'titles': titles_csv_filename,
-        'uploader': uploader_csv_filename,
-        'duration': duration_csv_filename,
-        'existing': output_csv_filename
+        "titles": titles_csv_filename,
+        "uploader": uploader_csv_filename,
+        "duration": duration_csv_filename,
+        "existing": output_csv_filename,
     }
 
     rows = {}
@@ -165,20 +176,26 @@ def fuzzy_match(
             reader = csv.reader(file)
             rows[category] = [row for row in reader]
 
-    category_order = ['titles', 'uploader', 'duration']
+    category_order = ["titles", "uploader", "duration"]
 
-    adaptations = {category: check_similarities(rows[category]) for category in category_order}
+    adaptations = {
+        category: check_similarities(rows[category]) for category in category_order
+    }
 
-    with open("outputs/processed.csv", "w", newline="", encoding="utf-8") as output_file:
+    with open(
+        "outputs/processed.csv", "w", newline="", encoding="utf-8"
+    ) as output_file:
         output_writer = csv.writer(output_file)
 
-        for i, existing_row in enumerate(rows['existing']):
+        for i, existing_row in enumerate(rows["existing"]):
             for j, cell in enumerate(existing_row):
                 cell_coord = (i, j)
 
                 # Get the list of categories for which the given cell was found to be similar to other cells in its row.
                 adaptations_containing_cell = [
-                    category.upper() for category in category_order if cell_coord in adaptations[category]
+                    category.upper()
+                    for category in category_order
+                    if cell_coord in adaptations[category]
                 ]
 
                 if len(adaptations_containing_cell) > 0:
