@@ -60,7 +60,6 @@ def run_checks():
     if debug_var == False:  # Calls deleting outputs if present
         delete_if_present("outputs/temp_outputs/processed_blacklist.csv")
         delete_if_present("outputs/temp_outputs/processed_duplicates.csv")
-        delete_if_present("outputs/temp_outputs/processed_fuzzlist.csv")
         delete_if_present("outputs/temp_outputs/processed_dates.csv")
         delete_if_present("outputs/temp_outputs/durations_output.csv")
         delete_if_present("outputs/temp_outputs/titles_output.csv")
