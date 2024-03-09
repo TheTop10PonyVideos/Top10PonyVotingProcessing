@@ -1,18 +1,22 @@
-import csv
-from modules import data_pulling
-import os
+"""Blacklist check."""
 
-input_file_data_link = "modules/csv/data_link.csv"
+import csv, os
+from modules import data_pulling
+
 input_file_processed_duplicates = "outputs/temp_outputs/processed.csv"
 output_file = "outputs/temp_outputs/processed_blacklist.csv"
 
 
-def check_blacklist(input):  # Check for blacklisted channels
-    with open(input, "r", encoding="utf-8") as csv_data_link, open(  # Opens CSV
-        input_file_processed_duplicates, "r", encoding="utf-8"
-    ) as csv_duplicates, open(
-        output_file, "w", newline="", encoding="utf-8"
-    ) as csv_out:
+def check_blacklist(input_file):  # Check for blacklisted channels
+    """Given an input file containing video URLs, check the uploader of each URL
+    against a blacklist. For each URL found to be blacklisted, annotate the cell
+    to its right with a note indicating its blacklisted status.
+    """
+    with (
+        open(input_file, "r", encoding="utf-8") as csv_data_link,
+        open(input_file_processed_duplicates, "r", encoding="utf-8") as csv_duplicates,
+        open(output_file, "w", newline="", encoding="utf-8") as csv_out,
+    ):
         reader_data_link = csv.reader(csv_data_link)
         reader_duplicates = csv.reader(csv_duplicates)
         writer = csv.writer(csv_out)
@@ -36,9 +40,9 @@ def check_blacklist(input):  # Check for blacklisted channels
                         if data_pulling.check_blacklisted_channels(uploader):
                             row_duplicates[index + 1] += "[BLACKLISTED]"
 
-                elif data_pulling.contains_accepted_domain(
-                    cell
-                ):  # Checks for other links comparing to the accepted_domains.csv file
+                # Checks for other links comparing to the accepted_domains.csv
+                # file
+                elif data_pulling.contains_accepted_domain(cell):
                     video_link = cell
 
                     if video_link:

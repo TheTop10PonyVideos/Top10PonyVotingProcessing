@@ -18,8 +18,8 @@ SIMILARITY_THRESHOLD = 80
 def links_to_titles(input_file_name: str):
     """Given a CSV file containing video URLs, output 3 new CSV files in which
     each URL is replaced by the video title, uploader, and duration
-    respectively. The video metadata is obtained via a lookup to the Google API
-    or yt-dlp.
+    respectively. The video metadata is obtained via a lookup to the YouTube
+    Data API or to yt-dlp.
 
     The 3 output CSV files are specified by setting the global variables
     `output_titles`, `output_uploaders`, and `output_durations`.
