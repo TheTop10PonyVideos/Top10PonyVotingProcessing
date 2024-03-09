@@ -111,8 +111,7 @@ def yt_api(video_id: str) -> tuple:
 
 
 def parse_youtube_date(date_str: str) -> datetime:
-    """Parse a date string in the format used by the YouTube Data API (ISO 8601)
-    """
+    """Parse a date string in the format used by the YouTube Data API (ISO 8601)"""
     return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ")
 
 
@@ -222,14 +221,17 @@ def check_blacklisted_channels(channel: str) -> bool:
                     return False
     return False
 
+
 def is_youtube_link(url: str) -> bool:
     """Return True if the given URL is a YouTube link."""
     return "youtube.com" in url or "youtu.be" in url
+
 
 def is_video_link(url: str) -> bool:
     """Return True if the given URL is either a YouTube link or is one of the
     acceptable video domains."""
     return is_youtube_link(url) or contains_accepted_domain(url)
+
 
 def get_video_metadata(url: str) -> VideoMetadata:
     """Return an object containing metadata (title, uploader, duration, upload
@@ -252,26 +254,34 @@ def get_video_metadata(url: str) -> VideoMetadata:
             if upload_date_str is not None:
                 upload_date = parse_youtube_date(upload_date_str)
 
-            metadata = VideoMetadata(title, uploader, duration, upload_date, 'youtube')
+            metadata = VideoMetadata(title, uploader, duration, upload_date, "youtube")
         else:
-            raise Exception(f'Could not get video metadata for URL {url}; unable to extract video id')
+            raise Exception(
+                f"Could not get video metadata for URL {url}; unable to extract video id"
+            )
 
     # For non-YouTube videos, attempt to obtain metadata via yt-dlp.
     # The application only permits videos from whitelisted domains;
     # these are defined in `accepted_domains.csv`.
     elif contains_accepted_domain(url):
         if video_link:
-            title, uploader, duration, upload_date_str = check_with_yt_dlp(video_link=url)
+            title, uploader, duration, upload_date_str = check_with_yt_dlp(
+                video_link=url
+            )
 
             upload_date = None
             if upload_date_str is not None:
                 upload_date = parse_yt_dlp_date(upload_date_str)
 
-            metadata = VideoMetadata(title, uploader, duration, upload_date, 'yt-dlp')
+            metadata = VideoMetadata(title, uploader, duration, upload_date, "yt-dlp")
         else:
-            raise Exception(f'Could not get video metadata for URL {url}; not a valid video link')
+            raise Exception(
+                f"Could not get video metadata for URL {url}; not a valid video link"
+            )
     else:
-        raise Exception(f'Could not get video metadata for URL {url}; domain is not in list of accepted domains')
+        raise Exception(
+            f"Could not get video metadata for URL {url}; domain is not in list of accepted domains"
+        )
 
     return metadata
 

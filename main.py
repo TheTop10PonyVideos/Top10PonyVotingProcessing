@@ -51,7 +51,6 @@ def run_checks():
     # * `outputs/temp_outputs/durations_output.csv`
     fuzzy_check.links_to_titles(csv_file)
 
-    
     # `duplicate_var.get()` reads in `outputs/temp_outputs/titles_output.csv`
     # (which contains video titles), and outputs a new CSV
     # `outputs/temp_outputs/processed.csv`, containing video titles annotated

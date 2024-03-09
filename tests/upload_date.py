@@ -1,7 +1,11 @@
 from datetime import datetime
 from unittest import TestCase
 from pytz import timezone
-from modules.upload_date import get_preceding_month, get_month_bounds, compare_date_to_bounds
+from modules.upload_date import (
+    get_preceding_month,
+    get_month_bounds,
+    compare_date_to_bounds,
+)
 
 
 class TestUploadDate(TestCase):
@@ -9,7 +13,7 @@ class TestUploadDate(TestCase):
         tz = timezone("Etc/GMT-14")
         today = datetime.now()
         self.assertEqual(today.month - 1, get_preceding_month(tz))
-        
+
     def test_get_month_bounds(self):
         tz = timezone("Etc/GMT-14")
 
@@ -19,7 +23,7 @@ class TestUploadDate(TestCase):
             self.assertEqual(lower_bound.year, upper_bound.year)
             self.assertEqual(1, upper_bound.day)
             self.assertEqual(month, lower_bound.month)
-            self.assertEqual(month+1, upper_bound.month)
+            self.assertEqual(month + 1, upper_bound.month)
             self.assertEqual(1, lower_bound.day)
             self.assertEqual(1, upper_bound.day)
 
@@ -27,8 +31,8 @@ class TestUploadDate(TestCase):
         lower_bound, upper_bound = get_month_bounds(12, tz)
         self.assertEqual(12, lower_bound.month)
         self.assertEqual(1, upper_bound.month)
-        self.assertEqual(lower_bound.year+1, upper_bound.year)
-        
+        self.assertEqual(lower_bound.year + 1, upper_bound.year)
+
     def test_compare_date_to_bounds(self):
         # Check bounds: 1st Feburary 2024 to 1st March 2024
         lower_bound = datetime(2024, 2, 1)
@@ -128,4 +132,3 @@ class TestUploadDate(TestCase):
 
         date = datetime(2025, 2, 1)
         self.assertEqual(1, compare_date_to_bounds(date, lower_bound, upper_bound))
-

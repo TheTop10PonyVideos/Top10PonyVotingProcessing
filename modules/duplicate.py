@@ -1,4 +1,5 @@
 """Duplicate check."""
+
 import csv
 
 additional_file_path = "outputs/temp_outputs/titles_output.csv"
@@ -24,7 +25,9 @@ def check_duplicates(input_file: str):
     """Check the given CSV file for duplicate entries."""
     with (
         open(input_file, "r", newline="", encoding="utf-8") as file,
-        open(additional_file_path, "r", newline="", encoding="utf-8" )as additional_file
+        open(
+            additional_file_path, "r", newline="", encoding="utf-8"
+        ) as additional_file,
     ):
         reader = csv.reader(file)
         additional_reader = csv.reader(additional_file)

@@ -1,4 +1,5 @@
 """Blacklist check."""
+
 import csv, os
 from modules import data_pulling
 
@@ -14,7 +15,7 @@ def check_blacklist(input_file):  # Check for blacklisted channels
     with (
         open(input_file, "r", encoding="utf-8") as csv_data_link,
         open(input_file_processed_duplicates, "r", encoding="utf-8") as csv_duplicates,
-        open(output_file, "w", newline="", encoding="utf-8") as csv_out
+        open(output_file, "w", newline="", encoding="utf-8") as csv_out,
     ):
         reader_data_link = csv.reader(csv_data_link)
         reader_duplicates = csv.reader(csv_duplicates)
