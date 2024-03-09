@@ -36,8 +36,26 @@ def run_checks():
 
     start_csv_file = entry_var.get()
     csv_file = "outputs/temp_outputs/shifted_cells.csv"
-    init.add_empty_cells(start_csv_file)  # Add the empty cells
+
+    # `init.add_empty_cells` writes the content of `start_csv_file` to
+    # `outputs/temp_outputs/shifted_cells.csv`, with empty annotation columns
+    # added after each URL column.
+    init.add_empty_cells(start_csv_file)
+
+    # `fuzzy_check.links_to_titles(csv_file)` reads in
+    # `outputs/temp_outputs/shifted_cells.csv` (which contains URLs), and writes
+    # 3 new CSVs, each containing a type of data pertaining to the URL:
+    #
+    # * `outputs/temp_outputs/titles_output.csv`
+    # * `outputs/temp_outputs/uploaders_output.csv`
+    # * `outputs/temp_outputs/durations_output.csv`
     fuzzy_check.links_to_titles(csv_file)
+
+    
+    # `duplicate_var.get()` reads in `outputs/temp_outputs/titles_output.csv`
+    # (which contains video titles), and outputs a new CSV
+    # `outputs/temp_outputs/processed.csv`, containing video titles annotated
+    # with duplicate warnings.
     if duplicate_var.get() == False:
         shutil.copyfile(
             "outputs/temp_outputs/titles_output.csv",
@@ -45,6 +63,7 @@ def run_checks():
         )
     if duplicate_var.get():
         duplicate.check_duplicates(csv_file)
+
     if blacklist_var.get():
         blacklist.check_blacklist(csv_file)
     if upload_date_var.get():
