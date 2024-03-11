@@ -1,8 +1,5 @@
 import csv
 
-titles_file = "modules/csv/data_link.csv"
-output_titles = "outputs/temp_outputs/titles_output.csv"
-output_file = "outputs/temp_outputs/processed_titles.csv"
 input_titles_path = "outputs/temp_outputs/titles_output.csv"
 output_titles_path = "outputs/calculated_top_10.csv"
 

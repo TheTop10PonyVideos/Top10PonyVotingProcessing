@@ -264,20 +264,13 @@ def get_video_metadata(url: str) -> VideoMetadata:
     # The application only permits videos from whitelisted domains;
     # these are defined in `accepted_domains.csv`.
     elif contains_accepted_domain(url):
-        if video_link:
-            title, uploader, duration, upload_date_str = check_with_yt_dlp(
-                video_link=url
-            )
+        title, uploader, duration, upload_date_str = check_with_yt_dlp(url)
 
-            upload_date = None
-            if upload_date_str is not None:
-                upload_date = parse_yt_dlp_date(upload_date_str)
+        upload_date = None
+        if upload_date_str is not None:
+            upload_date = parse_yt_dlp_date(upload_date_str)
 
-            metadata = VideoMetadata(title, uploader, duration, upload_date, "yt-dlp")
-        else:
-            raise Exception(
-                f"Could not get video metadata for URL {url}; not a valid video link"
-            )
+        metadata = VideoMetadata(title, uploader, duration, upload_date, "yt-dlp")
     else:
         raise Exception(
             f"Could not get video metadata for URL {url}; domain is not in list of accepted domains"
@@ -292,6 +285,21 @@ def contains_accepted_domain(cell: str) -> bool:
     """
 
     return any(domain in cell for domain in accepted_domains)
+
+
+def get_urls_to_metadata(urls: list[str]) -> dict[str, VideoMetadata]:
+    """Given a list of video URLs, return a dictionary mapping each URL to its
+    metadata.
+    """
+    return {url: get_video_metadata(url) for url in urls}
+
+
+def get_video_urls(values: list[str]) -> list[str]:
+    """Given a list of values, return a list of only those values that represent
+    accepted video URLs.
+    """
+    return [value for value in values if is_video_link(value)]
+
 
 
 # why is this here :P hmmmmmmmmmmmmmmm anyways don't touch it :D

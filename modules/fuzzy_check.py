@@ -6,91 +6,8 @@ import csv, re
 from modules import data_pulling
 from fuzzywuzzy import fuzz
 
-# This file is used as the input to the fuzzy check. It should, at the point the
-# fuzzy check is made, contain the set of URLs uploaded by the user, with an
-# annotation column to the right of each URL column.
-input_file = "outputs/temp_outputs/processed.csv"
-
 # Fuzzy threshold percentage
 SIMILARITY_THRESHOLD = 80
-
-
-def links_to_titles(input_file_name: str):
-    """Given a CSV file containing video URLs, output 3 new CSV files in which
-    each URL is replaced by the video title, uploader, and duration
-    respectively. The video metadata is obtained via a lookup to the YouTube
-    Data API or to yt-dlp.
-
-    The 3 output CSV files are specified by setting the global variables
-    `output_titles`, `output_uploaders`, and `output_durations`.
-    """
-    with (
-        open(input_file_name, "r", encoding="utf-8") as csv_in,
-        open(output_titles, "w", newline="", encoding="utf-8") as csv_out_titles,
-        open(output_uploaders, "w", newline="", encoding="utf-8") as csv_out_uploaders,
-        open(output_durations, "w", newline="", encoding="utf-8") as csv_out_durations,
-    ):
-        reader = csv.reader(csv_in)
-        writer_titles = csv.writer(csv_out_titles)
-        writer_uploaders = csv.writer(csv_out_uploaders)
-        writer_durations = csv.writer(csv_out_durations)
-
-        for row in reader:
-            new_row_titles = row.copy()
-            new_row_uploaders = row.copy()
-            new_row_durations = row.copy()
-
-            for index, cell in enumerate(row):
-                # For YouTube videos, use the YouTube Data API to obtain video
-                # metadata.
-                if "youtube.com" in cell or "youtu.be" in cell:
-                    video_id = data_pulling.extract_video_id(cell)
-
-                    if video_id:
-                        title, uploader, duration, date = data_pulling.yt_api(video_id)
-                        if title and uploader and duration:
-                            new_row_titles[index] = title
-                            new_row_uploaders[index] = uploader
-                            new_row_durations[index] = duration
-                        else:
-                            print(
-                                f"ERROR: Could not obtain video data from YouTube Data API for video id {video_id}. Marking video as private."
-                            )
-                            new_row_titles[index] = cell
-                            new_row_uploaders[index] = cell
-                            new_row_durations[index] = cell
-
-                # For non-YouTube videos, attempt to obtain metadata via yt-dlp.
-                # The application only permits videos from whitelisted domains;
-                # these are defined in `accepted_domains.csv`.
-                elif data_pulling.contains_accepted_domain(cell):
-                    video_link = cell
-
-                    if video_link:
-                        title, uploader, duration, date = (
-                            data_pulling.check_with_yt_dlp(video_link=video_link)
-                        )
-                        if title and uploader and duration:
-                            new_row_titles[index] = title
-                            new_row_uploaders[index] = uploader
-                            new_row_durations[index] = duration
-                        else:
-                            print(
-                                f"ERROR: Could not obtain video data via yt-dlp for video id {video_id}. Marking video as private."
-                            )
-                            new_row_titles[index] = "VIDEO PRIVATE"
-                            new_row_uploaders[index] = "VIDEO PRIVATE"
-                            # TODO: This isn't consistent with the treatment for the YouTube Data API above. Should it be 0 or "VIDEO PRIVATE"?
-                            new_row_durations[index] = 0
-
-            writer_titles.writerow(new_row_titles)
-            writer_uploaders.writerow(new_row_uploaders)
-            writer_durations.writerow(new_row_durations)
-
-
-output_titles = "outputs/temp_outputs/titles_output.csv"
-output_uploaders = "outputs/temp_outputs/uploaders_output.csv"
-output_durations = "outputs/temp_outputs/durations_output.csv"
 
 
 def check_similar_values(
@@ -149,11 +66,85 @@ def check_similarities(rows: list[str]) -> dict[tuple[int, int], tuple[str, floa
     return similarities
 
 
+def links_to_titles(video_urls_file_path: str, output_titles_file_name: str, output_uploaders_file_name: str, output_durations_file_name: str):
+    """Given a CSV file containing video URLs, output 3 new CSV files in which
+    each URL is replaced by the video title, uploader, and duration
+    respectively. The video metadata is obtained via a lookup to the YouTube
+    Data API or to yt-dlp.
+
+    The 3 output CSV files are specified by setting the global variables
+    `output_titles`, `output_uploaders`, and `output_durations`.
+    """
+    with (
+        open(video_urls_file_path, "r", encoding="utf-8") as csv_video_urls,
+        open(output_titles_file_name, "w", newline="", encoding="utf-8") as csv_out_titles,
+        open(output_uploaders_file_name, "w", newline="", encoding="utf-8") as csv_out_uploaders,
+        open(output_durations_file_name, "w", newline="", encoding="utf-8") as csv_out_durations,
+    ):
+        reader = csv.reader(csv_video_urls)
+        writer_titles = csv.writer(csv_out_titles)
+        writer_uploaders = csv.writer(csv_out_uploaders)
+        writer_durations = csv.writer(csv_out_durations)
+
+        rows = [row for row in reader]
+
+        urls = []
+        for row in rows:
+            urls.extend(data_pulling.get_video_urls(row))
+
+        urls_to_metadata = data_pulling.get_urls_to_metadata(urls)
+
+        for row in rows:
+            new_row_titles = row.copy()
+            new_row_uploaders = row.copy()
+            new_row_durations = row.copy()
+
+            for index, cell in enumerate(row):
+                if cell not in urls_to_metadata:
+                    continue
+
+                metadata = urls_to_metadata[cell]
+                
+                if metadata.title and metadata.uploader and metadata.duration:
+                    new_row_titles[index] = metadata.title
+                    new_row_uploaders[index] = metadata.uploader
+                    new_row_durations[index] = metadata.duration
+                else:
+                    if data_pulling.is_youtube_link(cell):
+                        # If we weren't able to get title/uploader/duration
+                        # information for a YouTube video, leave the cell
+                        # unchanged in the output (ie. keep it as a URL).
+                        print(
+                            f"ERROR: Could not obtain video data from YouTube Data API for {cell}."
+                        )
+                        new_row_titles[index] = cell
+                        new_row_uploaders[index] = cell
+                        new_row_durations[index] = cell
+                    else:
+                        # If we weren't able to get title/uploader/duration
+                        # information for a non-YouTube video, set the title to
+                        # "VIDEO PRIVATE".
+                        #
+                        # TODO: This isn't consistent with the treatment for the
+                        # YouTube Data API above. Shouldn't the URLs be kept for
+                        # non-YouTube videos too?
+                        print(
+                        f"ERROR: Could not obtain video data via yt-dlp for video id {video_id}. Marking video as private."
+                    )
+                        new_row_titles[index] = "VIDEO PRIVATE"
+                        new_row_uploaders[index] = "VIDEO PRIVATE"
+                        new_row_durations[index] = 0
+
+            writer_titles.writerow(new_row_titles)
+            writer_uploaders.writerow(new_row_uploaders)
+            writer_durations.writerow(new_row_durations)
+
+
 def fuzzy_match(
-    output_csv_filename=input_file,
-    titles_csv_filename=output_titles,
-    uploader_csv_filename=output_uploaders,
-    duration_csv_filename=output_durations,
+    output_csv_filename: str,
+    titles_csv_filename: str,
+    uploader_csv_filename: str,
+    duration_csv_filename: str
 ):
     """Given an input CSV file containing video URLs, and 3 CSV files containing
     corresponding titles, uploaders, and durations for each cell in the input
