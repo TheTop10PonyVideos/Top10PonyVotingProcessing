@@ -63,7 +63,9 @@ def compare_date_to_bounds(
     return 0
 
 
-def check_dates(video_urls_file_path: str, titles_file_path: str, output_file_path: str):
+def check_dates(
+    video_urls_file_path: str, titles_file_path: str, output_file_path: str
+):
     """Given a CSV file containing video URLs, obtain the upload date for each
     URL, and annotate the column next to it if the upload date is too old or too
     new.

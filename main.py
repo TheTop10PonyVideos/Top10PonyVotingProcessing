@@ -35,75 +35,74 @@ def run_checks():
     """
 
     selected_csv_file = entry_var.get()
-    if selected_csv_file.strip() == '':
+    if selected_csv_file.strip() == "":
         tk.messagebox.showinfo("Error", "Please select a CSV file first.")
         return
 
     init.add_empty_cells(
-        selected_csv_file,                             # input
-        "outputs/temp_outputs/shifted_cells.csv"       # output
+        selected_csv_file, "outputs/temp_outputs/shifted_cells.csv"  # input  # output
     )
 
     fuzzy_check.links_to_titles(
-        "outputs/temp_outputs/shifted_cells.csv",      # input
-        "outputs/temp_outputs/titles_output.csv",      # output 1
-        "outputs/temp_outputs/uploaders_output.csv",   # output 2
-        "outputs/temp_outputs/durations_output.csv"    # output 3
+        "outputs/temp_outputs/shifted_cells.csv",  # input
+        "outputs/temp_outputs/titles_output.csv",  # output 1
+        "outputs/temp_outputs/uploaders_output.csv",  # output 2
+        "outputs/temp_outputs/durations_output.csv",  # output 3
     )
 
     if duplicate_var.get() == False:
         shutil.copyfile(
             "outputs/temp_outputs/titles_output.csv",
-            "outputs/temp_outputs/processed.csv" 
+            "outputs/temp_outputs/processed.csv",
         )
     if duplicate_var.get():
         duplicate.check_duplicates(
-            "outputs/temp_outputs/shifted_cells.csv",   # input 1
-            "outputs/temp_outputs/titles_output.csv",   # input 2
-            "outputs/temp_outputs/processed.csv"        # output
+            "outputs/temp_outputs/shifted_cells.csv",  # input 1
+            "outputs/temp_outputs/titles_output.csv",  # input 2
+            "outputs/temp_outputs/processed.csv",  # output
         )
 
     if blacklist_var.get():
         blacklist.check_blacklist(
-            "outputs/temp_outputs/shifted_cells.csv",   # input 1
-            "outputs/temp_outputs/processed.csv",       # input 2
-            "outputs/temp_outputs/processed.csv"        # output
+            "outputs/temp_outputs/shifted_cells.csv",  # input 1
+            "outputs/temp_outputs/processed.csv",  # input 2
+            "outputs/temp_outputs/processed.csv",  # output
         )
 
     if upload_date_var.get():
         upload_date.check_dates(
-            "outputs/temp_outputs/shifted_cells.csv",   # input 1
-            "outputs/temp_outputs/processed.csv",       # input 2
-            "outputs/temp_outputs/processed.csv"        # output
+            "outputs/temp_outputs/shifted_cells.csv",  # input 1
+            "outputs/temp_outputs/processed.csv",  # input 2
+            "outputs/temp_outputs/processed.csv",  # output
         )
 
     if duration_var.get():
         duration_check.check_duration(
-            "outputs/temp_outputs/shifted_cells.csv",   # input 1
-            "outputs/temp_outputs/processed.csv",       # input 2
-            "outputs/temp_outputs/processed.csv"        # output
+            "outputs/temp_outputs/shifted_cells.csv",  # input 1
+            "outputs/temp_outputs/processed.csv",  # input 2
+            "outputs/temp_outputs/processed.csv",  # output
         )
 
     if fuzzy_var.get():
         fuzzy_check.fuzzy_match(
-            "outputs/temp_outputs/processed.csv",        # input
-            "outputs/temp_outputs/titles_output.csv",    # output 1
-            "outputs/temp_outputs/uploaders_output.csv", # output 2
-            "outputs/temp_outputs/durations_output.csv"  # output 3
+            "outputs/temp_outputs/processed.csv",  # input
+            "outputs/temp_outputs/titles_output.csv",  # output 1
+            "outputs/temp_outputs/uploaders_output.csv",  # output 2
+            "outputs/temp_outputs/durations_output.csv",  # output 3
         )
 
     if uploader_occurrence_var.get():
         uploader_occurence.check_uploader_occurrence(
-            "outputs/temp_outputs/uploaders_output.csv", # input
-            "outputs/processed.csv",                     # input 2
-            "outputs/processed.csv"                      # output
+            "outputs/temp_outputs/uploaders_output.csv",  # input
+            "outputs/processed.csv",  # input 2
+            "outputs/processed.csv",  # output
         )
 
     if uploader_diversity_var.get():
         uploader_diversity.check_uploader_diversity(
-            "outputs/temp_outputs/uploaders_output.csv", # input
-            "outputs/processed.csv",                     # input 2
-            "outputs/processed.csv"                      # output
+            "outputs/temp_outputs/uploaders_output.csv",  # input
+            "outputs/processed.csv",  # input 2
+            "outputs/processed.csv",  # output
         )
 
     if debug_var == False:  # Calls deleting outputs if present

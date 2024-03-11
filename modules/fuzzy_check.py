@@ -66,7 +66,12 @@ def check_similarities(rows: list[str]) -> dict[tuple[int, int], tuple[str, floa
     return similarities
 
 
-def links_to_titles(video_urls_file_path: str, output_titles_file_name: str, output_uploaders_file_name: str, output_durations_file_name: str):
+def links_to_titles(
+    video_urls_file_path: str,
+    output_titles_file_name: str,
+    output_uploaders_file_name: str,
+    output_durations_file_name: str,
+):
     """Given a CSV file containing video URLs, output 3 new CSV files in which
     each URL is replaced by the video title, uploader, and duration
     respectively. The video metadata is obtained via a lookup to the YouTube
@@ -77,9 +82,15 @@ def links_to_titles(video_urls_file_path: str, output_titles_file_name: str, out
     """
     with (
         open(video_urls_file_path, "r", encoding="utf-8") as csv_video_urls,
-        open(output_titles_file_name, "w", newline="", encoding="utf-8") as csv_out_titles,
-        open(output_uploaders_file_name, "w", newline="", encoding="utf-8") as csv_out_uploaders,
-        open(output_durations_file_name, "w", newline="", encoding="utf-8") as csv_out_durations,
+        open(
+            output_titles_file_name, "w", newline="", encoding="utf-8"
+        ) as csv_out_titles,
+        open(
+            output_uploaders_file_name, "w", newline="", encoding="utf-8"
+        ) as csv_out_uploaders,
+        open(
+            output_durations_file_name, "w", newline="", encoding="utf-8"
+        ) as csv_out_durations,
     ):
         reader = csv.reader(csv_video_urls)
         writer_titles = csv.writer(csv_out_titles)
@@ -104,7 +115,7 @@ def links_to_titles(video_urls_file_path: str, output_titles_file_name: str, out
                     continue
 
                 metadata = urls_to_metadata[cell]
-                
+
                 if metadata.title and metadata.uploader and metadata.duration:
                     new_row_titles[index] = metadata.title
                     new_row_uploaders[index] = metadata.uploader
@@ -129,8 +140,8 @@ def links_to_titles(video_urls_file_path: str, output_titles_file_name: str, out
                         # YouTube Data API above. Shouldn't the URLs be kept for
                         # non-YouTube videos too?
                         print(
-                        f"ERROR: Could not obtain video data via yt-dlp for video id {video_id}. Marking video as private."
-                    )
+                            f"ERROR: Could not obtain video data via yt-dlp for video id {video_id}. Marking video as private."
+                        )
                         new_row_titles[index] = "VIDEO PRIVATE"
                         new_row_uploaders[index] = "VIDEO PRIVATE"
                         new_row_durations[index] = 0
@@ -144,7 +155,7 @@ def fuzzy_match(
     output_csv_filename: str,
     titles_csv_filename: str,
     uploader_csv_filename: str,
-    duration_csv_filename: str
+    duration_csv_filename: str,
 ):
     """Given an input CSV file containing video URLs, and 3 CSV files containing
     corresponding titles, uploaders, and durations for each cell in the input

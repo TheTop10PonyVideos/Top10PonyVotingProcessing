@@ -4,6 +4,7 @@ import re
 import os
 import shutil
 
+
 def evaluate_video_duration(seconds: int) -> str:
     """Evaluate the given duration and return one of the following numeric
     codes:
@@ -21,13 +22,15 @@ def evaluate_video_duration(seconds: int) -> str:
     return 0
 
 
-def check_duration(video_urls_file_path: str, titles_file_path: str, output_file_path: str):
+def check_duration(
+    video_urls_file_path: str, titles_file_path: str, output_file_path: str
+):
     temp_output_file_path = "outputs/temp_outputs/processed_duration.csv"
 
     with (
         open(video_urls_file_path, "r", encoding="utf-8") as csv_video_urls,
         open(titles_file_path, "r", encoding="utf-8") as csv_titles,
-        open(temp_output_file_path, "w", newline="", encoding="utf-8") as csv_output
+        open(temp_output_file_path, "w", newline="", encoding="utf-8") as csv_output,
     ):
         reader_video_urls = csv.reader(csv_video_urls)
         reader_titles = csv.reader(csv_titles)
@@ -55,7 +58,9 @@ def check_duration(video_urls_file_path: str, titles_file_path: str, output_file
                 }
 
                 if duration_check_result in duration_check_labels:
-                    row_titles[index + 3] += duration_check_labels[duration_check_result]
+                    row_titles[index + 3] += duration_check_labels[
+                        duration_check_result
+                    ]
 
             writer.writerow(row_titles)
 

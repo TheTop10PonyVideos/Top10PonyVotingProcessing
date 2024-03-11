@@ -4,7 +4,9 @@ import csv, os
 from modules import data_pulling
 
 
-def check_blacklist(video_urls_file_path: str, titles_file_path: str, output_file_path: str):
+def check_blacklist(
+    video_urls_file_path: str, titles_file_path: str, output_file_path: str
+):
     """Given an input file containing video URLs, check the uploader of each URL
     against a blacklist. For each URL found to be blacklisted, annotate the cell
     to its right with a note indicating its blacklisted status.
@@ -34,7 +36,7 @@ def check_blacklist(video_urls_file_path: str, titles_file_path: str, output_fil
                     continue
 
                 metadata = urls_to_metadata[cell]
-                
+
                 if data_pulling.check_blacklisted_channels(metadata.uploader):
                     row_titles[index + 1] += "[BLACKLISTED]"
 

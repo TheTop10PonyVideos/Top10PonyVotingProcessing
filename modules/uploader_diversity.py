@@ -8,6 +8,7 @@ with open("modules/csv/possible_notes.csv", "r") as csvfile:
         notes.extend(row)
     # Initialize list of notes for contains_note() check.
 
+
 def contains_note(cell):
     """Return True if cell contains at least one annotation, e.g. "[DUPLICATE
     CREATOR]"
@@ -15,7 +16,9 @@ def contains_note(cell):
     return any(domain in cell for domain in notes)
 
 
-def check_uploader_diversity(uploaders_file_path: str, titles_file_path: str, output_file_path: str):
+def check_uploader_diversity(
+    uploaders_file_path: str, titles_file_path: str, output_file_path: str
+):
     """Check the names of all uploaders within every submission. If a submission
     contains fewer than 5 unique uploaders, every cell of the submission in
     `processed.csv` is flagged with the "[DUPLICATE CREATOR]" tag to signify
@@ -26,7 +29,7 @@ def check_uploader_diversity(uploaders_file_path: str, titles_file_path: str, ou
 
     with (
         open(uploaders_file_path, "r", newline="", encoding="utf-8") as uploaders_file,
-        open(titles_file_path, "r+", newline="", encoding="utf-8") as titles_file
+        open(titles_file_path, "r+", newline="", encoding="utf-8") as titles_file,
     ):
 
         reader_uploaders = csv.reader(uploaders_file)
@@ -50,13 +53,10 @@ def check_uploader_diversity(uploaders_file_path: str, titles_file_path: str, ou
                     cell = processed_rows[line_number][cell_number]
                     if cell != "" and not contains_note(cell):
                         # If cell is a video title, append note to notes column
-                        processed_rows[line_number][cell_number + 1] += "[5 CHANNEL RULE]"
+                        processed_rows[line_number][
+                            cell_number + 1
+                        ] += "[5 CHANNEL RULE]"
 
-    with (
-        open(output_file_path, "r+", newline="", encoding="utf-8") as output_file
-    ):
+    with open(output_file_path, "r+", newline="", encoding="utf-8") as output_file:
         processed_writer = csv.writer(output_file)
         processed_writer.writerows(processed_rows)
-
-
-

@@ -18,7 +18,9 @@ def mark_duplicate_cells(row: list[str], additional_row: list[str]) -> list[str]
     return additional_row
 
 
-def check_duplicates(input_file_path: str, additional_file_path: str, output_file_path: str):
+def check_duplicates(
+    input_file_path: str, additional_file_path: str, output_file_path: str
+):
     """Check the given CSV file for duplicate entries."""
     with (
         open(input_file_path, "r", newline="", encoding="utf-8") as file,

@@ -301,7 +301,6 @@ def get_video_urls(values: list[str]) -> list[str]:
     return [value for value in values if is_video_link(value)]
 
 
-
 # why is this here :P hmmmmmmmmmmmmmmm anyways don't touch it :D
 checker_file = "modules/csv/blacklist.csv"
 

@@ -1,5 +1,6 @@
 import csv
 
+
 def count_occurrences(values: list) -> dict:
     """Given a list of values, return a dictionary containing a count of the
     occurrences of each value.
@@ -10,6 +11,7 @@ def count_occurrences(values: list) -> dict:
 
     return occurrences
 
+
 def get_uploaders_from_row(row: list[str]) -> list[str]:
     """Given a row of string values, return every nonempty row other than the
     first and last. For the uploaders CSV, this should provide a list of all
@@ -17,7 +19,10 @@ def get_uploaders_from_row(row: list[str]) -> list[str]:
     """
     return [uploader.strip() for uploader in row[1:-1] if uploader.strip()]
 
-def check_uploader_occurrence(uploaders_file_path: str, titles_file_path: str, output_file_path: str):
+
+def check_uploader_occurrence(
+    uploaders_file_path: str, titles_file_path: str, output_file_path: str
+):
     """Check the names of all uploaders for every submission. If a particular
     uploader shows up 3 times or more in a submission, the note "[DUPLICATE
     CREATOR]" is appended to the notes column of every video uploaded by the
@@ -53,6 +58,8 @@ def check_uploader_occurrence(uploaders_file_path: str, titles_file_path: str, o
                             # Append note to notes column for corresponding cell in processed.csv
 
     # Write to processed.csv
-    with open(titles_file_path, "w", newline="", encoding="utf-8") as processed_uploaders_csv:
+    with open(
+        titles_file_path, "w", newline="", encoding="utf-8"
+    ) as processed_uploaders_csv:
         writer = csv.writer(processed_uploaders_csv)
         writer.writerows(rows_titles)
