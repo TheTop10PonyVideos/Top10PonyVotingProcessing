@@ -1,7 +1,7 @@
 import csv
 
 
-def add_empty_cells(input_file, output_file="outputs/temp_outputs/shifted_cells.csv"):
+def add_empty_cells(input_file, output_file="outputs/shifted_cells.csv"):
     with open(input_file, "r") as file:
         with open(output_file, "w", newline="") as new_file:
             reader = csv.reader(file)

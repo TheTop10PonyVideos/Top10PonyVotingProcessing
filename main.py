@@ -35,7 +35,7 @@ def run_checks():
     """
 
     start_csv_file = entry_var.get()
-    csv_file = "outputs/temp_outputs/shifted_cells.csv"
+    csv_file = "outputs/shifted_cells.csv"
 
     # `init.add_empty_cells` writes the content of `start_csv_file` to
     # `outputs/temp_outputs/shifted_cells.csv`, with empty annotation columns
@@ -43,7 +43,7 @@ def run_checks():
     init.add_empty_cells(start_csv_file)
 
     # `fuzzy_check.links_to_titles(csv_file)` reads in
-    # `outputs/temp_outputs/shifted_cells.csv` (which contains URLs), and writes
+    # `outputs/shifted_cells.csv` (which contains URLs), and writes
     # 3 new CSVs, each containing a type of data pertaining to the URL:
     #
     # * `outputs/temp_outputs/titles_output.csv`
@@ -82,7 +82,7 @@ def run_checks():
         delete_if_present("outputs/temp_outputs/durations_output.csv")
         delete_if_present("outputs/temp_outputs/titles_output.csv")
         delete_if_present("outputs/temp_outputs/uploaders_output.csv")
-        delete_if_present("outputs/temp_outputs/shifted_cells.csv")
+        delete_if_present("outputs/shifted_cells.csv")
         delete_if_present("outputs/temp_outputs/processed.csv")
 
     tk.messagebox.showinfo("Processing Completed", "Processing Completed")
