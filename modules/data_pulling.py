@@ -5,6 +5,7 @@ from yt_dlp import YoutubeDL
 from dotenv import load_dotenv
 from classes.caching import FileCache
 from classes.video_metadata import VideoMetadata
+from classes.exceptions import GetVideoMetadataError, UnsupportedHostError
 
 # TODO: Use pathlib for path abstraction
 # TODO: Don't use global variables
@@ -256,7 +257,7 @@ def get_video_metadata(url: str) -> VideoMetadata:
 
             metadata = VideoMetadata(title, uploader, duration, upload_date, "youtube")
         else:
-            raise Exception(
+            raise GetVideoMetadataError(
                 f"Could not get video metadata for URL {url}; unable to extract video id"
             )
 
@@ -272,8 +273,8 @@ def get_video_metadata(url: str) -> VideoMetadata:
 
         metadata = VideoMetadata(title, uploader, duration, upload_date, "yt-dlp")
     else:
-        raise Exception(
-            f"Could not get video metadata for URL {url}; domain is not in list of accepted domains"
+        raise UnsupportedHostError(
+            f"Could not get video metadata for URL {url}; unsupported host"
         )
 
     return metadata
@@ -291,6 +292,7 @@ def get_urls_to_metadata(urls: list[str]) -> dict[str, VideoMetadata]:
     """Given a list of video URLs, return a dictionary mapping each URL to its
     metadata.
     """
+
     return {url: get_video_metadata(url) for url in urls}
 
 

@@ -46,21 +46,26 @@ def check_duration(
 
         for row_video_urls, row_titles in zip(rows_video_urls, reader_titles):
             for index, cell in enumerate(row_video_urls[2:]):
-                if cell not in urls_to_metadata:
+                if cell.strip() == "":
                     continue
 
-                seconds = urls_to_metadata[cell].duration
-                duration_check_result = evaluate_video_duration(seconds)
+                duration_check_label = "[UNSUPPORTED HOST]"
 
-                duration_check_labels = {
-                    1: "[VIDEO TOO SHORT]",
-                    2: "[VIDEO MAYBE TOO SHORT]",
-                }
+                if cell in urls_to_metadata:
+                    seconds = urls_to_metadata[cell].duration
+                    duration_check_result = evaluate_video_duration(seconds)
 
-                if duration_check_result in duration_check_labels:
-                    row_titles[index + 3] += duration_check_labels[
-                        duration_check_result
-                    ]
+                    if duration_check_result == 0:
+                        continue
+
+                    duration_check_labels = {
+                        1: "[VIDEO TOO SHORT]",
+                        2: "[VIDEO MAYBE TOO SHORT]",
+                    }
+
+                    duration_check_label = duration_check_labels[duration_check_result]
+
+                row_titles[index + 3] += duration_check_label
 
             writer.writerow(row_titles)
 
