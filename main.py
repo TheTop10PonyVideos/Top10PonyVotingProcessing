@@ -28,11 +28,7 @@ def browse_file_csv():
 
 
 def run_checks():
-    """Handler for the "Run Checks" button.
-
-    TODO: Handle the scenario where `entry_var` is empty (ie. no file was
-    selected), eg. by showing an error message in the UI.
-    """
+    """Handler for the "Run Checks" button."""
 
     selected_csv_file = entry_var.get()
     if selected_csv_file.strip() == "":
@@ -40,11 +36,11 @@ def run_checks():
         return
 
     init.add_empty_cells(
-        selected_csv_file, "outputs/temp_outputs/shifted_cells.csv"  # input  # output
+        selected_csv_file, "outputs/shifted_cells.csv"  # input  # output
     )
 
     fuzzy_check.links_to_titles(
-        "outputs/temp_outputs/shifted_cells.csv",  # input
+        "outputs/shifted_cells.csv",  # input
         "outputs/temp_outputs/titles_output.csv",  # output 1
         "outputs/temp_outputs/uploaders_output.csv",  # output 2
         "outputs/temp_outputs/durations_output.csv",  # output 3
@@ -57,28 +53,28 @@ def run_checks():
         )
     if duplicate_var.get():
         duplicate.check_duplicates(
-            "outputs/temp_outputs/shifted_cells.csv",  # input 1
+            "outputs/shifted_cells.csv",  # input 1
             "outputs/temp_outputs/titles_output.csv",  # input 2
             "outputs/temp_outputs/processed.csv",  # output
         )
 
     if blacklist_var.get():
         blacklist.check_blacklist(
-            "outputs/temp_outputs/shifted_cells.csv",  # input 1
+            "outputs/shifted_cells.csv",  # input 1
             "outputs/temp_outputs/processed.csv",  # input 2
             "outputs/temp_outputs/processed.csv",  # output
         )
 
     if upload_date_var.get():
         upload_date.check_dates(
-            "outputs/temp_outputs/shifted_cells.csv",  # input 1
+            "outputs/shifted_cells.csv",  # input 1
             "outputs/temp_outputs/processed.csv",  # input 2
             "outputs/temp_outputs/processed.csv",  # output
         )
 
     if duration_var.get():
         duration_check.check_duration(
-            "outputs/temp_outputs/shifted_cells.csv",  # input 1
+            "outputs/shifted_cells.csv",  # input 1
             "outputs/temp_outputs/processed.csv",  # input 2
             "outputs/temp_outputs/processed.csv",  # output
         )
@@ -105,7 +101,8 @@ def run_checks():
             "outputs/processed.csv",  # output
         )
 
-    if debug_var == False:  # Calls deleting outputs if present
+    # Delete output files if present
+    if debug_var == False:
         temp_output_file_paths = [
             "outputs/temp_outputs/processed_blacklist.csv",
             "outputs/temp_outputs/processed_duplicates.csv",
@@ -113,7 +110,7 @@ def run_checks():
             "outputs/temp_outputs/durations_output.csv",
             "outputs/temp_outputs/titles_output.csv",
             "outputs/temp_outputs/uploaders_output.csv",
-            "outputs/temp_outputs/shifted_cells.csv",
+            "outputs/shifted_cells.csv",
             "outputs/temp_outputs/processed.csv",
         ]
 
