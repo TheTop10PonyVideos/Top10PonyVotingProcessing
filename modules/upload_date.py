@@ -17,9 +17,6 @@ from datetime import datetime
 from pytz import timezone
 from modules import data_pulling
 
-input_file_blacklist = "outputs/temp_outputs/processed.csv"
-output_file = "outputs/temp_outputs/processed_dates.csv"
-
 # Use the earliest possible global timezone to determine the current month. Once
 # it is, say, January somewhere in the world, it is for everyone in respects to
 # this script.
@@ -66,46 +63,49 @@ def compare_date_to_bounds(
     return 0
 
 
-def check_dates(input_file: str):
+def check_dates(
+    video_urls_file_path: str, titles_file_path: str, output_file_path: str
+):
     """Given a CSV file containing video URLs, obtain the upload date for each
     URL, and annotate the column next to it if the upload date is too old or too
     new.
     """
+    temp_output_file_path = "outputs/temp_outputs/processed_dates.csv"
 
     voting_month = get_preceding_month(zone)
     lower_date_bound, upper_date_bound = get_month_bounds(voting_month, zone)
 
     with (
-        open(input_file, "r", encoding="utf-8") as csv_data_link,
-        open(input_file_blacklist, "r", encoding="utf-8") as csv_blacklist,
-        open(output_file, "w", newline="", encoding="utf-8") as csv_out,
+        open(video_urls_file_path, "r", encoding="utf-8") as csv_video_urls,
+        open(titles_file_path, "r", encoding="utf-8") as csv_titles,
+        open(temp_output_file_path, "w", newline="", encoding="utf-8") as csv_output,
     ):
-        reader_data_link = csv.reader(csv_data_link)
-        reader_blacklist = csv.reader(csv_blacklist)
-        writer = csv.writer(csv_out)
+        reader_video_urls = csv.reader(csv_video_urls)
+        reader_titles = csv.reader(csv_titles)
+        writer = csv.writer(csv_output)
 
-        for row_data_link, row_blacklist in zip(reader_data_link, reader_blacklist):
-            new_row = row_data_link
+        rows_video_urls = [row for row in reader_video_urls]
 
-            for index, cell in enumerate(row_data_link):
-                if not data_pulling.is_video_link(cell):
+        urls = []
+        for row in rows_video_urls:
+            urls.extend(data_pulling.get_video_urls(row))
+
+        urls_to_metadata = data_pulling.get_urls_to_metadata(urls)
+
+        for row_video_urls, row_titles in zip(rows_video_urls, reader_titles):
+            for index, cell in enumerate(row_video_urls):
+                if not cell in urls_to_metadata:
                     continue
 
-                try:
-                    video_metadata = data_pulling.get_video_metadata(cell)
-                except Exception as e:
+                metadata = urls_to_metadata[cell]
+
+                if metadata.upload_date is None:
                     print(
-                        f"[UPLOAD DATE] ERROR: Problem while fetching metadata for <{cell}>; {e}. Proceeding without it."
+                        f"[UPLOAD DATE] ERROR: Could not obtain an upload date for {cell}. Proceeding without it."
                     )
                     continue
 
-                if video_metadata.upload_date is None:
-                    print(
-                        f"[UPLOAD DATE] ERROR: Could not obtain an upload date for <{cell}>. Proceeding without it."
-                    )
-                    continue
-
-                upload_date = video_metadata.upload_date
+                upload_date = metadata.upload_date
                 # Both YouTube and yt-dlp return upload dates in UTC, which is
                 # considered a "naive" datetime as it lacks timezone
                 # information. In order to perform a date comparison with our
@@ -117,10 +117,11 @@ def check_dates(input_file: str):
                     upload_date, lower_date_bound, upper_date_bound
                 )
                 if upload_date_comparison == -1:
-                    row_blacklist[index + 1] += "[VIDEO TOO OLD]"
+                    row_titles[index + 1] += "[VIDEO TOO OLD]"
                 if upload_date_comparison == 1:
-                    row_blacklist[index + 1] += "[VIDEO TOO NEW]"
+                    row_titles[index + 1] += "[VIDEO TOO NEW]"
 
-            writer.writerow(row_blacklist)
-    os.remove("outputs/temp_outputs/processed.csv")
-    os.rename(output_file, "outputs/temp_outputs/processed.csv")
+            writer.writerow(row_titles)
+
+    os.remove(output_file_path)
+    os.rename(temp_output_file_path, output_file_path)

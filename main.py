@@ -28,62 +28,94 @@ def browse_file_csv():
 
 
 def run_checks():
-    """Handler for the "Run Checks" button.
+    """Handler for the "Run Checks" button."""
 
-    TODO: Handle the scenario where `entry_var` is empty (ie. no file was
-    selected), eg. by showing an error message in the UI.
-    """
+    selected_csv_file = entry_var.get()
+    if selected_csv_file.strip() == "":
+        tk.messagebox.showinfo("Error", "Please select a CSV file first.")
+        return
 
-    start_csv_file = entry_var.get()
-    csv_file = "outputs/shifted_cells.csv"
+    init.add_empty_cells(
+        selected_csv_file, "outputs/shifted_cells.csv"  # input  # output
+    )
 
-    # `init.add_empty_cells` writes the content of `start_csv_file` to
-    # `outputs/temp_outputs/shifted_cells.csv`, with empty annotation columns
-    # added after each URL column.
-    init.add_empty_cells(start_csv_file)
+    fuzzy_check.links_to_titles(
+        "outputs/shifted_cells.csv",  # input
+        "outputs/temp_outputs/titles_output.csv",  # output 1
+        "outputs/temp_outputs/uploaders_output.csv",  # output 2
+        "outputs/temp_outputs/durations_output.csv",  # output 3
+    )
 
-    # `fuzzy_check.links_to_titles(csv_file)` reads in
-    # `outputs/shifted_cells.csv` (which contains URLs), and writes
-    # 3 new CSVs, each containing a type of data pertaining to the URL:
-    #
-    # * `outputs/temp_outputs/titles_output.csv`
-    # * `outputs/temp_outputs/uploaders_output.csv`
-    # * `outputs/temp_outputs/durations_output.csv`
-    fuzzy_check.links_to_titles(csv_file)
-
-    # `duplicate_var.get()` reads in `outputs/temp_outputs/titles_output.csv`
-    # (which contains video titles), and outputs a new CSV
-    # `outputs/temp_outputs/processed.csv`, containing video titles annotated
-    # with duplicate warnings.
     if duplicate_var.get() == False:
         shutil.copyfile(
             "outputs/temp_outputs/titles_output.csv",
             "outputs/temp_outputs/processed.csv",
         )
     if duplicate_var.get():
-        duplicate.check_duplicates(csv_file)
+        duplicate.check_duplicates(
+            "outputs/shifted_cells.csv",  # input 1
+            "outputs/temp_outputs/titles_output.csv",  # input 2
+            "outputs/temp_outputs/processed.csv",  # output
+        )
 
     if blacklist_var.get():
-        blacklist.check_blacklist(csv_file)
+        blacklist.check_blacklist(
+            "outputs/shifted_cells.csv",  # input 1
+            "outputs/temp_outputs/processed.csv",  # input 2
+            "outputs/temp_outputs/processed.csv",  # output
+        )
+
     if upload_date_var.get():
-        upload_date.check_dates(csv_file)
+        upload_date.check_dates(
+            "outputs/shifted_cells.csv",  # input 1
+            "outputs/temp_outputs/processed.csv",  # input 2
+            "outputs/temp_outputs/processed.csv",  # output
+        )
+
     if duration_var.get():
-        duration_check.check_duration(csv_file)
+        duration_check.check_duration(
+            "outputs/shifted_cells.csv",  # input 1
+            "outputs/temp_outputs/processed.csv",  # input 2
+            "outputs/temp_outputs/processed.csv",  # output
+        )
+
     if fuzzy_var.get():
-        fuzzy_check.fuzzy_match()
+        fuzzy_check.fuzzy_match(
+            "outputs/temp_outputs/processed.csv",  # input
+            "outputs/temp_outputs/titles_output.csv",  # output 1
+            "outputs/temp_outputs/uploaders_output.csv",  # output 2
+            "outputs/temp_outputs/durations_output.csv",  # output 3
+        )
+
     if uploader_occurrence_var.get():
-        uploader_occurence.check_uploader_occurence()
+        uploader_occurence.check_uploader_occurrence(
+            "outputs/temp_outputs/uploaders_output.csv",  # input
+            "outputs/processed.csv",  # input 2
+            "outputs/processed.csv",  # output
+        )
+
     if uploader_diversity_var.get():
-        uploader_diversity.check_uploader_diversity()
-    if debug_var == False:  # Calls deleting outputs if present
-        delete_if_present("outputs/temp_outputs/processed_blacklist.csv")
-        delete_if_present("outputs/temp_outputs/processed_duplicates.csv")
-        delete_if_present("outputs/temp_outputs/processed_dates.csv")
-        delete_if_present("outputs/temp_outputs/durations_output.csv")
-        delete_if_present("outputs/temp_outputs/titles_output.csv")
-        delete_if_present("outputs/temp_outputs/uploaders_output.csv")
-        delete_if_present("outputs/shifted_cells.csv")
-        delete_if_present("outputs/temp_outputs/processed.csv")
+        uploader_diversity.check_uploader_diversity(
+            "outputs/temp_outputs/uploaders_output.csv",  # input
+            "outputs/processed.csv",  # input 2
+            "outputs/processed.csv",  # output
+        )
+
+    # Delete output files if present
+    if debug_var == False:
+        temp_output_file_paths = [
+            "outputs/temp_outputs/processed_blacklist.csv",
+            "outputs/temp_outputs/processed_duplicates.csv",
+            "outputs/temp_outputs/processed_dates.csv",
+            "outputs/temp_outputs/durations_output.csv",
+            "outputs/temp_outputs/titles_output.csv",
+            "outputs/temp_outputs/uploaders_output.csv",
+            "outputs/shifted_cells.csv",
+            "outputs/temp_outputs/processed.csv",
+        ]
+
+        for temp_output_file_path in temp_output_file_paths:
+            delete_if_present(temp_output_file_path)
 
     tk.messagebox.showinfo("Processing Completed", "Processing Completed")
 

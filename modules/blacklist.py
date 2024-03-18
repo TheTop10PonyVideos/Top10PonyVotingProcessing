@@ -3,60 +3,44 @@
 import csv, os
 from modules import data_pulling
 
-input_file_processed_duplicates = "outputs/temp_outputs/processed.csv"
-output_file = "outputs/temp_outputs/processed_blacklist.csv"
 
-
-def check_blacklist(input_file):  # Check for blacklisted channels
+def check_blacklist(
+    video_urls_file_path: str, titles_file_path: str, output_file_path: str
+):
     """Given an input file containing video URLs, check the uploader of each URL
     against a blacklist. For each URL found to be blacklisted, annotate the cell
     to its right with a note indicating its blacklisted status.
     """
+    temp_output_file_path = "outputs/temp_outputs/processed_blacklist.csv"
+
     with (
-        open(input_file, "r", encoding="utf-8") as csv_data_link,
-        open(input_file_processed_duplicates, "r", encoding="utf-8") as csv_duplicates,
-        open(output_file, "w", newline="", encoding="utf-8") as csv_out,
+        open(video_urls_file_path, "r", encoding="utf-8") as csv_video_urls,
+        open(titles_file_path, "r", encoding="utf-8") as csv_titles,
+        open(temp_output_file_path, "w", newline="", encoding="utf-8") as csv_output,
     ):
-        reader_data_link = csv.reader(csv_data_link)
-        reader_duplicates = csv.reader(csv_duplicates)
-        writer = csv.writer(csv_out)
+        reader_video_urls = csv.reader(csv_video_urls)
+        reader_titles = csv.reader(csv_titles)
+        writer = csv.writer(csv_output)
 
-        for row_data_link, row_duplicates in zip(reader_data_link, reader_duplicates):
-            new_row = row_data_link
+        rows_video_urls = [row for row in reader_video_urls]
 
-            for index, cell in enumerate(row_data_link):
-                if index % 2 == 0:  # Process every other cell
-                    if index // 2 < len(row_data_link):
-                        link = row_data_link[index // 2]
-                if (
-                    "youtube.com" in cell or "youtu.be" in cell
-                ):  # Checks youtube with the Google API
-                    video_id = data_pulling.extract_video_id(cell)
+        urls = []
+        for row in rows_video_urls:
+            urls.extend(data_pulling.get_video_urls(row))
 
-                    if video_id:
-                        title, uploader, seconds, upload_date_str = data_pulling.yt_api(
-                            video_id
-                        )
-                        if data_pulling.check_blacklisted_channels(uploader):
-                            row_duplicates[index + 1] += "[BLACKLISTED]"
+        urls_to_metadata = data_pulling.get_urls_to_metadata(urls)
 
-                # Checks for other links comparing to the accepted_domains.csv
-                # file
-                elif data_pulling.contains_accepted_domain(cell):
-                    video_link = cell
+        for row_video_urls, row_titles in zip(rows_video_urls, reader_titles):
+            for index, cell in enumerate(row_video_urls):
+                if cell not in urls_to_metadata:
+                    continue
 
-                    if video_link:
-                        print(video_link)
-                        (
-                            title,
-                            uploader,
-                            seconds,
-                            upload_date_str,
-                        ) = data_pulling.check_with_yt_dlp(video_link=video_link)
+                metadata = urls_to_metadata[cell]
 
-                        if data_pulling.check_blacklisted_channels(uploader):
-                            row_duplicates[index + 1] += "[BLACKLISTED]"
+                if data_pulling.check_blacklisted_channels(metadata.uploader):
+                    row_titles[index + 1] += "[BLACKLISTED]"
 
-            writer.writerow(row_duplicates)
-    os.remove("outputs/temp_outputs/processed.csv")
-    os.rename(output_file, "outputs/temp_outputs/processed.csv")
+            writer.writerow(row_titles)
+
+    os.remove(output_file_path)
+    os.rename(temp_output_file_path, output_file_path)
