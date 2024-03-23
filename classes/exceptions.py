@@ -1,4 +1,4 @@
-# TODO: Deprecate
+# TODO: Deprecate when modules are removed
 class GetVideoMetadataError(Exception):
     pass
 

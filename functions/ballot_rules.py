@@ -64,8 +64,8 @@ def check_fuzzy(
     annotate it with the properties in which it is similar.
     """
     for ballot in ballots:
-        # TODO: Why are we doing Levenshtein check on duration? Does it even
-        # work on numbers?
+        # TODO: Is Levenshtein check on duration needed? I'm not sure it works
+        # on numbers.
         similarity_sets = {
             "title": set(),
             "uploader": set(),
@@ -89,7 +89,7 @@ def check_fuzzy(
 
                 # TODO: This string conversion is here because for some reason
                 # we're comparing durations (integer values) with the fuzzy
-                # check, which I don't think is useful.
+                # check. Possibly we may want to use a different check for this.
                 prop_to_check = str(prop_to_check)
 
                 is_similar = lambda a, b: fuzz.ratio(a, b) >= similarity_threshold

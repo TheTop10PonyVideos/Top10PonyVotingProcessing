@@ -72,6 +72,16 @@ def run_checks():
         tk.messagebox.showinfo("Error", "Please select a CSV file first.")
         return
 
+    selected_checks = [
+        name
+        for name in check_vars
+        if check_vars[name].get() == True and name != "debug"
+    ]
+
+    if len(selected_checks) == 0:
+        tk.messagebox.showinfo("Error", "Please select at least one check type.")
+        return
+
     inf(f'Preparing to run checks on "{selected_csv_file}"...')
 
     inf("* Configuring video data fetcher...")
@@ -175,26 +185,35 @@ def run_checks():
     # Run checks on the ballots to annotate problematic votes.
     inf("Performing ballot checks...")
 
-    inf("* Checking for duplicate votes...")
-    check_duplicates(ballots)
+    do_check = lambda k: check_vars[k].get() == True
 
-    inf("* Checking for votes for blacklisted videos...")
-    check_blacklisted_ballots(ballots, videos)
+    if do_check("duplicate"):
+        inf("* Checking for duplicate votes...")
+        check_duplicates(ballots)
 
-    inf("* Checking for votes for videos with invalid upload dates...")
-    check_ballot_upload_dates(ballots, videos)
+    if do_check("blacklist"):
+        inf("* Checking for votes for blacklisted videos...")
+        check_blacklisted_ballots(ballots, videos)
 
-    inf("* Checking for votes for videos with invalid durations...")
-    check_ballot_video_durations(ballots, videos)
+    if do_check("upload_date"):
+        inf("* Checking for votes for videos with invalid upload dates...")
+        check_ballot_upload_dates(ballots, videos)
 
-    inf("* Performing fuzzy matching checks...")
-    check_fuzzy(ballots, videos, CONFIG["fuzzy_similarity_threshold"])
+    if do_check("duration"):
+        inf("* Checking for votes for videos with invalid durations...")
+        check_ballot_video_durations(ballots, videos)
 
-    inf("* Checking for ballot uploader occurrences...")
-    check_ballot_uploader_occurrences(ballots, videos)
+    if do_check("fuzzy"):
+        inf("* Performing fuzzy matching checks...")
+        check_fuzzy(ballots, videos, CONFIG["fuzzy_similarity_threshold"])
 
-    inf("* Checking for ballot uploader diversity...")
-    check_ballot_uploader_diversity(ballots, videos)
+    if do_check("uploader_occurrence"):
+        inf("* Checking for ballot uploader occurrences...")
+        check_ballot_uploader_occurrences(ballots, videos)
+
+    if do_check("uploader_diversity"):
+        inf("* Checking for ballot uploader diversity...")
+        check_ballot_uploader_diversity(ballots, videos)
 
     suc(f"Ballot checks complete.")
 
