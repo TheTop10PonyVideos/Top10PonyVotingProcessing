@@ -2,8 +2,10 @@ import csv
 import tkinter as tk
 from tkinter import ttk, filedialog
 
+
 class CSVEditor(tk.Frame):
     """CSV editor UI."""
+
     def __init__(self, master):
         super().__init__(master)
 
@@ -13,8 +15,7 @@ class CSVEditor(tk.Frame):
         self.create_widgets()
 
     def create_widgets(self):
-        """Create and lay out the various UI widgets required by the CSV editor.
-        """
+        """Create and lay out the various UI widgets required by the CSV editor."""
         # File select button and save button
         self.browse_button = ttk.Button(self, text="Browse", command=self.browse_file)
         self.browse_button.pack(pady=5, padx=5, side="top")
@@ -58,7 +59,7 @@ class CSVEditor(tk.Frame):
 
         self.inner_frame.bind(
             "<Configure>",
-            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")),
         )
 
     def browse_file(self):

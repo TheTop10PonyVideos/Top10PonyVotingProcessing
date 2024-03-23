@@ -4,6 +4,7 @@ from datetime import datetime
 class Annotations:
     """Class representing a collection of annotations, with methods to add,
     query, and render annotation labels."""
+
     def __init__(self):
         self.annotations: list[str] = []
 
@@ -23,7 +24,7 @@ class Annotations:
         """Return True if no annotations exist."""
         return self.count() == 0
 
-    def get_label(self, left_enclosure: str='[', right_enclosure: str=']') -> str:
+    def get_label(self, left_enclosure: str = "[", right_enclosure: str = "]") -> str:
         """Return a string consisting of all the annotations surrounded by
         enclosing characters and concatenated together, or None if no
         annotations exist. This allows for more convenient and readable output.
@@ -31,23 +32,27 @@ class Annotations:
         if len(self.annotations) == 0:
             return None
 
-        return ''.join(
-            [f'{left_enclosure}{annotation}{right_enclosure}' for annotation in self.annotations]
+        return "".join(
+            [
+                f"{left_enclosure}{annotation}{right_enclosure}"
+                for annotation in self.annotations
+            ]
         )
 
-class Vote():
+
+class Vote:
     """Class representing a vote, with optional annotations."""
+
     def __init__(self, url: str):
         super().__init__()
         self.url = url
         self.annotations = Annotations()
 
 
-class Video():
-    """Class representing a video and its metadata, with optional annotations.
-    """
+class Video:
+    """Class representing a video and its metadata, with optional annotations."""
 
-    def __init__(self, data: dict=None):
+    def __init__(self, data: dict = None):
         super().__init__()
         self.data = data
         self.annotations = Annotations()
@@ -67,10 +72,12 @@ class Video():
         """Delegate `in` operation to `data` dictionary."""
         return key in self.data
 
+
 class Ballot:
     """Class representing a set of votes from one person, along with the
     timestamp of their submission.
     """
+
     def __init__(self, timestamp: datetime, votes: list[Vote]):
         self.timestamp = timestamp
         self.votes = votes

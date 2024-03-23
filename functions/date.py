@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 from pytz import timezone
 
+
 def parse_votes_csv_timestamp(timestamp: str) -> datetime:
     """Parse the timestamp from the votes CSV file into a datetime object.
 
@@ -11,17 +12,21 @@ def parse_votes_csv_timestamp(timestamp: str) -> datetime:
     can have either 1 or 2 digits. Python's `strptime` parser isn't able to
     handle that, so we have to preprocess the date a little first.
     """
-    
+
     timestamp = timestamp.strip()
-    pattern = '^(\d+)/(\d+)/(\d+) (\d+):(\d+):(\d+)$'
+    pattern = "^(\d+)/(\d+)/(\d+) (\d+):(\d+):(\d+)$"
     match = re.match(pattern, timestamp)
     try:
         date_components = match.groups()
     except AttributeError:
-        raise ValueError(f'Cannot parse votes CSV timestamp "{timestamp}"; invalid format')
+        raise ValueError(
+            f'Cannot parse votes CSV timestamp "{timestamp}"; invalid format'
+        )
 
     if len(date_components) != 6:
-        raise ValueError(f'Cannot parse votes CSV timestamp "{timestamp}"; invalid format')
+        raise ValueError(
+            f'Cannot parse votes CSV timestamp "{timestamp}"; invalid format'
+        )
 
     month, day, year, hour, minute, second = date_components
     month = month.zfill(2)
@@ -31,12 +36,13 @@ def parse_votes_csv_timestamp(timestamp: str) -> datetime:
     minute = minute.zfill(2)
     second = second.zfill(2)
 
-    processed_timestamp = f'{month}/{day}/{year} {hour}:{minute}:{second}'
+    processed_timestamp = f"{month}/{day}/{year} {hour}:{minute}:{second}"
 
-    timestamp_format = '%m/%d/%Y %H:%M:%S'
+    timestamp_format = "%m/%d/%Y %H:%M:%S"
     dt = datetime.strptime(processed_timestamp, timestamp_format)
 
     return dt.replace(tzinfo=None)
+
 
 def format_votes_csv_timestamp(dt: datetime) -> str:
     """Format a datetime into the timestamp format used by the votes CSV
@@ -48,7 +54,8 @@ def format_votes_csv_timestamp(dt: datetime) -> str:
     hour = dt.hour
     minute = str(dt.minute).zfill(2)
     second = str(dt.second).zfill(2)
-    return f'{month}/{day}/{year} {hour}:{minute}:{second}'
+    return f"{month}/{day}/{year} {hour}:{minute}:{second}"
+
 
 def convert_iso8601_duration_to_seconds(iso8601_duration: str) -> int:
     """Given an ISO 8601 duration string, return the length of that duration in
@@ -76,6 +83,7 @@ def convert_iso8601_duration_to_seconds(iso8601_duration: str) -> int:
     total_seconds = hours * 3600 + minutes * 60 + seconds
 
     return total_seconds
+
 
 def get_preceding_month_date(date: datetime) -> datetime:
     """Given a date, return the date corresponding to the first day of the
@@ -106,5 +114,3 @@ def is_date_between(
 ) -> bool:
     """Return True if the given date is between the given bounds."""
     return date >= lower_bound and date < upper_bound
-
-

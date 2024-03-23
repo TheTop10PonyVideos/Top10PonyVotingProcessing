@@ -43,4 +43,3 @@ class FileCache:
 
     def __contains__(self, item):
         return self.has(item)
-

@@ -9,7 +9,7 @@ class TestFetcher(TestCase):
         fetcher = Fetcher()
 
         with self.assertRaises(UnsupportedHostError):
-            fetcher.fetch('https://example.com')
+            fetcher.fetch("https://example.com")
 
         # Test fetch with incorrectly-defined fetch services
         class InvalidMockFetchService:
@@ -19,7 +19,7 @@ class TestFetcher(TestCase):
         service = InvalidMockFetchService()
 
         with self.assertRaises(NotImplementedError):
-            fetcher.add_service('invalid_mock', service)
+            fetcher.add_service("invalid_mock", service)
 
         # Test fetch with no capable services
         class IncapableMockFetchService:
@@ -34,10 +34,10 @@ class TestFetcher(TestCase):
 
         fetcher = Fetcher()
         service = IncapableMockFetchService()
-        fetcher.add_service('incapable_mock', service)
+        fetcher.add_service("incapable_mock", service)
 
         with self.assertRaises(UnsupportedHostError):
-            fetcher.fetch('https://example.com')
+            fetcher.fetch("https://example.com")
 
         # Test fetch with service that returns an error
         class FailureMockFetchService:
@@ -45,17 +45,17 @@ class TestFetcher(TestCase):
                 return True
 
             def request(self, url):
-                raise FetchRequestError('Request failed')
+                raise FetchRequestError("Request failed")
 
             def parse(self, response):
                 pass
 
         fetcher = Fetcher()
         service = FailureMockFetchService()
-        fetcher.add_service('failure_mock', service)
+        fetcher.add_service("failure_mock", service)
 
         with self.assertRaises(FetchRequestError):
-            fetcher.fetch('https://example.com')
+            fetcher.fetch("https://example.com")
 
         # Test fetch with service that successfully returns data, but fails to
         # parse it
@@ -64,17 +64,17 @@ class TestFetcher(TestCase):
                 return True
 
             def request(self, url):
-                return {'title': 'Example video'}
+                return {"title": "Example video"}
 
             def parse(self, response):
-                raise FetchParseError('Parsing failed')
+                raise FetchParseError("Parsing failed")
 
         fetcher = Fetcher()
         service = ParseFailureMockFetchService()
-        fetcher.add_service('parse_failure_mock', service)
+        fetcher.add_service("parse_failure_mock", service)
 
         with self.assertRaises(FetchParseError):
-            fetcher.fetch('https://example.com')
+            fetcher.fetch("https://example.com")
 
         # Test fetch with service that successfully and parses data
         class SuccessMockFetchService:
@@ -82,13 +82,13 @@ class TestFetcher(TestCase):
                 return True
 
             def request(self, url):
-                return {'title': 'Example Video'}
+                return {"title": "Example Video"}
 
             def parse(self, response):
-                return {'title': response['title']}
+                return {"title": response["title"]}
 
         fetcher = Fetcher()
         service = SuccessMockFetchService()
-        fetcher.add_service('success_mock', service)
-        video_data = fetcher.fetch('https://example.com')
-        self.assertEqual('Example Video', video_data['title'])
+        fetcher.add_service("success_mock", service)
+        video_data = fetcher.fetch("https://example.com")
+        self.assertEqual("Example Video", video_data["title"])
