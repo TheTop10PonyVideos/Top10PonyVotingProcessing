@@ -221,7 +221,7 @@ def run_checks():
     inf(f"Writing annotated ballot data...")
     output_csv_data = generate_annotated_csv_data(ballots, videos)
     output_csv_path = Path(output_csv_path_str)
-    with output_csv_path.open("w") as output_csv_file:
+    with output_csv_path.open("w", encoding="utf-8") as output_csv_file:
         output_csv_writer = csv.writer(output_csv_file)
         output_csv_writer.writerows(output_csv_data)
 
