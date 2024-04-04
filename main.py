@@ -1,22 +1,56 @@
+"""Top 10 Pony Video Squeezer 3000 application."""
+
+import csv, os, shutil, sys
+from datetime import datetime
+from pathlib import Path
+from pytz import timezone
+from dotenv import load_dotenv
 import tkinter as tk
 from tkinter import ttk, filedialog
-from modules import (  # Import all the neccesary modules lol
-    duplicate,
-    duration_check,
-    fuzzy_check,
-    blacklist,
-    upload_date,
-    uploader_occurence,
-    data_pulling,
-    init,
-    uploader_diversity,
+from modules import init
+from functions.voting import (
+    load_votes_csv,
+    fetch_video_data_for_ballots,
+    generate_annotated_csv_data,
 )
-import os
-import shutil
-import csv
-import sys
+from functions.date import get_preceding_month_date, is_date_between, get_month_bounds
+from functions.video_rules import check_blacklist, check_upload_date, check_duration
+from functions.ballot_rules import (
+    check_duplicates,
+    check_blacklisted_ballots,
+    check_ballot_upload_dates,
+    check_ballot_video_durations,
+    check_fuzzy,
+    check_ballot_uploader_occurrences,
+    check_ballot_uploader_diversity,
+)
+from functions.messages import suc, inf, err
+from classes.ui import CSVEditor
+from classes.fetcher import Fetcher
+from classes.fetch_services import YouTubeFetchService, YtDlpFetchService
+from classes.caching import FileCache
+from classes.printers import ConsolePrinter
 
-# Main program to be run
+# Load environment configuration from a `.env` file if present.
+load_dotenv()
+
+API_KEY = os.getenv("apikey")  # may replace this
+
+# Application configuration
+CONFIG = {
+    "window": {
+        "title": "Top 10 Pony Video Squeezer 3000",
+        "width": 800,
+        "height": 600,
+    },
+    "paths": {
+        "icon": "images/icon.ico",
+        "blacklist": "data/blacklist.txt",
+        "output": "outputs/processed.csv",
+    },
+    "fuzzy_similarity_threshold": 80,
+    "timezone": timezone("Etc/GMT-14"),
+}
 
 
 def browse_file_csv():
@@ -28,178 +62,195 @@ def browse_file_csv():
 
 
 def run_checks():
-    """Handler for the "Run Checks" button.
-
-    TODO: Handle the scenario where `entry_var` is empty (ie. no file was
-    selected), eg. by showing an error message in the UI.
+    """Handler for the "Run Checks" button. Reads in the selected CSV file, runs
+    a battery of checks on the voting data, and outputs an annotated version of
+    the CSV with problematic votes labeled.
     """
 
-    start_csv_file = entry_var.get()
-    csv_file = "outputs/temp_outputs/shifted_cells.csv"
-    init.add_empty_cells(start_csv_file)  # Add the empty cells
-    fuzzy_check.links_to_titles(csv_file)
-    if duplicate_var.get() == False:
-        shutil.copyfile(
-            "outputs/temp_outputs/titles_output.csv",
-            "outputs/temp_outputs/processed.csv",
-        )
-    if duplicate_var.get():
-        duplicate.check_duplicates(csv_file)
-    if blacklist_var.get():
-        blacklist.check_blacklist(csv_file)
-    if upload_date_var.get():
-        upload_date.check_dates(csv_file)
-    if duration_var.get():
-        duration_check.check_duration(csv_file)
-    if fuzzy_var.get():
-        fuzzy_check.fuzzy_match()
-    if uploader_occurrence_var.get():
-        uploader_occurence.check_uploader_occurence()
-    if uploader_diversity_var.get():
-        uploader_diversity.check_uploader_diversity()
-    if debug_var == False:  # Calls deleting outputs if present
-        delete_if_present("outputs/temp_outputs/processed_blacklist.csv")
-        delete_if_present("outputs/temp_outputs/processed_duplicates.csv")
-        delete_if_present("outputs/temp_outputs/processed_fuzzlist.csv")
-        delete_if_present("outputs/temp_outputs/processed_dates.csv")
-        delete_if_present("outputs/temp_outputs/durations_output.csv")
-        delete_if_present("outputs/temp_outputs/titles_output.csv")
-        delete_if_present("outputs/temp_outputs/uploaders_output.csv")
-        delete_if_present("outputs/temp_outputs/shifted_cells.csv")
-        delete_if_present("outputs/temp_outputs/processed.csv")
+    selected_csv_file = entry_var.get()
+    if selected_csv_file.strip() == "":
+        tk.messagebox.showinfo("Error", "Please select a CSV file first.")
+        return
 
+    selected_checks = [
+        name
+        for name in check_vars
+        if check_vars[name].get() == True and name != "debug"
+    ]
+
+    if len(selected_checks) == 0:
+        tk.messagebox.showinfo("Error", "Please select at least one check type.")
+        return
+
+    inf(f'Preparing to run checks on "{selected_csv_file}"...')
+
+    inf("* Configuring video data fetcher...")
+    fetcher = Fetcher()
+    fetcher.set_printer(ConsolePrinter())
+
+    # Set up a cache file for video data.
+    response_cache_file = os.getenv("response_cache_file")
+
+    if response_cache_file is not None:
+        inf(f"  * Fetched video data will be cached in {response_cache_file}.")
+        fetcher.set_cache(FileCache(response_cache_file))
+
+    # Configure fetch services. Currently the YouTube Data API and yt-dlp are
+    # supported.
+    inf("  * Adding fetch services...")
+    accepted_domains = []
+    with open("modules/csv/accepted_domains.csv", "r") as csvfile:
+        reader = csv.reader(csvfile)
+        accepted_domains = [row[0] for row in reader]
+
+    fetch_services = {
+        "YouTube": YouTubeFetchService(API_KEY),
+        "yt-dlp": YtDlpFetchService(accepted_domains),
+    }
+
+    for name, service in fetch_services.items():
+        inf(f'    * Adding "{name}" fetch service.')
+        fetcher.add_service(name, service)
+
+    suc(f"  * {len(fetch_services)} fetch services added.")
+
+    # Load all ballots from the CSV file.
+    inf(f'Loading all votes from CSV file "{selected_csv_file}"...')
+    ballots = load_votes_csv(selected_csv_file)
+    total_votes = sum([len(ballot.votes) for ballot in ballots])
+
+    suc(f"Loaded {len(ballots)} ballots containing a total of {total_votes} votes.")
+
+    for ballot in ballots:
+        ballot.timestamp = ballot.timestamp.replace(tzinfo=CONFIG["timezone"])
+
+    inf(f'Converting all ballot timestamps to the {CONFIG["timezone"]} timezone.')
+    voting_month_date = datetime.now(tz=CONFIG["timezone"])
+    upload_month_date = get_preceding_month_date(voting_month_date)
+
+    # Give a warning in the console if the CSV is for a different month than the
+    # current one.
+    anachronistic_ballots = [
+        ballot
+        for ballot in ballots
+        if not is_date_between(ballot.timestamp, *get_month_bounds(voting_month_date))
+    ]
+    if len(anachronistic_ballots) > 0:
+        voting_month_year_str = voting_month_date.strftime("%B %Y")
+        err(
+            f"Warning: the input CSV contains votes that do not fall within the current month ({voting_month_year_str})."
+        )
+
+    # Fetch data for all video URLs that were voted on. The data is indexed by
+    # URL to allow lookups when checking the votes. Note that some videos may
+    # have no data if their fetch failed; however, they're still included in the
+    # results as the votes still reference them.
+    inf("Fetching data for all videos...")
+    videos = fetch_video_data_for_ballots(ballots, fetcher)
+
+    # Print out a summary of the fetch results (number of successes, failures,
+    # etc.)
+    suc("Data fetch complete. Result summary:")
+    videos_by_label = {}
+    for url, video in videos.items():
+        label = video.annotations.get_label()
+        if label is None:
+            label = "successful"
+        if label not in videos_by_label:
+            videos_by_label[label] = []
+        videos_by_label[label].append(video)
+
+    for label, labeled_videos in sorted(videos_by_label.items(), key=lambda i: i[0]):
+        suc(f"* {label}: {len(labeled_videos)}")
+
+    # Run some checks to annotate any issues with the videos themselves.
+    inf("Performing video checks...")
+    videos_with_data = {
+        url: video for url, video in videos.items() if video.data is not None
+    }
+
+    inf("* Checking for videos from blacklisted uploaders...")
+    blacklist_path = Path(CONFIG["paths"]["blacklist"])
+    blacklist = [line.strip() for line in blacklist_path.open()]
+    check_blacklist(videos_with_data.values(), blacklist)
+
+    inf(f"* Checking video upload dates...")
+    check_upload_date(videos_with_data.values(), upload_month_date)
+
+    inf(f"* Checking video durations...")
+    check_duration(videos_with_data.values())
+
+    suc(f"Video checks complete.")
+
+    # Run checks on the ballots to annotate problematic votes.
+    inf("Performing ballot checks...")
+
+    do_check = lambda k: check_vars[k].get() == True
+
+    if do_check("duplicate"):
+        inf("* Checking for duplicate votes...")
+        check_duplicates(ballots)
+
+    if do_check("blacklist"):
+        inf("* Checking for votes for blacklisted videos...")
+        check_blacklisted_ballots(ballots, videos)
+
+    if do_check("upload_date"):
+        inf("* Checking for votes for videos with invalid upload dates...")
+        check_ballot_upload_dates(ballots, videos)
+
+    if do_check("duration"):
+        inf("* Checking for votes for videos with invalid durations...")
+        check_ballot_video_durations(ballots, videos)
+
+    if do_check("fuzzy"):
+        inf("* Performing fuzzy matching checks...")
+        check_fuzzy(ballots, videos, CONFIG["fuzzy_similarity_threshold"])
+
+    if do_check("uploader_occurrence"):
+        inf("* Checking for ballot uploader occurrences...")
+        check_ballot_uploader_occurrences(ballots, videos)
+
+    if do_check("uploader_diversity"):
+        inf("* Checking for ballot uploader diversity...")
+        check_ballot_uploader_diversity(ballots, videos)
+
+    suc(f"Ballot checks complete.")
+
+    output_csv_path_str = CONFIG["paths"]["output"]
+    inf(f"Writing annotated ballot data...")
+    output_csv_data = generate_annotated_csv_data(ballots, videos)
+    output_csv_path = Path(output_csv_path_str)
+    with output_csv_path.open("w") as output_csv_file:
+        output_csv_writer = csv.writer(output_csv_file)
+        output_csv_writer.writerows(output_csv_data)
+
+    suc(f'Wrote annotated ballot data to "{output_csv_path_str}".')
+
+    # Write the old-style "shifted cells" CSV. Kept for historical reasons.
+    init.add_empty_cells(selected_csv_file, "outputs/shifted_cells.csv")
+
+    suc("Finished checks.")
     tk.messagebox.showinfo("Processing Completed", "Processing Completed")
 
 
+# TODO: Do we still need this?
 def delete_if_present(filepath):
-    """Delete the given file, if it exists on the filesystem."""
+    """Delete the given file if it exists on the filesystem."""
     if os.path.exists(filepath):
         os.remove(filepath)
 
 
-class CSVEditor(tk.Frame):
-    def __init__(self, master):
-        super().__init__(master)
-
-        self.file_path = tk.StringVar()
-        self.data = []
-
-        self.create_widgets()
-
-    def create_widgets(self):
-        # File select button and save button
-        self.browse_button = ttk.Button(self, text="Browse", command=self.browse_file)
-        self.browse_button.pack(pady=5, padx=5, side="top")
-        self.save_button = ttk.Button(
-            self, text="Save Changes", command=self.save_changes
-        )
-        self.save_button.pack(pady=5, padx=5, side="top")
-
-        self.load_button = ttk.Button(
-            self, text="Load processed CSV", command=self.load_processed_csv
-        )
-        self.load_button.pack(pady=5, padx=5, side="top")
-        # Frame to hold the CSV data grid
-        self.data_frame = tk.Frame(self)
-        self.data_frame.pack(expand=True, fill="both", padx=10, pady=10)
-
-        # V-Scrollbar
-        self.scrollbar_y = tk.Scrollbar(self.data_frame, orient="vertical")
-        self.scrollbar_y.pack(side="right", fill="y")
-
-        # H-Scrollbar
-        self.scrollbar_x = tk.Scrollbar(self.data_frame, orient="horizontal")
-        self.scrollbar_x.pack(side="bottom", fill="x")
-
-        # Canvas to hold the data
-        self.canvas = tk.Canvas(
-            self.data_frame,
-            bd=0,
-            xscrollcommand=self.scrollbar_x.set,
-            yscrollcommand=self.scrollbar_y.set,
-            width=1200,
-            height=700,
-        )
-        self.canvas.pack(side="left", fill="both", expand=True)
-        self.scrollbar_x.config(command=self.canvas.xview)
-        self.scrollbar_y.config(command=self.canvas.yview)
-
-        self.inner_frame = tk.Frame(self.canvas)
-        self.canvas.create_window((0, 0), window=self.inner_frame, anchor="nw")
-
-        self.inner_frame.bind("<Configure>", self.on_frame_configure)
-
-    def on_frame_configure(self, event):
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-
-    def browse_file(self):
-        file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
-        if file_path:
-            self.file_path.set(file_path)
-            self.load_csv(file_path)
-
-    def load_csv(self, file_path):
-        self.data = []
-        with open(file_path, newline="", encoding="utf-8") as csvfile:
-            reader = csv.reader(csvfile)
-            for row in reader:
-                self.data.append(row)
-
-        self.display_csv()
-
-    def load_processed_csv(self):
-        processed_csv_file = "outputs/processed.csv"
-        self.load_csv(processed_csv_file)
-
-    def display_csv(self):
-        # Clear existing widgets
-        for widget in self.inner_frame.winfo_children():
-            widget.destroy()
-
-        # Display CSV data
-        for row_idx, row in enumerate(self.data):
-            for col_idx, value in enumerate(row):
-                entry = tk.Entry(self.inner_frame, width=50)
-                entry.grid(row=row_idx, column=col_idx, padx=5, pady=5)
-                entry.insert(tk.END, value)
-                entry.config(fg="green")
-                if (
-                    "[SIMILARITY DETECTED" in value
-                    or "[DUPLICATE CREATOR]" in value
-                    or "[VIDEO TOO OLD]" in value
-                ):
-                    entry.config(fg="orange")
-                if (
-                    "[5 CHANNEL RULE]" in value
-                    or "[UNSUPPORTED HOST]" in value
-                    or "[VIDEO TOO SHORT]" in value
-                    or "[BLACKLISTED]" in value
-                ):
-                    entry.config(fg="red")
-
-    def save_changes(self):
-        for row_idx, row in enumerate(self.data):
-            for col_idx, _ in enumerate(row):
-                entry_widget = self.inner_frame.grid_slaves(
-                    row=row_idx, column=col_idx
-                )[0]
-                self.data[row_idx][col_idx] = entry_widget.get()
-
-        # Save the changes
-        with open(self.file_path.get(), "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerows(self.data)
-
-
-# Create GUI
+# Create application window and GUI.
 root = tk.Tk()
-root.title("Top 10 Pony Video Squeezer 3000")
-root.geometry("800x600")
+window_conf = CONFIG["window"]
+root.title(window_conf["title"])
+root.geometry(f'{window_conf["width"]}x{window_conf["height"]}')
 
 # .ico files unfortunately don't work on Linux due to a known Tkinter issue.
 # Current fix is simply to not use the icon on Linux.
 if not sys.platform.startswith("linux"):
-    root.iconbitmap("images/icon.ico")
+    root.iconbitmap(CONFIG["paths"]["icon"])
 
 # Create Main Object Frame
 main_frame = tk.Frame(root)
@@ -212,52 +263,33 @@ entry.pack(padx=10, pady=10)
 browse_button = ttk.Button(main_frame, text="Browse", command=browse_file_csv)
 browse_button.pack(pady=10)
 
-# Create checkboxes
-debug_var = tk.BooleanVar()
-debug_checkbox = ttk.Checkbutton(
-    main_frame, text="Enable Debug Files (Broken LOL)", variable=debug_var
-)
-debug_checkbox.pack(pady=40)
+# Create checkboxes and the variables bound to them.
+check_labels = {
+    "debug": "Enable Debug Files (Broken LOL)",
+    "duplicate": "Duplicate Check",
+    "blacklist": "Blacklist Check",
+    "upload_date": "Upload Date Check",
+    "duration": "Duration Check",
+    "fuzzy": "Fuzzy Check",
+    "uploader_occurrence": "Uploader Occurrence Check",
+    "uploader_diversity": "Uploader Diversity Check",
+}
 
-duplicate_var = tk.BooleanVar(value=True)
-duplicate_checkbox = ttk.Checkbutton(
-    main_frame, text="Duplicate Check", variable=duplicate_var
-)
-duplicate_checkbox.pack()
+check_vars = {key: tk.BooleanVar(value=True) for key in check_labels}
 
-blacklist_var = tk.BooleanVar(value=True)
-blacklist_checkbox = ttk.Checkbutton(
-    main_frame, text="Blacklist Check", variable=blacklist_var
-)
-blacklist_checkbox.pack()
+# Disable the debug checkbox by default.
+check_vars["debug"] = tk.BooleanVar()
 
-upload_date_var = tk.BooleanVar(value=True)
-upload_date_checkbox = ttk.Checkbutton(
-    main_frame, text="Upload Date Check", variable=upload_date_var
-)
-upload_date_checkbox.pack()
+checkboxes = {
+    key: ttk.Checkbutton(main_frame, text=check_labels[key], variable=check_vars[key])
+    for key in check_labels
+}
 
-duration_var = tk.BooleanVar(value=True)
-duration_checkbox = ttk.Checkbutton(
-    main_frame, text="Duration Check", variable=duration_var
-)
-duration_checkbox.pack()
-
-fuzzy_var = tk.BooleanVar(value=True)
-fuzzy_checkbox = ttk.Checkbutton(main_frame, text="Fuzzy Check", variable=fuzzy_var)
-fuzzy_checkbox.pack()
-
-uploader_occurrence_var = tk.BooleanVar(value=True)
-uploader_occurrence_checkbox = ttk.Checkbutton(
-    main_frame, text="Uploader Occurrence Check", variable=uploader_occurrence_var
-)
-uploader_occurrence_checkbox.pack()
-
-uploader_diversity_var = tk.BooleanVar(value=True)
-uploader_diversity_checkbox = ttk.Checkbutton(
-    main_frame, text="Uploader Diversity Check", variable=uploader_diversity_var
-)
-uploader_diversity_checkbox.pack()
+for key, checkbox in checkboxes.items():
+    if key == "debug":
+        checkbox.pack(pady=40)
+    else:
+        checkbox.pack()
 
 run_button = ttk.Button(main_frame, text="Run Checks", command=run_checks)
 run_button.pack()
