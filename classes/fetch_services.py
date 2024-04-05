@@ -14,14 +14,15 @@ from classes.exceptions import FetchRequestError, FetchParseError, VideoUnavaila
 class YouTubeFetchService:
     """Fetch service for YouTube video data. Requires a YouTube Data API key."""
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, do_build_service: bool=True):
         # Create the YouTube Data API service.
-        self.yt_service = build("youtube", "v3", developerKey=api_key)
+        if do_build_service:
+            self.yt_service = build("youtube", "v3", developerKey=api_key)
 
     def extract_video_id(self, url: str) -> str:
         """Given a YouTube video URL, extract the video id from it."""
 
-        video_id_regex = r"(?:\?v=|/embed/|/watch\?v=|/youtu.be/)([a-zA-Z0-9_-]+)"
+        video_id_regex = r"(?:\?v=|/embed/|/watch\?v=|/youtu.be/|live/)([a-zA-Z0-9_-]+)"
 
         video_id_match = re.search(video_id_regex, url)
 

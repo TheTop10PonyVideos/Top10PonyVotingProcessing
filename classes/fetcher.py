@@ -66,7 +66,7 @@ class Fetcher:
         cache_key = self.generate_cache_key(service_name, url)
         cached_response = None
         if self.cache is not None and self.cache.has(cache_key):
-            self.print(f"[cache]: Response for <{url}> loaded from cache.", "suc")
+            self.print(f"[cache]: Response for {url} loaded from cache.", "suc")
             cached_response = self.cache.get(cache_key)
 
         if cached_response is not None:
@@ -75,7 +75,7 @@ class Fetcher:
             # Request phase: Use a capable service to request video data
             # from the URL.
             try:
-                self.print(f"[{service_name}]: Requesting data from <{url}>...")
+                self.print(f"[{service_name}]: Requesting data from {url}...")
                 response = service.request(url)
             except Exception as e:
                 self.print(f"[{service_name}]: Request error: {e}]", "err")
@@ -95,9 +95,10 @@ class Fetcher:
             try:
                 self.cache.set(cache_key, response)
             except TypeError as e:
-                # If we can't cache the response, give a warning, but continue.
+                # If we can't cache the response (because the response isn't
+                # JSON-serializable), give a warning, but continue.
                 self.print(
-                    f'[cache]: Unable to cache response from URL "{url}"; {e}', "err"
+                    f'[cache]: Unable to cache response from URL {url}; {e}', "err"
                 )
 
         return parsed_data
