@@ -7,7 +7,11 @@ from pytz import timezone
 from functions.date import parse_votes_csv_timestamp, format_votes_csv_timestamp
 from classes.voting import Ballot, Vote, Video
 from classes.fetcher import Fetcher
-from classes.exceptions import VideoUnavailableError, UnsupportedHostError, SchemaValidationError
+from classes.exceptions import (
+    VideoUnavailableError,
+    UnsupportedHostError,
+    SchemaValidationError,
+)
 
 
 def load_votes_csv(csv_file_path_str: str) -> list[Ballot]:
@@ -96,7 +100,9 @@ def fetch_video_data_for_ballots(
             # service needs updating to provide all required fields.
             missing_fields = validate_video_data(data)
             if len(missing_fields) > 0:
-                raise SchemaValidationError(f'Error when validating video data for URL "{url}"; the following fields are missing: {", ".join(missing_fields)}')
+                raise SchemaValidationError(
+                    f'Error when validating video data for URL "{url}"; the following fields are missing: {", ".join(missing_fields)}'
+                )
 
             videos[vote.url] = video
 
@@ -107,10 +113,11 @@ def validate_video_data(data: dict) -> list[str]:
     """Check the given dictionary of video data and return a list of missing
     fields, if any. This helps ensure the fields we're interested in are always
     available."""
-    required_fields = ['title', 'uploader', 'upload_date', 'duration']
+    required_fields = ["title", "uploader", "upload_date", "duration"]
     missing_fields = [field for field in required_fields if field not in data]
 
     return missing_fields
+
 
 def generate_annotated_csv_data(
     ballots: list[Ballot], videos: dict[str, Video]

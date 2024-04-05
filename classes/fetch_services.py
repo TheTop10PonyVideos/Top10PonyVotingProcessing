@@ -14,7 +14,7 @@ from classes.exceptions import FetchRequestError, FetchParseError, VideoUnavaila
 class YouTubeFetchService:
     """Fetch service for YouTube video data. Requires a YouTube Data API key."""
 
-    def __init__(self, api_key: str, do_build_service: bool=True):
+    def __init__(self, api_key: str, do_build_service: bool = True):
         # Create the YouTube Data API service.
         if do_build_service:
             self.yt_service = build("youtube", "v3", developerKey=api_key)

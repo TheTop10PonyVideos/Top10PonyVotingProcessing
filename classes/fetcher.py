@@ -98,7 +98,7 @@ class Fetcher:
                 # If we can't cache the response (because the response isn't
                 # JSON-serializable), give a warning, but continue.
                 self.print(
-                    f'[cache]: Unable to cache response from URL {url}; {e}', "err"
+                    f"[cache]: Unable to cache response from URL {url}; {e}", "err"
                 )
 
         return parsed_data

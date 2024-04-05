@@ -107,34 +107,32 @@ class TestFunctionsVoting(TestCase):
         self.assertEqual("https://example.com/6", ballot.votes[5].url)
         self.assertEqual("https://example.com/7", ballot.votes[6].url)
 
-
     def test_validate_video_data(self):
         data = {
-            'title': 'Example Video 1',
-            'uploader': 'Example Uploader',
-            'upload_date': datetime(2024, 4, 1, 9, 0, 0),
-            'duration': 300
+            "title": "Example Video 1",
+            "uploader": "Example Uploader",
+            "upload_date": datetime(2024, 4, 1, 9, 0, 0),
+            "duration": 300,
         }
         missing_fields = validate_video_data(data)
         self.assertEqual(0, len(missing_fields))
 
         data = {
-            'uploader': 'Example Uploader',
-            'upload_date': datetime(2024, 4, 1, 9, 0, 0),
-            'duration': 300
+            "uploader": "Example Uploader",
+            "upload_date": datetime(2024, 4, 1, 9, 0, 0),
+            "duration": 300,
         }
         missing_fields = validate_video_data(data)
         self.assertEqual(1, len(missing_fields))
-        self.assertEqual('title', missing_fields[0])
+        self.assertEqual("title", missing_fields[0])
 
         data = {}
         missing_fields = validate_video_data(data)
         self.assertEqual(4, len(missing_fields))
-        self.assertEqual('title', missing_fields[0])
-        self.assertEqual('uploader', missing_fields[1])
-        self.assertEqual('upload_date', missing_fields[2])
-        self.assertEqual('duration', missing_fields[3])
-
+        self.assertEqual("title", missing_fields[0])
+        self.assertEqual("uploader", missing_fields[1])
+        self.assertEqual("upload_date", missing_fields[2])
+        self.assertEqual("duration", missing_fields[3])
 
     def test_generate_annotated_csv_data(self):
         ballots = [
