@@ -1,4 +1,4 @@
-# TODO: Deprecate when modules are removed
+# TODO: Deprecate `GetVideoMetadataError` class when modules are removed
 class GetVideoMetadataError(Exception):
     pass
 
@@ -22,6 +22,14 @@ class FetchRequestError(Exception):
 class FetchParseError(Exception):
     """Raised when an API request succeeds, but the resulting response can't be
     parsed into video data."""
+
+    pass
+
+
+class SchemaValidationError(Exception):
+    """Raised when data doesn't match the expected schema; eg. a video that has
+    no title attribute. This usually indicates that a fetch service needs to be
+    updated to provide the expected data."""
 
     pass
 

@@ -4,6 +4,7 @@ from pytz import timezone
 from functions.voting import (
     process_votes_csv,
     process_votes_csv_row,
+    validate_video_data,
     generate_annotated_csv_data,
 )
 from classes.voting import Ballot, Vote, Video
@@ -106,6 +107,33 @@ class TestFunctionsVoting(TestCase):
         self.assertEqual("https://example.com/6", ballot.votes[5].url)
         self.assertEqual("https://example.com/7", ballot.votes[6].url)
 
+    def test_validate_video_data(self):
+        data = {
+            "title": "Example Video 1",
+            "uploader": "Example Uploader",
+            "upload_date": datetime(2024, 4, 1, 9, 0, 0),
+            "duration": 300,
+        }
+        missing_fields = validate_video_data(data)
+        self.assertEqual(0, len(missing_fields))
+
+        data = {
+            "uploader": "Example Uploader",
+            "upload_date": datetime(2024, 4, 1, 9, 0, 0),
+            "duration": 300,
+        }
+        missing_fields = validate_video_data(data)
+        self.assertEqual(1, len(missing_fields))
+        self.assertEqual("title", missing_fields[0])
+
+        data = {}
+        missing_fields = validate_video_data(data)
+        self.assertEqual(4, len(missing_fields))
+        self.assertEqual("title", missing_fields[0])
+        self.assertEqual("uploader", missing_fields[1])
+        self.assertEqual("upload_date", missing_fields[2])
+        self.assertEqual("duration", missing_fields[3])
+
     def test_generate_annotated_csv_data(self):
         ballots = [
             # Ballot with 10 votes, some annotated
@@ -156,7 +184,8 @@ class TestFunctionsVoting(TestCase):
             "https://example.com/7": Video({"title": "Example Video 7"}),
             "https://example.com/8": Video({"title": "Example Video 8"}),
             "https://example.com/9": Video({"title": "Example Video 9"}),
-            "https://example.com/10": Video({"title": "Example Video 10"}),
+            # Video with no data
+            "https://example.com/10": Video(),
         }
         ballots[0].votes[0].annotations.add("VIDEO TOO OLD")
         ballots[0].votes[0].annotations.add("VIDEO TOO SHORT")
@@ -197,7 +226,9 @@ class TestFunctionsVoting(TestCase):
         self.assertEqual("", csv_rows[1][17])
         self.assertEqual("Example Video 9", csv_rows[1][18])
         self.assertEqual("", csv_rows[1][19])
-        self.assertEqual("Example Video 10", csv_rows[1][20])
+        # For the last row, since the video has no data, by convention the vote
+        # URL should be included instead.
+        self.assertEqual("https://example.com/10", csv_rows[1][20])
         self.assertEqual("", csv_rows[1][21])
 
         # Row 2
