@@ -9,7 +9,7 @@ class CSVEditor(tk.Frame):
     """CSV editor UI."""
 
     def __init__(self, master):
-        super().__init__(master, borderwidth=1, relief='sunken')
+        super().__init__(master, borderwidth=1, relief="sunken")
 
         self.file_path = tk.StringVar()
         self.data = []
@@ -20,12 +20,16 @@ class CSVEditor(tk.Frame):
         """Create and lay out the various UI widgets required by the CSV editor."""
         # File select button and save button
         self.buttons_frame = tk.Frame(self)
-        self.load_csv_button = ttk.Button(self.buttons_frame, text="📁 Load CSV...", command=self.browse_file)
+        self.load_csv_button = ttk.Button(
+            self.buttons_frame, text="📁 Load CSV...", command=self.browse_file
+        )
         self.save_button = ttk.Button(
             self.buttons_frame, text="💾 Save Changes", command=self.save_changes
         )
         self.load_processed_csv_button = ttk.Button(
-            self.buttons_frame, text="📄 Load Processed CSV", command=self.load_processed_csv
+            self.buttons_frame,
+            text="📄 Load Processed CSV",
+            command=self.load_processed_csv,
         )
 
         self.load_csv_button.grid(row=0, column=0)
@@ -96,7 +100,7 @@ class CSVEditor(tk.Frame):
             widget.destroy()
 
         label_colors = {
-            'orange': [
+            "orange": [
                 "[SIMILARITY DETECTED",
                 "[DUPLICATE CREATOR]",
                 "[VIDEO TOO OLD]",
@@ -104,12 +108,12 @@ class CSVEditor(tk.Frame):
                 "[VIDEO MAYBE TOO SHORT]",
                 "[NOT WHITELISTED]",
             ],
-            'red': [
+            "red": [
                 "[5 CHANNEL RULE]",
                 "[UNSUPPORTED HOST]",
                 "[VIDEO TOO SHORT]",
                 "[BLACKLISTED]",
-            ]
+            ],
         }
 
         # Display CSV data
@@ -120,7 +124,7 @@ class CSVEditor(tk.Frame):
                 entry.insert(tk.END, value)
                 # Cell color defaults to green.
                 entry_fg_color = "green"
-                
+
                 # Set the cell color depending on whether the cell value
                 # contains (or partially contains) any of a given set of labels.
                 # If a cell contains orange and red labels, red is given
@@ -133,7 +137,6 @@ class CSVEditor(tk.Frame):
 
                 entry.config(fg=entry_fg_color)
 
-
     def save_changes(self):
         """Save any text changes made via the UI to the CSV file (that was
         selected by pressing the "Load CSV..." button)."""
@@ -144,9 +147,10 @@ class CSVEditor(tk.Frame):
                 )[0]
                 self.data[row_idx][col_idx] = entry_widget.get()
 
-
-        if self.file_path.get() == '':
-            tk.messagebox.showinfo("Error", "No CSV file loaded. Please load a CSV file first.")
+        if self.file_path.get() == "":
+            tk.messagebox.showinfo(
+                "Error", "No CSV file loaded. Please load a CSV file first."
+            )
             return
 
         # Save the changes

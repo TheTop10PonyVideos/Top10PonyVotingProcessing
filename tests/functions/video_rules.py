@@ -1,7 +1,12 @@
 from unittest import TestCase
 from datetime import datetime
 from classes.voting import Video
-from functions.video_rules import check_uploader_blacklist, check_uploader_whitelist, check_upload_date, check_duration
+from functions.video_rules import (
+    check_uploader_blacklist,
+    check_uploader_whitelist,
+    check_upload_date,
+    check_duration,
+)
 
 
 class TestFunctionsVideoRules(TestCase):

@@ -14,7 +14,12 @@ from functions.voting import (
     generate_annotated_csv_data,
 )
 from functions.date import get_preceding_month_date, is_date_between, get_month_bounds
-from functions.video_rules import check_uploader_blacklist, check_uploader_whitelist, check_upload_date, check_duration
+from functions.video_rules import (
+    check_uploader_blacklist,
+    check_uploader_whitelist,
+    check_upload_date,
+    check_duration,
+)
 from functions.ballot_rules import (
     check_duplicates,
     check_blacklisted_ballots,
@@ -271,10 +276,12 @@ entry_var = tk.StringVar()
 entry = ttk.Entry(main_frame, textvariable=entry_var)
 entry.pack(padx=10, pady=10)
 
-browse_button = ttk.Button(main_frame, text="📁 Load Votes CSV...", command=browse_file_csv)
+browse_button = ttk.Button(
+    main_frame, text="📁 Load Votes CSV...", command=browse_file_csv
+)
 browse_button.pack(pady=10)
 
-checks_frame = tk.LabelFrame(main_frame, text='Checks')
+checks_frame = tk.LabelFrame(main_frame, text="Checks")
 # Create checkboxes and the variables bound to them.
 check_labels = {
     "duplicate": "Duplicate Check",
@@ -295,12 +302,14 @@ check_checkboxes = {
 
 for row, key in enumerate(check_checkboxes):
     checkbox = check_checkboxes[key]
-    checkbox.grid(row=row, sticky='W', padx=10)
+    checkbox.grid(row=row, sticky="W", padx=10)
 
 checks_frame.pack(pady=20)
 
 debug_var = tk.BooleanVar()
-debug_checkbox = ttk.Checkbutton(main_frame, text="Enable Debug Files (Broken LOL)", variable=debug_var)
+debug_checkbox = ttk.Checkbutton(
+    main_frame, text="Enable Debug Files (Broken LOL)", variable=debug_var
+)
 debug_checkbox.pack()
 
 run_button = ttk.Button(main_frame, text="📜 Run Checks", command=run_checks)
