@@ -28,6 +28,18 @@ def check_blacklisted_ballots(ballots: list[Ballot], videos: dict[str, Video]):
             if video.annotations.has("BLACKLISTED"):
                 vote.annotations.add("BLACKLISTED")
 
+def check_non_whitelisted_ballots(ballots: list[Ballot], videos: dict[str, Video]):
+    """Given a list of ballots and a dictionary of annotated videos indexed by
+    URL, annotate any votes for videos which were not found on the whitelist.
+    (This makes it easier to spot new or unknown creators during a manual
+    review).
+    """
+    for ballot in ballots:
+        for vote in ballot.votes:
+            video = videos[vote.url]
+            if video.annotations.has("NOT WHITELISTED"):
+                vote.annotations.add("NOT WHITELISTED")
+
 
 def check_ballot_upload_dates(ballots: list[Ballot], videos: dict[str, Video]):
     """Given a list of ballots and a dictionary of annotated videos indexed by

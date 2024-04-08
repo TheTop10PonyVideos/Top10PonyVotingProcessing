@@ -1,16 +1,29 @@
-"""Rule checks for videos."""
+"""Rule checks for videos. These functions check videos for validity and
+annotate any that fail the tests. Note that this is different from annotating a
+_vote_ for a video, which happens in `functions/ballot_rules.py`. Some of the
+vote checks rely on videos having been checked and annotated first."""
 
 from datetime import datetime
 from classes.voting import Video
 
 
-def check_blacklist(videos: list[Video], blacklisted_uploaders: list[str]):
+def check_uploader_blacklist(videos: list[Video], blacklisted_uploaders: list[str]):
     """Check the given list of videos against a list of blacklisted uploaders.
     Annotate any videos with a blacklisted uploader.
     """
     for video in videos:
         if video.data["uploader"] in blacklisted_uploaders:
             video.annotations.add("BLACKLISTED")
+
+
+def check_uploader_whitelist(videos: list[Video], whitelisted_uploaders: list[str]):
+    """Check the given list of videos against a list of whitelisted uploaders.
+    Annotate any videos whose uploader is NOT on the whitelist. (This makes it
+    easier to spot new or unknown creators during a manual review).
+    """
+    for video in videos:
+        if video.data["uploader"] not in whitelisted_uploaders:
+            video.annotations.add("NOT WHITELISTED")
 
 
 def check_upload_date(videos: list[Video], month_date: datetime):

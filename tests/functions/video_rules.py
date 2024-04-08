@@ -1,11 +1,11 @@
 from unittest import TestCase
 from datetime import datetime
 from classes.voting import Video
-from functions.video_rules import check_blacklist, check_upload_date, check_duration
+from functions.video_rules import check_uploader_blacklist, check_uploader_whitelist, check_upload_date, check_duration
 
 
 class TestFunctionsVideoRules(TestCase):
-    def test_check_blacklist(self):
+    def test_check_uploader_blacklist(self):
         videos = [
             Video({"title": "Example Video 1", "uploader": "Sunny Starscout"}),
             Video({"title": "Example Video 2", "uploader": "LittleshyFiM"}),
@@ -17,7 +17,7 @@ class TestFunctionsVideoRules(TestCase):
 
         blacklisted_uploaders = ["LittleshyFiM", "Pipp Petals", "hawthornbunny"]
 
-        check_blacklist(videos, blacklisted_uploaders)
+        check_uploader_blacklist(videos, blacklisted_uploaders)
 
         self.assertFalse(videos[0].annotations.has("BLACKLISTED"))
         self.assertTrue(videos[1].annotations.has("BLACKLISTED"))
@@ -25,6 +25,27 @@ class TestFunctionsVideoRules(TestCase):
         self.assertTrue(videos[3].annotations.has("BLACKLISTED"))
         self.assertTrue(videos[4].annotations.has("BLACKLISTED"))
         self.assertFalse(videos[5].annotations.has("BLACKLISTED"))
+
+    def test_check_uploader_whitelist(self):
+        videos = [
+            Video({"title": "Example Video 1", "uploader": "Sunny Starscout"}),
+            Video({"title": "Example Video 2", "uploader": "Hitch Trailblazer"}),
+            Video({"title": "Example Video 3", "uploader": "Izzy Moonbow"}),
+            Video({"title": "Example Video 4", "uploader": "Zipp Storm"}),
+            Video({"title": "Example Video 5", "uploader": "Pipp Petals"}),
+            Video({"title": "Example Video 6", "uploader": "Misty Brightdawn"}),
+        ]
+
+        whitelisted_uploaders = ["Sunny Starscout", "Pipp Petals", "Misty Brightdawn"]
+
+        check_uploader_whitelist(videos, whitelisted_uploaders)
+
+        self.assertFalse(videos[0].annotations.has("NOT WHITELISTED"))
+        self.assertTrue(videos[1].annotations.has("NOT WHITELISTED"))
+        self.assertTrue(videos[2].annotations.has("NOT WHITELISTED"))
+        self.assertTrue(videos[3].annotations.has("NOT WHITELISTED"))
+        self.assertFalse(videos[4].annotations.has("NOT WHITELISTED"))
+        self.assertFalse(videos[5].annotations.has("NOT WHITELISTED"))
 
     def test_check_upload_date(self):
         videos = [

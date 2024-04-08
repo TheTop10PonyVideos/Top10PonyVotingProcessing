@@ -2,6 +2,7 @@ from unittest import TestCase
 from functions.ballot_rules import (
     check_duplicates,
     check_blacklisted_ballots,
+    check_non_whitelisted_ballots,
     check_ballot_upload_dates,
     check_ballot_video_durations,
     check_fuzzy,
@@ -432,8 +433,10 @@ class TestFunctionsBallotRules(TestCase):
         videos["https://example.com/2"].annotations.add("BLACKLISTED")
         videos["https://example.com/2"].annotations.add("VIDEO MAYBE TOO SHORT")
         videos["https://example.com/3"].annotations.add("VIDEO TOO NEW")
+        videos["https://example.com/3"].annotations.add("NOT WHITELISTED")
 
         check_blacklisted_ballots(ballots, videos)
+        check_non_whitelisted_ballots(ballots, videos)
         check_ballot_upload_dates(ballots, videos)
         check_ballot_video_durations(ballots, videos)
 
@@ -443,4 +446,5 @@ class TestFunctionsBallotRules(TestCase):
         self.assertTrue(ballots[0].votes[1].annotations.has("BLACKLISTED"))
         self.assertTrue(ballots[0].votes[1].annotations.has("VIDEO MAYBE TOO SHORT"))
         self.assertTrue(ballots[1].votes[0].annotations.has("VIDEO TOO NEW"))
+        self.assertTrue(ballots[1].votes[0].annotations.has("NOT WHITELISTED"))
         self.assertTrue(ballots[1].votes[1].annotations.has_none())
