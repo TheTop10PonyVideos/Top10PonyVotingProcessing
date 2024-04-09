@@ -14,10 +14,16 @@ from functions.voting import (
     generate_annotated_csv_data,
 )
 from functions.date import get_preceding_month_date, is_date_between, get_month_bounds
-from functions.video_rules import check_blacklist, check_upload_date, check_duration
+from functions.video_rules import (
+    check_uploader_blacklist,
+    check_uploader_whitelist,
+    check_upload_date,
+    check_duration,
+)
 from functions.ballot_rules import (
     check_duplicates,
     check_blacklisted_ballots,
+    check_non_whitelisted_ballots,
     check_ballot_upload_dates,
     check_ballot_video_durations,
     check_fuzzy,
@@ -46,6 +52,7 @@ CONFIG = {
     "paths": {
         "icon": "images/icon.ico",
         "blacklist": "data/blacklist.txt",
+        "whitelist": "data/uploader_whitelist.txt",
         "output": "outputs/processed.csv",
     },
     "fuzzy_similarity_threshold": 80,
@@ -172,7 +179,12 @@ def run_checks():
     inf("* Checking for videos from blacklisted uploaders...")
     blacklist_path = Path(CONFIG["paths"]["blacklist"])
     blacklist = [line.strip() for line in blacklist_path.open()]
-    check_blacklist(videos_with_data.values(), blacklist)
+    check_uploader_blacklist(videos_with_data.values(), blacklist)
+
+    inf("* Checking for videos from whitelisted uploaders...")
+    whitelist_path = Path(CONFIG["paths"]["whitelist"])
+    whitelist = [line.strip() for line in whitelist_path.open()]
+    check_uploader_whitelist(videos_with_data.values(), whitelist)
 
     inf(f"* Checking video upload dates...")
     check_upload_date(videos_with_data.values(), upload_month_date)
@@ -194,6 +206,10 @@ def run_checks():
     if do_check("blacklist"):
         inf("* Checking for votes for blacklisted videos...")
         check_blacklisted_ballots(ballots, videos)
+
+    if do_check("whitelist"):
+        inf("* Checking for votes for non-whitelisted videos...")
+        check_non_whitelisted_ballots(ballots, videos)
 
     if do_check("upload_date"):
         inf("* Checking for votes for videos with invalid upload dates...")
@@ -260,14 +276,17 @@ entry_var = tk.StringVar()
 entry = ttk.Entry(main_frame, textvariable=entry_var)
 entry.pack(padx=10, pady=10)
 
-browse_button = ttk.Button(main_frame, text="Browse", command=browse_file_csv)
+browse_button = ttk.Button(
+    main_frame, text="📁 Load Votes CSV...", command=browse_file_csv
+)
 browse_button.pack(pady=10)
 
+checks_frame = tk.LabelFrame(main_frame, text="Checks")
 # Create checkboxes and the variables bound to them.
 check_labels = {
-    "debug": "Enable Debug Files (Broken LOL)",
     "duplicate": "Duplicate Check",
     "blacklist": "Blacklist Check",
+    "whitelist": "Whitelist Check",
     "upload_date": "Upload Date Check",
     "duration": "Duration Check",
     "fuzzy": "Fuzzy Check",
@@ -276,23 +295,25 @@ check_labels = {
 }
 
 check_vars = {key: tk.BooleanVar(value=True) for key in check_labels}
-
-# Disable the debug checkbox by default.
-check_vars["debug"] = tk.BooleanVar()
-
-checkboxes = {
-    key: ttk.Checkbutton(main_frame, text=check_labels[key], variable=check_vars[key])
+check_checkboxes = {
+    key: ttk.Checkbutton(checks_frame, text=check_labels[key], variable=check_vars[key])
     for key in check_labels
 }
 
-for key, checkbox in checkboxes.items():
-    if key == "debug":
-        checkbox.pack(pady=40)
-    else:
-        checkbox.pack()
+for row, key in enumerate(check_checkboxes):
+    checkbox = check_checkboxes[key]
+    checkbox.grid(row=row, sticky="W", padx=10)
 
-run_button = ttk.Button(main_frame, text="Run Checks", command=run_checks)
-run_button.pack()
+checks_frame.pack(pady=20)
+
+debug_var = tk.BooleanVar()
+debug_checkbox = ttk.Checkbutton(
+    main_frame, text="Enable Debug Files (Broken LOL)", variable=debug_var
+)
+debug_checkbox.pack()
+
+run_button = ttk.Button(main_frame, text="📜 Run Checks", command=run_checks)
+run_button.pack(pady=20)
 
 csv_editor = CSVEditor(main_frame)  # Editor main frame
 csv_editor.pack()

@@ -126,7 +126,7 @@ class YtDlpFetchService:
 
         video_data = {
             "title": response.get("title"),
-            "uploader": response.get("uploader"),
+            "uploader": response.get("channel"),
             "upload_date": upload_date,
             "duration": response.get("duration"),
         }
