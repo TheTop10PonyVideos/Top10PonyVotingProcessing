@@ -95,11 +95,13 @@ def get_preceding_month_date(date: datetime) -> datetime:
     return datetime(preceding_year, preceding_month, 1, tzinfo=date.tzinfo)
 
 
-def get_month_year_bounds(month: int, year: int, lenient=False) -> tuple[datetime, datetime]:
+def get_month_year_bounds(
+    month: int, year: int, lenient=False
+) -> tuple[datetime, datetime]:
     """Given a month and year, return the two dates that bound that month (ie.
     the first day of the month, and the first day of the next month). If lenient
     is true, then the lower and upper date bounds will use the most lenient
-    timezones possible. """
+    timezones possible."""
 
     lower_timezone = None
     upper_timezone = None
@@ -115,10 +117,14 @@ def get_month_year_bounds(month: int, year: int, lenient=False) -> tuple[datetim
     lower_bound = datetime(year, month, 1, tzinfo=lower_timezone)
     upper_bound = None
     if month < 12:
-        upper_bound = lower_bound.replace(month=lower_bound.month + 1, tzinfo=upper_timezone)
+        upper_bound = lower_bound.replace(
+            month=lower_bound.month + 1, tzinfo=upper_timezone
+        )
     else:
-        upper_bound = lower_bound.replace(year=lower_bound.year + 1, month=1, tzinfo=upper_timezone)
-    
+        upper_bound = lower_bound.replace(
+            year=lower_bound.year + 1, month=1, tzinfo=upper_timezone
+        )
+
     return lower_bound, upper_bound
 
 
@@ -144,7 +150,11 @@ def guess_voting_month_year(ballots: list[Ballot]) -> tuple[int, int, bool]:
             voting_month_year_counts[month_year] = 0
         voting_month_year_counts[month_year] += 1
 
-    sorted_voting_month_years = sorted(voting_month_year_counts, key=lambda my: voting_month_year_counts[my], reverse=True)
+    sorted_voting_month_years = sorted(
+        voting_month_year_counts,
+        key=lambda my: voting_month_year_counts[my],
+        reverse=True,
+    )
 
     most_popular_month_year = sorted_voting_month_years[0]
     is_unanimous = len(sorted_voting_month_years) == 1

@@ -154,7 +154,6 @@ class TestFunctionsDate(TestCase):
 
         date = datetime(2025, 2, 1)
         self.assertFalse(is_date_between(date, lower_bound, upper_bound))
-        
 
     def test_guess_voting_month_year(self):
         ballots = [

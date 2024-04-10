@@ -54,35 +54,155 @@ class TestFunctionsVideoRules(TestCase):
         self.assertFalse(videos[5].annotations.has("NOT WHITELISTED"))
 
     def test_check_upload_date(self):
-        utc = timezone('Etc/UTC')
+        utc = timezone("Etc/UTC")
         videos = [
             # Too old
-            Video({"title": "Example Video 1", "upload_date": datetime(1912, 4, 15, tzinfo=utc)}),
-            Video({"title": "Example Video 2", "upload_date": datetime(2000, 1, 1, tzinfo=utc)}),
-            Video({"title": "Example Video 3", "upload_date": datetime(2000, 1, 1, tzinfo=utc)}),
-            Video({"title": "Example Video 4", "upload_date": datetime(2023, 2, 14, tzinfo=utc)}),
-            Video({"title": "Example Video 5", "upload_date": datetime(2023, 12, 31, tzinfo=utc)}),
-            Video({"title": "Example Video 6", "upload_date": datetime(2024, 1, 1, tzinfo=utc)}),
-            Video({"title": "Example Video 7", "upload_date": datetime(2024, 1, 31, tzinfo=utc)}),
+            Video(
+                {
+                    "title": "Example Video 1",
+                    "upload_date": datetime(1912, 4, 15, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 2",
+                    "upload_date": datetime(2000, 1, 1, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 3",
+                    "upload_date": datetime(2000, 1, 1, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 4",
+                    "upload_date": datetime(2023, 2, 14, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 5",
+                    "upload_date": datetime(2023, 12, 31, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 6",
+                    "upload_date": datetime(2024, 1, 1, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 7",
+                    "upload_date": datetime(2024, 1, 31, tzinfo=utc),
+                }
+            ),
             # Within date
-            Video({"title": "Example Video 8", "upload_date": datetime(2024, 1, 31, 13, 0, 0, tzinfo=utc)}),
-            Video({"title": "Example Video 9", "upload_date": datetime(2024, 2, 1, tzinfo=utc)}),
-            Video({"title": "Example Video 10", "upload_date": datetime(2024, 2, 1, tzinfo=utc)}),
-            Video({"title": "Example Video 11", "upload_date": datetime(2024, 2, 14, tzinfo=utc)}),
-            Video({"title": "Example Video 12", "upload_date": datetime(2024, 2, 28, tzinfo=utc)}),
-            Video({"title": "Example Video 13", "upload_date": datetime(2024, 2, 29, tzinfo=utc)}),
-            Video({"title": "Example Video 14", "upload_date": datetime(2024, 3, 1, tzinfo=utc)}),
-            Video({"title": "Example Video 15", "upload_date": datetime(2024, 3, 1, 10, 0, 0, tzinfo=utc)}),
+            Video(
+                {
+                    "title": "Example Video 8",
+                    "upload_date": datetime(2024, 1, 31, 13, 0, 0, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 9",
+                    "upload_date": datetime(2024, 2, 1, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 10",
+                    "upload_date": datetime(2024, 2, 1, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 11",
+                    "upload_date": datetime(2024, 2, 14, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 12",
+                    "upload_date": datetime(2024, 2, 28, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 13",
+                    "upload_date": datetime(2024, 2, 29, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 14",
+                    "upload_date": datetime(2024, 3, 1, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 15",
+                    "upload_date": datetime(2024, 3, 1, 10, 0, 0, tzinfo=utc),
+                }
+            ),
             # Too new
-            Video({"title": "Example Video 16", "upload_date": datetime(2024, 3, 2, tzinfo=utc)}),
-            Video({"title": "Example Video 17", "upload_date": datetime(2024, 4, 1, tzinfo=utc)}),
-            Video({"title": "Example Video 18", "upload_date": datetime(2024, 12, 31, tzinfo=utc)}),
-            Video({"title": "Example Video 19", "upload_date": datetime(2025, 2, 1, tzinfo=utc)}),
-            Video({"title": "Example Video 20", "upload_date": datetime(2025, 2, 14, tzinfo=utc)}),
-            Video({"title": "Example Video 21", "upload_date": datetime(2025, 2, 28, tzinfo=utc)}),
-            Video({"title": "Example Video 22", "upload_date": datetime(2025, 3, 1, tzinfo=utc)}),
-            Video({"title": "Example Video 23", "upload_date": datetime(3025, 1, 1, tzinfo=utc)}),
-            Video({"title": "Example Video 24", "upload_date": datetime(9999, 12, 31, tzinfo=utc)}),
+            Video(
+                {
+                    "title": "Example Video 16",
+                    "upload_date": datetime(2024, 3, 2, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 17",
+                    "upload_date": datetime(2024, 4, 1, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 18",
+                    "upload_date": datetime(2024, 12, 31, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 19",
+                    "upload_date": datetime(2025, 2, 1, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 20",
+                    "upload_date": datetime(2025, 2, 14, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 21",
+                    "upload_date": datetime(2025, 2, 28, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 22",
+                    "upload_date": datetime(2025, 3, 1, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 23",
+                    "upload_date": datetime(3025, 1, 1, tzinfo=utc),
+                }
+            ),
+            Video(
+                {
+                    "title": "Example Video 24",
+                    "upload_date": datetime(9999, 12, 31, tzinfo=utc),
+                }
+            ),
         ]
 
         # Check videos to make sure they were uploaded in February 2024

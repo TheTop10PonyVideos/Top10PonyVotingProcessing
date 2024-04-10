@@ -13,7 +13,12 @@ from functions.voting import (
     fetch_video_data_for_ballots,
     generate_annotated_csv_data,
 )
-from functions.date import get_preceding_month_date, is_date_between, get_month_year_bounds, guess_voting_month_year
+from functions.date import (
+    get_preceding_month_date,
+    is_date_between,
+    get_month_year_bounds,
+    guess_voting_month_year,
+)
 from functions.video_rules import (
     check_uploader_blacklist,
     check_uploader_whitelist,
@@ -139,12 +144,14 @@ def run_checks():
     #               to use old data for testing. The user will be warned if they
     #               are using old data.
 
-    voting_month, voting_year, is_voting_date_unanimous = guess_voting_month_year(ballots)
+    voting_month, voting_year, is_voting_date_unanimous = guess_voting_month_year(
+        ballots
+    )
     voting_month_date = datetime(voting_year, voting_month, 1)
     voting_month_year_str = voting_month_date.strftime("%B %Y")
 
     if not is_voting_date_unanimous:
-        voting_date_discrepancy_warning = f'Warning: the majority of the ballot timestamps are for {voting_month_year_str}; however, some are for a different month and date. Assuming a voting month of {voting_month_year_str}.'
+        voting_date_discrepancy_warning = f"Warning: the majority of the ballot timestamps are for {voting_month_year_str}; however, some are for a different month and date. Assuming a voting month of {voting_month_year_str}."
         err(voting_date_discrepancy_warning)
         tk.messagebox.showinfo("Warning", voting_date_discrepancy_warning)
 
@@ -159,7 +166,10 @@ def run_checks():
     anachronistic_ballots = [
         ballot
         for ballot in ballots
-        if not is_date_between(ballot.timestamp, *get_month_year_bounds(current_month_date.month, current_month_date.year))
+        if not is_date_between(
+            ballot.timestamp,
+            *get_month_year_bounds(current_month_date.month, current_month_date.year),
+        )
     ]
 
     if len(anachronistic_ballots) > 0:
@@ -167,10 +177,10 @@ def run_checks():
             f"Warning: the input CSV contains votes that do not fall within the current month ({current_month_year_str})."
         )
 
-    inf(f'Date information:')
-    inf(f'* Upload month:  {upload_month_year_str}')
-    inf(f'* Voting month:  {voting_month_year_str}')
-    inf(f'* Current month: {current_month_year_str}')
+    inf(f"Date information:")
+    inf(f"* Upload month:  {upload_month_year_str}")
+    inf(f"* Voting month:  {voting_month_year_str}")
+    inf(f"* Current month: {current_month_year_str}")
 
     # Fetch data for all video URLs that were voted on. The data is indexed by
     # URL to allow lookups when checking the votes. Note that some videos may
@@ -211,7 +221,9 @@ def run_checks():
     check_uploader_whitelist(videos_with_data.values(), whitelist)
 
     inf(f"* Checking video upload dates...")
-    check_upload_date(videos_with_data.values(), upload_month_date.month, upload_month_date.year)
+    check_upload_date(
+        videos_with_data.values(), upload_month_date.month, upload_month_date.year
+    )
 
     inf(f"* Checking video durations...")
     check_duration(videos_with_data.values())
