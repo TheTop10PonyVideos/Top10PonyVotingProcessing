@@ -4,6 +4,8 @@ _vote_ for a video, which happens in `functions/ballot_rules.py`. Some of the
 vote checks rely on videos having been checked and annotated first."""
 
 from datetime import datetime
+from pytz import timezone
+from functions.date import get_month_year_bounds
 from classes.voting import Video
 
 
@@ -26,18 +28,17 @@ def check_uploader_whitelist(videos: list[Video], whitelisted_uploaders: list[st
             video.annotations.add("NOT WHITELISTED")
 
 
-def check_upload_date(videos: list[Video], month_date: datetime):
+def check_upload_date(videos: list[Video], month: int, year: int):
     """Check the given list of videos to make sure they were released in the
     given month. Annotate any videos that were released too early or too late.
+
+    For maximum leniency, the lower and upper date bounds are in the earliest
+    and latest timezones respectively; this means, for example, that a video
+    uploaded on 1st April could still be eligible for the March voting as long
+    as it was still March _somewhere_ in the world when it was uploaded.
     """
 
-    lower_bound = month_date.replace(day=1)
-
-    upper_bound = None
-    if month_date.month < 12:
-        upper_bound = lower_bound.replace(month=lower_bound.month + 1, day=1)
-    else:
-        upper_bound = lower_bound.replace(year=lower_bound.year + 1, month=1, day=1)
+    lower_bound, upper_bound = get_month_year_bounds(month, year, True)
 
     for video in videos:
         upload_date = video.data["upload_date"]
