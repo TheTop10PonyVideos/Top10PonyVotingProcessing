@@ -3,6 +3,7 @@
 import re
 from datetime import datetime
 from pytz import timezone
+from classes.voting import Ballot
 
 
 def parse_votes_csv_timestamp(timestamp: str) -> datetime:
@@ -94,17 +95,35 @@ def get_preceding_month_date(date: datetime) -> datetime:
     return datetime(preceding_year, preceding_month, 1, tzinfo=date.tzinfo)
 
 
-def get_month_bounds(date: datetime) -> tuple[datetime, datetime]:
-    """Given a date, return the two dates that bound that date's month (ie. the
-    first day of the month, and the first day of the next month).
-    """
-    lower_bound = date.replace(day=1)
-    upper_bound = None
+def get_month_year_bounds(
+    month: int, year: int, lenient=False
+) -> tuple[datetime, datetime]:
+    """Given a month and year, return the two dates that bound that month (ie.
+    the first day of the month, and the first day of the next month). If lenient
+    is true, then the lower and upper date bounds will use the most lenient
+    timezones possible."""
 
-    if lower_bound.month < 12:
-        upper_bound = lower_bound.replace(month=lower_bound.month + 1, day=1)
+    lower_timezone = None
+    upper_timezone = None
+
+    # If leniency is requested, use the following timezones for the lower and
+    # upper date bounds:
+    # * Lower: Kiribati, UTC+14:00
+    # * Upper: International Date Line West (IDLW), UTC:-12:00
+    if lenient:
+        lower_timezone = timezone("Etc/GMT-14")
+        upper_timezone = timezone("Etc/GMT+12")
+
+    lower_bound = datetime(year, month, 1, tzinfo=lower_timezone)
+    upper_bound = None
+    if month < 12:
+        upper_bound = lower_bound.replace(
+            month=lower_bound.month + 1, tzinfo=upper_timezone
+        )
     else:
-        upper_bound = lower_bound.replace(year=lower_bound.year + 1, month=1, day=1)
+        upper_bound = lower_bound.replace(
+            year=lower_bound.year + 1, month=1, tzinfo=upper_timezone
+        )
 
     return lower_bound, upper_bound
 
@@ -114,3 +133,30 @@ def is_date_between(
 ) -> bool:
     """Return True if the given date is between the given bounds."""
     return date >= lower_bound and date < upper_bound
+
+
+def guess_voting_month_year(ballots: list[Ballot]) -> tuple[int, int, bool]:
+    """Given a list of ballots, attempt to determine what month and year is
+    being voted on. This uses a simple heuristic of counting the most popular
+    month-year in the ballot timestamps.
+
+    Returns a tuple of 3 values: month, year, and is_unanimous, which is set to
+    True if all ballots agreed on the same month and year."""
+    voting_month_year_counts = {}
+
+    for ballot in ballots:
+        month_year = (ballot.timestamp.month, ballot.timestamp.year)
+        if month_year not in voting_month_year_counts:
+            voting_month_year_counts[month_year] = 0
+        voting_month_year_counts[month_year] += 1
+
+    sorted_voting_month_years = sorted(
+        voting_month_year_counts,
+        key=lambda my: voting_month_year_counts[my],
+        reverse=True,
+    )
+
+    most_popular_month_year = sorted_voting_month_years[0]
+    is_unanimous = len(sorted_voting_month_years) == 1
+
+    return (*most_popular_month_year, is_unanimous)

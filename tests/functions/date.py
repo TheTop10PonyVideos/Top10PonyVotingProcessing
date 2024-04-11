@@ -5,9 +5,11 @@ from functions.date import (
     parse_votes_csv_timestamp,
     format_votes_csv_timestamp,
     get_preceding_month_date,
-    get_month_bounds,
+    get_month_year_bounds,
     is_date_between,
+    guess_voting_month_year,
 )
+from classes.voting import Ballot
 
 
 class TestFunctionsDate(TestCase):
@@ -45,11 +47,10 @@ class TestFunctionsDate(TestCase):
         date = datetime(2024, 2, 14)
         self.assertEqual(datetime(2024, 1, 1), get_preceding_month_date(date))
 
-    def test_get_month_bounds(self):
+    def test_get_month_year_bounds(self):
         # Test January to November
         for month in range(1, 12):
-            date = datetime(2024, month, 14)
-            lower_bound, upper_bound = get_month_bounds(date)
+            lower_bound, upper_bound = get_month_year_bounds(month, 2024)
             self.assertEqual(lower_bound.year, upper_bound.year)
             self.assertEqual(1, upper_bound.day)
             self.assertEqual(month, lower_bound.month)
@@ -58,8 +59,7 @@ class TestFunctionsDate(TestCase):
             self.assertEqual(1, upper_bound.day)
 
         # Test that December's upper bound is the start of next year
-        date = datetime(2024, 12, 25)
-        lower_bound, upper_bound = get_month_bounds(date)
+        lower_bound, upper_bound = get_month_year_bounds(12, 2024)
         self.assertEqual(12, lower_bound.month)
         self.assertEqual(1, upper_bound.month)
         self.assertEqual(lower_bound.year + 1, upper_bound.year)
@@ -154,3 +154,61 @@ class TestFunctionsDate(TestCase):
 
         date = datetime(2025, 2, 1)
         self.assertFalse(is_date_between(date, lower_bound, upper_bound))
+
+    def test_guess_voting_month_year(self):
+        ballots = [
+            Ballot(datetime(2024, 4, 1), []),
+            Ballot(datetime(2024, 4, 2), []),
+            Ballot(datetime(2024, 4, 10), []),
+            Ballot(datetime(2024, 4, 20), []),
+            Ballot(datetime(2024, 4, 29), []),
+            Ballot(datetime(2024, 4, 30), []),
+        ]
+
+        month, year, is_unanimous = guess_voting_month_year(ballots)
+
+        self.assertEqual(4, month)
+        self.assertEqual(2024, year)
+        self.assertTrue(is_unanimous)
+
+        ballots = [
+            Ballot(datetime(2024, 3, 31), []),
+            Ballot(datetime(2024, 4, 1), []),
+            Ballot(datetime(2024, 4, 2), []),
+        ]
+
+        month, year, is_unanimous = guess_voting_month_year(ballots)
+
+        self.assertEqual(4, month)
+        self.assertEqual(2024, year)
+        self.assertFalse(is_unanimous)
+
+        ballots = [
+            Ballot(datetime(2012, 4, 1), []),
+            Ballot(datetime(2024, 4, 1), []),
+            Ballot(datetime(2024, 4, 1), []),
+        ]
+
+        month, year, is_unanimous = guess_voting_month_year(ballots)
+
+        self.assertEqual(4, month)
+        self.assertEqual(2024, year)
+        self.assertFalse(is_unanimous)
+
+        ballots = [
+            Ballot(datetime(2020, 4, 1), []),
+            Ballot(datetime(2021, 4, 1), []),
+            Ballot(datetime(2022, 4, 1), []),
+            Ballot(datetime(2023, 4, 1), []),
+            Ballot(datetime(2024, 4, 1), []),
+            Ballot(datetime(2024, 4, 2), []),
+            Ballot(datetime(2025, 4, 3), []),
+            Ballot(datetime(2026, 4, 3), []),
+            Ballot(datetime(2027, 4, 3), []),
+        ]
+
+        month, year, is_unanimous = guess_voting_month_year(ballots)
+
+        self.assertEqual(4, month)
+        self.assertEqual(2024, year)
+        self.assertFalse(is_unanimous)
