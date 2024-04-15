@@ -78,7 +78,7 @@ class Fetcher:
                 self.print(f"[{service_name}]: Requesting data from {url}...")
                 response = service.request(url)
             except Exception as e:
-                self.print(f"[{service_name}]: Request error: {e}]", "err")
+                self.print(f"[{service_name}]: Request error: {e}", "err")
                 raise e
 
         # Parse phase: If the service managed to retrieve a response, use it
@@ -86,7 +86,7 @@ class Fetcher:
         try:
             parsed_data = service.parse(response)
         except Exception as e:
-            self.print(f"[{service_name}]: Parse error: {e}]", "err")
+            self.print(f"[{service_name}]: Parse error: {e}", "err")
             raise e
 
         # If using a cache, and if the response object is JSON-serializable,
