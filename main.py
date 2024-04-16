@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import tkinter as tk
 from tkinter import ttk, filedialog
 from modules import init
+from functions.general import load_text_data
 from functions.voting import (
     load_votes_csv,
     fetch_video_data_for_ballots,
@@ -56,8 +57,9 @@ CONFIG = {
     },
     "paths": {
         "icon": "images/icon.ico",
-        "blacklist": "data/blacklist.txt",
-        "whitelist": "data/uploader_whitelist.txt",
+        "uploader_blacklist": "data/uploader_blacklist.txt",
+        "uploader_whitelist": "data/uploader_whitelist.txt",
+        "accepted_domains": "data/accepted_domains.txt",
         "output": "outputs/processed.csv",
     },
     "fuzzy_similarity_threshold": 80,
@@ -106,10 +108,7 @@ def run_checks():
     # Configure fetch services. Currently the YouTube Data API and yt-dlp are
     # supported.
     inf("  * Adding fetch services...")
-    accepted_domains = []
-    with open("modules/csv/accepted_domains.csv", "r") as csvfile:
-        reader = csv.reader(csvfile)
-        accepted_domains = [row[0] for row in reader]
+    accepted_domains = load_text_data(CONFIG["paths"]["accepted_domains"])
 
     fetch_services = {
         "YouTube": YouTubeFetchService(API_KEY),
@@ -211,14 +210,12 @@ def run_checks():
     }
 
     inf("* Checking for videos from blacklisted uploaders...")
-    blacklist_path = Path(CONFIG["paths"]["blacklist"])
-    blacklist = [line.strip() for line in blacklist_path.open()]
-    check_uploader_blacklist(videos_with_data.values(), blacklist)
+    uploader_blacklist = load_text_data(CONFIG["paths"]["uploader_blacklist"])
+    check_uploader_blacklist(videos_with_data.values(), uploader_blacklist)
 
     inf("* Checking for videos from whitelisted uploaders...")
-    whitelist_path = Path(CONFIG["paths"]["whitelist"])
-    whitelist = [line.strip() for line in whitelist_path.open()]
-    check_uploader_whitelist(videos_with_data.values(), whitelist)
+    uploader_whitelist = load_text_data(CONFIG["paths"]["uploader_whitelist"])
+    check_uploader_whitelist(videos_with_data.values(), uploader_whitelist)
 
     inf(f"* Checking video upload dates...")
     check_upload_date(

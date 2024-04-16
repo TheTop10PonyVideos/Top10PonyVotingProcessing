@@ -1,0 +1,17 @@
+{
+    "warning": [
+        "[SIMILARITY DETECTED",
+        "[DUPLICATE CREATOR]",
+        "[DUPLICATE VIDEO]",
+        "[VIDEO TOO OLD]",
+        "[VIDEO TOO NEW]",
+        "[VIDEO MAYBE TOO SHORT]",
+        "[NOT WHITELISTED]"
+    ],
+    "serious": [
+        "[5 CHANNEL RULE]",
+        "[UNSUPPORTED HOST]",
+        "[VIDEO TOO SHORT]",
+        "[BLACKLISTED]"
+    ]
+}
