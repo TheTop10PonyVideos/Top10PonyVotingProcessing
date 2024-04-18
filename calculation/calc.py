@@ -12,11 +12,13 @@ def analyze_and_write_titles_to_csv(input_file, output_file=output_titles_path):
 
     with open(input_file, "r", encoding="utf-8") as csvfile:
         csvreader = csv.reader(csvfile)
+        next(csvreader)
         for row in csvreader:
-            total_rows += 1
-            for index, title_value in enumerate(row[2:], start=1):
-                if index % 2 != 0 and title_value.strip():
-                    title_counts[title_value] = title_counts.get(title_value, 0) + 1
+            if any(field.strip() for field in row):
+                total_rows += 1
+                for index, title_value in enumerate(row[2:], start=1):
+                    if index % 2 != 0 and title_value.strip():
+                        title_counts[title_value] = title_counts.get(title_value, 0) + 1
 
     title_percentage = {  # calculates percentage
         title: (count / total_rows) * 100 for title, count in title_counts.items()

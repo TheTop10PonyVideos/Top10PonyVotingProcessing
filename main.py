@@ -181,7 +181,7 @@ def run_checks():
 
     inf("* Checking for videos from whitelisted uploaders...")
     whitelist_path = Path(CONFIG["paths"]["whitelist"])
-    whitelist = [line.strip() for line in whitelist_path.open()]
+    whitelist = [line.strip() for line in whitelist_path.open(encoding="utf8")]
     check_uploader_whitelist(videos_with_data.values(), whitelist)
 
     inf(f"* Checking video upload dates...")
