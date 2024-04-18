@@ -20,7 +20,7 @@ Given a text file containing a list of video URLs, output 3 files:
 video_urls_list_path_str = sys.argv[1]
 output_file_name = sys.argv[2]
 video_urls_list_path = Path(video_urls_list_path_str)
-video_urls_list_str = video_urls_list_path.read_text()
+video_urls_list_str = video_urls_list_path.read_text(encoding="utf8")
 video_urls = [line.strip() for line in video_urls_list_str.split('\n')]
 video_urls = [url for url in video_urls if url != '']
 videos_data = fetch_videos_data(video_urls)
@@ -38,7 +38,7 @@ generate_sharable_csv(sharable_records, sharable_file_name)
 suc(f'Wrote sharable spreadsheet data to {sharable_file_name}.')
 
 showcase_desc = generate_showcase_description(video_urls, videos_data, silent=False)
-with open(f'{output_file_name}-description.txt', 'w') as file:
+with open(f'{output_file_name}-description.txt', 'w', encoding="utf8") as file:
     file.write(showcase_desc)
 suc(f'Wrote showcase description to {desc_file_name}.')
 suc('Finished.')
