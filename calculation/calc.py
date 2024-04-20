@@ -17,15 +17,19 @@ def analyze_and_write_titles_to_csv(input_file, output_file=output_titles_path):
             titles_reader = csv.reader(titles_csv)
             urls_reader = csv.reader(urls_csv)
 
-            next(titles_reader)
-            next(urls_reader)
+            next(titles_reader)  # Skip the header row
+            next(urls_reader)  # Skip the header row
 
             for titles_row, urls_row in zip(titles_reader, urls_reader):
-                for title, url in zip(titles_row[1:], urls_row[1:]):
+                titles_row = titles_row[::2]  # Skip all odd-indexed columns
+                urls_row = urls_row[::2]  # Skip all odd-indexed columns
+
+                if titles_row:
+                    total_rows += 1
+                for title, url in zip(titles_row, urls_row):
                     title = title.strip()
                     url = url.strip()
                     if title:
-                        total_rows += 1
                         title_counts[title] = title_counts.get(title, 0) + 1
                         title_urls[title] = url
 
