@@ -28,15 +28,17 @@ def analyze_and_write_titles_to_csv(input_file, output_file=output_titles_path):
                     2::2
                 ]  # Skip the first column and odd-indexed columns
 
-                if titles_row:
+                # Check if any value exists in the row after skipping the first column
+                if any(titles_row):
                     total_rows += 1
+
                 for title, url in zip(titles_row, urls_row):
                     title = title.strip()
                     url = url.strip()
                     if title:
                         title_counts[title] = title_counts.get(title, 0) + 1
                         title_urls[title] = url
-
+    print(total_rows)
     title_percentage = {  # calculates percentage
         title: (count / total_rows) * 100 for title, count in title_counts.items()
     }
