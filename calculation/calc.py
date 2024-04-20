@@ -21,6 +21,12 @@ def analyze_and_write_titles_to_csv(input_file, output_file=output_titles_path):
             next(urls_reader)  # Skip the header row
 
             for titles_row, urls_row in zip(titles_reader, urls_reader):
+                # Check if any non-empty cell exists in the row
+                if any(
+                    cell.strip() for cell in titles_row[1:]
+                ):  # Skip the first column
+                    total_rows += 1
+
                 titles_row = titles_row[
                     2::2
                 ]  # Skip the first column and odd-indexed columns
@@ -28,8 +34,6 @@ def analyze_and_write_titles_to_csv(input_file, output_file=output_titles_path):
                     2::2
                 ]  # Skip the first column and odd-indexed columns
 
-                if titles_row:
-                    total_rows += 1
                 for title, url in zip(titles_row, urls_row):
                     title = title.strip()
                     url = url.strip()
