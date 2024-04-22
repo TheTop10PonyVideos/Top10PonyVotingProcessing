@@ -37,7 +37,9 @@ def generate_archive_records(urls: str, videos_data: dict[str, dict]) -> list[di
     """
 
     records = []
-    for url in urls:
+    # Note: records created in reverse order as per the convention used in the
+    # master archive spreadsheet.
+    for url in reversed(urls):
         data = videos_data[url]
 
         if data is None:
@@ -203,7 +205,9 @@ https://creativecommons.org/licenses/by-sa/3.0/"""
 
     desc += '\n'
 
-    for url in urls:
+    # Note: URLs are listed in reverse order of popularity, as that's the way
+    # they're presented in the video.
+    for url in reversed(urls):
         video = videos_data[url]
 
         desc += f"""○ {video["title"]}
