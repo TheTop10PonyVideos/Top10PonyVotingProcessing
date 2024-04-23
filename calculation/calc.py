@@ -1,6 +1,7 @@
 import csv
 
 input_titles_path = "outputs/temp_outputs/titles_output.csv"
+urls_file = "outputs/shifted_cells.csv"
 output_titles_path = "outputs/calculated_top_10.csv"
 
 # Sorts videos by comparing the titles
@@ -9,14 +10,36 @@ output_titles_path = "outputs/calculated_top_10.csv"
 def analyze_and_write_titles_to_csv(input_file, output_file=output_titles_path):
     total_rows = 0
     title_counts = {}
+    title_urls = {}
 
-    with open(input_file, "r", encoding="utf-8") as csvfile:
-        csvreader = csv.reader(csvfile)
-        for row in csvreader:
-            total_rows += 1
-            for index, title_value in enumerate(row[2:], start=1):
-                if index % 2 != 0 and title_value.strip():
-                    title_counts[title_value] = title_counts.get(title_value, 0) + 1
+    with open(input_file, "r", encoding="utf-8") as titles_csv:
+        with open(urls_file, "r", encoding="utf-8") as urls_csv:
+            titles_reader = csv.reader(titles_csv)
+            urls_reader = csv.reader(urls_csv)
+
+            next(titles_reader)  # Skip the header row
+            next(urls_reader)  # Skip the header row
+
+            for titles_row, urls_row in zip(titles_reader, urls_reader):
+                # Check if any non-empty cell exists in the row
+                if any(
+                    cell.strip() for cell in titles_row[1:]
+                ):  # Skip the first column
+                    total_rows += 1
+
+                titles_row = titles_row[
+                    2::2
+                ]  # Skip the first column and odd-indexed columns
+                urls_row = urls_row[
+                    2::2
+                ]  # Skip the first column and odd-indexed columns
+
+                for title, url in zip(titles_row, urls_row):
+                    title = title.strip()
+                    url = url.strip()
+                    if title:
+                        title_counts[title] = title_counts.get(title, 0) + 1
+                        title_urls[title] = url
 
     title_percentage = {  # calculates percentage
         title: (count / total_rows) * 100 for title, count in title_counts.items()
@@ -32,8 +55,9 @@ def analyze_and_write_titles_to_csv(input_file, output_file=output_titles_path):
         output_file, "w", newline="", encoding="utf-8"
     ) as csvfile:  # writes rows to the output
         csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(["Title", "Percentage", "Total Votes"])
+        csvwriter.writerow(["Title", "Percentage", "Total Votes", "URL"])
 
         for title, percentage in sorted_titles:
             total_votes = title_counts[title]
-            csvwriter.writerow([title, f"{percentage:.4f}%", total_votes])
+            url = title_urls.get(title, "")
+            csvwriter.writerow([title, f"{percentage:.4f}%", total_votes, url])

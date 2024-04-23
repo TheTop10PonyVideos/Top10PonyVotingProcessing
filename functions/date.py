@@ -137,18 +137,13 @@ def is_date_between(
 
 def guess_voting_month_year(ballots: list[Ballot]) -> tuple[int, int, bool]:
     """Given a list of ballots, attempt to determine what month and year is
-    being voted on. This uses a simple heuristic of counting the most popular
+    being voted on. This uses a simple heuristic of counting the most common
     month-year in the ballot timestamps.
 
     Returns a tuple of 3 values: month, year, and is_unanimous, which is set to
     True if all ballots agreed on the same month and year."""
-    voting_month_year_counts = {}
-
-    for ballot in ballots:
-        month_year = (ballot.timestamp.month, ballot.timestamp.year)
-        if month_year not in voting_month_year_counts:
-            voting_month_year_counts[month_year] = 0
-        voting_month_year_counts[month_year] += 1
+    voting_month_years = [(ballot.timestamp.month, ballot.timestamp.year) for ballot in ballots]
+    voting_month_year_counts = get_freq_table(voting_month_years)
 
     sorted_voting_month_years = sorted(
         voting_month_year_counts,
@@ -156,7 +151,20 @@ def guess_voting_month_year(ballots: list[Ballot]) -> tuple[int, int, bool]:
         reverse=True,
     )
 
-    most_popular_month_year = sorted_voting_month_years[0]
+    most_common_month_year = sorted_voting_month_years[0]
     is_unanimous = len(sorted_voting_month_years) == 1
 
-    return (*most_popular_month_year, is_unanimous)
+    return (*most_common_month_year, is_unanimous)
+
+def get_freq_table(values: list) -> dict:
+    """Given a list of values, return a dictionary mapping each value to the
+    number of times it occurs in the list."""
+    
+    freqs = {}
+
+    for value in values:
+        if value not in freqs:
+            freqs[value] = 0
+        freqs[value] += 1
+
+    return freqs

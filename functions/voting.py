@@ -21,7 +21,7 @@ def load_votes_csv(csv_file_path_str: str) -> list[Ballot]:
 
     csv_file_path = Path(csv_file_path_str)
     rows = None
-    with csv_file_path.open() as csv_file:
+    with csv_file_path.open(encoding="utf8") as csv_file:
         csv_reader = csv.reader(csv_file)
         rows = [row for row in csv_reader]
 

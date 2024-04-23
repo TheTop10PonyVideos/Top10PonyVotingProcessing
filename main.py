@@ -4,7 +4,6 @@ import csv, os, shutil, sys
 from datetime import datetime
 from pathlib import Path
 from pytz import timezone
-from dotenv import load_dotenv
 import tkinter as tk
 from tkinter import ttk, filedialog
 from modules import init
@@ -37,16 +36,8 @@ from functions.ballot_rules import (
     check_ballot_uploader_diversity,
 )
 from functions.messages import suc, inf, err
+from functions.services import get_fetcher
 from classes.ui import CSVEditor
-from classes.fetcher import Fetcher
-from classes.fetch_services import YouTubeFetchService, YtDlpFetchService
-from classes.caching import FileCache
-from classes.printers import ConsolePrinter
-
-# Load environment configuration from a `.env` file if present.
-load_dotenv()
-
-API_KEY = os.getenv("apikey")  # may replace this
 
 # Application configuration
 CONFIG = {
@@ -59,7 +50,6 @@ CONFIG = {
         "icon": "images/icon.ico",
         "uploader_blacklist": "data/uploader_blacklist.txt",
         "uploader_whitelist": "data/uploader_whitelist.txt",
-        "accepted_domains": "data/accepted_domains.txt",
         "output": "outputs/processed.csv",
     },
     "fuzzy_similarity_threshold": 80,
@@ -94,32 +84,7 @@ def run_checks():
 
     inf(f'Preparing to run checks on "{selected_csv_file}"...')
 
-    inf("* Configuring video data fetcher...")
-    fetcher = Fetcher()
-    fetcher.set_printer(ConsolePrinter())
-
-    # Set up a cache file for video data.
-    response_cache_file = os.getenv("response_cache_file")
-
-    if response_cache_file is not None:
-        inf(f"  * Fetched video data will be cached in {response_cache_file}.")
-        fetcher.set_cache(FileCache(response_cache_file))
-
-    # Configure fetch services. Currently the YouTube Data API and yt-dlp are
-    # supported.
-    inf("  * Adding fetch services...")
-    accepted_domains = load_text_data(CONFIG["paths"]["accepted_domains"])
-
-    fetch_services = {
-        "YouTube": YouTubeFetchService(API_KEY),
-        "yt-dlp": YtDlpFetchService(accepted_domains),
-    }
-
-    for name, service in fetch_services.items():
-        inf(f'    * Adding "{name}" fetch service.')
-        fetcher.add_service(name, service)
-
-    suc(f"  * {len(fetch_services)} fetch services added.")
+    fetcher = get_fetcher()
 
     # Load all ballots from the CSV file.
     inf(f'Loading all votes from CSV file "{selected_csv_file}"...')
