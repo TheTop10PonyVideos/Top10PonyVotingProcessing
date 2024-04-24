@@ -4,20 +4,31 @@ import csv, os, shutil, sys
 from datetime import datetime
 from pathlib import Path
 from pytz import timezone
-from dotenv import load_dotenv
 import tkinter as tk
 from tkinter import ttk, filedialog
 from modules import init
+from functions.general import load_text_data
 from functions.voting import (
     load_votes_csv,
     fetch_video_data_for_ballots,
     generate_annotated_csv_data,
 )
-from functions.date import get_preceding_month_date, is_date_between, get_month_bounds
-from functions.video_rules import check_blacklist, check_upload_date, check_duration
+from functions.date import (
+    get_preceding_month_date,
+    is_date_between,
+    get_month_year_bounds,
+    guess_voting_month_year,
+)
+from functions.video_rules import (
+    check_uploader_blacklist,
+    check_uploader_whitelist,
+    check_upload_date,
+    check_duration,
+)
 from functions.ballot_rules import (
     check_duplicates,
     check_blacklisted_ballots,
+    check_non_whitelisted_ballots,
     check_ballot_upload_dates,
     check_ballot_video_durations,
     check_fuzzy,
@@ -25,16 +36,8 @@ from functions.ballot_rules import (
     check_ballot_uploader_diversity,
 )
 from functions.messages import suc, inf, err
+from functions.services import get_fetcher
 from classes.ui import CSVEditor
-from classes.fetcher import Fetcher
-from classes.fetch_services import YouTubeFetchService, YtDlpFetchService
-from classes.caching import FileCache
-from classes.printers import ConsolePrinter
-
-# Load environment configuration from a `.env` file if present.
-load_dotenv()
-
-API_KEY = os.getenv("apikey")  # may replace this
 
 # Application configuration
 CONFIG = {
@@ -45,7 +48,8 @@ CONFIG = {
     },
     "paths": {
         "icon": "images/icon.ico",
-        "blacklist": "data/blacklist.txt",
+        "uploader_blacklist": "data/uploader_blacklist.txt",
+        "uploader_whitelist": "data/uploader_whitelist.txt",
         "output": "outputs/processed.csv",
     },
     "fuzzy_similarity_threshold": 80,
@@ -72,11 +76,7 @@ def run_checks():
         tk.messagebox.showinfo("Error", "Please select a CSV file first.")
         return
 
-    selected_checks = [
-        name
-        for name in check_vars
-        if check_vars[name].get() == True and name != "debug"
-    ]
+    selected_checks = [name for name in check_vars if check_vars[name].get() == True]
 
     if len(selected_checks) == 0:
         tk.messagebox.showinfo("Error", "Please select at least one check type.")
@@ -84,35 +84,7 @@ def run_checks():
 
     inf(f'Preparing to run checks on "{selected_csv_file}"...')
 
-    inf("* Configuring video data fetcher...")
-    fetcher = Fetcher()
-    fetcher.set_printer(ConsolePrinter())
-
-    # Set up a cache file for video data.
-    response_cache_file = os.getenv("response_cache_file")
-
-    if response_cache_file is not None:
-        inf(f"  * Fetched video data will be cached in {response_cache_file}.")
-        fetcher.set_cache(FileCache(response_cache_file))
-
-    # Configure fetch services. Currently the YouTube Data API and yt-dlp are
-    # supported.
-    inf("  * Adding fetch services...")
-    accepted_domains = []
-    with open("modules/csv/accepted_domains.csv", "r") as csvfile:
-        reader = csv.reader(csvfile)
-        accepted_domains = [row[0] for row in reader]
-
-    fetch_services = {
-        "YouTube": YouTubeFetchService(API_KEY),
-        "yt-dlp": YtDlpFetchService(accepted_domains),
-    }
-
-    for name, service in fetch_services.items():
-        inf(f'    * Adding "{name}" fetch service.')
-        fetcher.add_service(name, service)
-
-    suc(f"  * {len(fetch_services)} fetch services added.")
+    fetcher = get_fetcher()
 
     # Load all ballots from the CSV file.
     inf(f'Loading all votes from CSV file "{selected_csv_file}"...')
@@ -121,25 +93,58 @@ def run_checks():
 
     suc(f"Loaded {len(ballots)} ballots containing a total of {total_votes} votes.")
 
-    for ballot in ballots:
-        ballot.timestamp = ballot.timestamp.replace(tzinfo=CONFIG["timezone"])
+    # Date calculations. There are 3 dates we need to be aware of:
+    # Voting date:  The date of the month and year in which the votes were cast.
+    #               For example, April 2024. For convenience, we represent this
+    #               as a datetime, set to the 1st of the voting month.
+    # Upload date:  The date of the month and year in which the videos being
+    #               voted on were uploaded. The voting rules require this to be
+    #               the month prior to the voting month; ie. if votes were cast
+    #               in April 2024, then the votes must be for videos that were
+    #               uploaded in March 2024.
+    # Current date: The date when the user is running this Python application.
+    #               In normal usage, the user will run this in the same month as
+    #               the voting month. However, during development, it's common
+    #               to use old data for testing. The user will be warned if they
+    #               are using old data.
 
-    inf(f'Converting all ballot timestamps to the {CONFIG["timezone"]} timezone.')
-    voting_month_date = datetime.now(tz=CONFIG["timezone"])
+    voting_month, voting_year, is_voting_date_unanimous = guess_voting_month_year(
+        ballots
+    )
+    voting_month_date = datetime(voting_year, voting_month, 1)
+    voting_month_year_str = voting_month_date.strftime("%B %Y")
+
+    if not is_voting_date_unanimous:
+        voting_date_discrepancy_warning = f"Warning: the majority of the ballot timestamps are for {voting_month_year_str}; however, some are for a different month and date. Assuming a voting month of {voting_month_year_str}."
+        err(voting_date_discrepancy_warning)
+        tk.messagebox.showinfo("Warning", voting_date_discrepancy_warning)
+
     upload_month_date = get_preceding_month_date(voting_month_date)
+    upload_month_year_str = upload_month_date.strftime("%B %Y")
+
+    current_month_date = datetime.now()
+    current_month_year_str = current_month_date.strftime("%B %Y")
 
     # Give a warning in the console if the CSV is for a different month than the
     # current one.
     anachronistic_ballots = [
         ballot
         for ballot in ballots
-        if not is_date_between(ballot.timestamp, *get_month_bounds(voting_month_date))
-    ]
-    if len(anachronistic_ballots) > 0:
-        voting_month_year_str = voting_month_date.strftime("%B %Y")
-        err(
-            f"Warning: the input CSV contains votes that do not fall within the current month ({voting_month_year_str})."
+        if not is_date_between(
+            ballot.timestamp,
+            *get_month_year_bounds(current_month_date.month, current_month_date.year),
         )
+    ]
+
+    if len(anachronistic_ballots) > 0:
+        err(
+            f"Warning: the input CSV contains votes that do not fall within the current month ({current_month_year_str})."
+        )
+
+    inf(f"Date information:")
+    inf(f"* Upload month:  {upload_month_year_str}")
+    inf(f"* Voting month:  {voting_month_year_str}")
+    inf(f"* Current month: {current_month_year_str}")
 
     # Fetch data for all video URLs that were voted on. The data is indexed by
     # URL to allow lookups when checking the votes. Note that some videos may
@@ -170,12 +175,17 @@ def run_checks():
     }
 
     inf("* Checking for videos from blacklisted uploaders...")
-    blacklist_path = Path(CONFIG["paths"]["blacklist"])
-    blacklist = [line.strip() for line in blacklist_path.open()]
-    check_blacklist(videos_with_data.values(), blacklist)
+    uploader_blacklist = load_text_data(CONFIG["paths"]["uploader_blacklist"])
+    check_uploader_blacklist(videos_with_data.values(), uploader_blacklist)
+
+    inf("* Checking for videos from whitelisted uploaders...")
+    uploader_whitelist = load_text_data(CONFIG["paths"]["uploader_whitelist"])
+    check_uploader_whitelist(videos_with_data.values(), uploader_whitelist)
 
     inf(f"* Checking video upload dates...")
-    check_upload_date(videos_with_data.values(), upload_month_date)
+    check_upload_date(
+        videos_with_data.values(), upload_month_date.month, upload_month_date.year
+    )
 
     inf(f"* Checking video durations...")
     check_duration(videos_with_data.values())
@@ -194,6 +204,10 @@ def run_checks():
     if do_check("blacklist"):
         inf("* Checking for votes for blacklisted videos...")
         check_blacklisted_ballots(ballots, videos)
+
+    if do_check("whitelist"):
+        inf("* Checking for votes for non-whitelisted videos...")
+        check_non_whitelisted_ballots(ballots, videos)
 
     if do_check("upload_date"):
         inf("* Checking for votes for videos with invalid upload dates...")
@@ -221,7 +235,7 @@ def run_checks():
     inf(f"Writing annotated ballot data...")
     output_csv_data = generate_annotated_csv_data(ballots, videos)
     output_csv_path = Path(output_csv_path_str)
-    with output_csv_path.open("w", encoding="utf-8") as output_csv_file:
+    with output_csv_path.open("w", newline="", encoding="utf-8") as output_csv_file:
         output_csv_writer = csv.writer(output_csv_file)
         output_csv_writer.writerows(output_csv_data)
 
@@ -260,14 +274,17 @@ entry_var = tk.StringVar()
 entry = ttk.Entry(main_frame, textvariable=entry_var)
 entry.pack(padx=10, pady=10)
 
-browse_button = ttk.Button(main_frame, text="Browse", command=browse_file_csv)
+browse_button = ttk.Button(
+    main_frame, text="📁 Load Votes CSV...", command=browse_file_csv
+)
 browse_button.pack(pady=10)
 
+checks_frame = tk.LabelFrame(main_frame, text="Checks")
 # Create checkboxes and the variables bound to them.
 check_labels = {
-    "debug": "Enable Debug Files (Broken LOL)",
     "duplicate": "Duplicate Check",
     "blacklist": "Blacklist Check",
+    "whitelist": "Whitelist Check",
     "upload_date": "Upload Date Check",
     "duration": "Duration Check",
     "fuzzy": "Fuzzy Check",
@@ -276,23 +293,25 @@ check_labels = {
 }
 
 check_vars = {key: tk.BooleanVar(value=True) for key in check_labels}
-
-# Disable the debug checkbox by default.
-check_vars["debug"] = tk.BooleanVar()
-
-checkboxes = {
-    key: ttk.Checkbutton(main_frame, text=check_labels[key], variable=check_vars[key])
+check_checkboxes = {
+    key: ttk.Checkbutton(checks_frame, text=check_labels[key], variable=check_vars[key])
     for key in check_labels
 }
 
-for key, checkbox in checkboxes.items():
-    if key == "debug":
-        checkbox.pack(pady=40)
-    else:
-        checkbox.pack()
+for row, key in enumerate(check_checkboxes):
+    checkbox = check_checkboxes[key]
+    checkbox.grid(row=row, sticky="W", padx=10)
 
-run_button = ttk.Button(main_frame, text="Run Checks", command=run_checks)
-run_button.pack()
+checks_frame.pack(pady=20)
+
+debug_var = tk.BooleanVar()
+debug_checkbox = ttk.Checkbutton(
+    main_frame, text="Enable Debug Files (Broken LOL)", variable=debug_var
+)
+debug_checkbox.pack()
+
+run_button = ttk.Button(main_frame, text="📜 Run Checks", command=run_checks)
+run_button.pack(pady=20)
 
 csv_editor = CSVEditor(main_frame)  # Editor main frame
 csv_editor.pack()
