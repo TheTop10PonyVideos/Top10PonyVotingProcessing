@@ -35,21 +35,26 @@ def handle_post_processing():
         return
 
     input_file_path = Path(input_file_str)
-    output_dir = 'outputs'
-    output_file_prefix = 'post-processed-'
+    output_dir = "outputs"
+    output_file_prefix = "post-processed-"
 
     calc_records = []
-    with input_file_path.open('r', newline="", encoding="utf-8") as file:
+    with input_file_path.open("r", newline="", encoding="utf-8") as file:
         reader = csv.DictReader(file)
-        required_header = ['Title', 'Percentage', 'Total Votes', 'URL']
+        required_header = ["Title", "Percentage", "Total Votes", "URL"]
         if reader.fieldnames != required_header:
-            err(f'Selected CSV file "{input_file_str}" has an invalid header: {",".join(reader.fieldnames)}')
-            tk.messagebox.showinfo("Error", f"The selected CSV file is invalid. The file must have the following header line:\n\n{','.join(required_header)}")
+            err(
+                f'Selected CSV file "{input_file_str}" has an invalid header: {",".join(reader.fieldnames)}'
+            )
+            tk.messagebox.showinfo(
+                "Error",
+                f"The selected CSV file is invalid. The file must have the following header line:\n\n{','.join(required_header)}",
+            )
             return
-            
+
         calc_records = [record for record in reader]
 
-    video_urls = [record['URL'] for record in calc_records]
+    video_urls = [record["URL"] for record in calc_records]
     videos_data = fetch_videos_data(video_urls)
 
     post_proc_records = create_post_processed_records(calc_records, videos_data)
@@ -73,26 +78,30 @@ def handle_post_processing():
     suc(f"Wrote showcase description to {desc_file}.")
     suc("Finished.")
 
-    tk.messagebox.showinfo("Success", f"Post-processing complete. The following output files have been created:\n\n{archive_file}\n{sharable_file}\n{desc_file}")
+    tk.messagebox.showinfo(
+        "Success",
+        f"Post-processing complete. The following output files have been created:\n\n{archive_file}\n{sharable_file}\n{desc_file}",
+    )
+
 
 root = tk.Tk()
 root.title("Top 10 Pony Videos: Post-processing")
-root.geometry(f'800x400')
+root.geometry(f"800x400")
 
 main_frame = tk.Frame(root)
 main_frame.pack(expand=True, fill="both", padx=10, pady=10)
 
-banner_image = ImageTk.PhotoImage(Image.open('images/post-processing.png'))
+banner_image = ImageTk.PhotoImage(Image.open("images/post-processing.png"))
 banner_label = tk.Label(main_frame, image=banner_image)
 
 title_font = Font(size=16)
-title_label = tk.Label(main_frame, font=title_font, text='Post-processing')
+title_label = tk.Label(main_frame, font=title_font, text="Post-processing")
 input_file_frame = tk.Frame(main_frame)
 buttons_frame = tk.Frame(main_frame)
 
-input_file_label = tk.Label(input_file_frame, text='Input CSV file:')
+input_file_label = tk.Label(input_file_frame, text="Input CSV file:")
 
-default_input_file = 'outputs/calculated_top_10.csv'
+default_input_file = "outputs/calculated_top_10.csv"
 input_file_var = tk.StringVar()
 input_file_var.set(default_input_file)
 input_file_entry = ttk.Entry(input_file_frame, width=40, textvariable=input_file_var)
@@ -110,7 +119,9 @@ input_file_label.grid(column=0, row=0, padx=5, pady=5)
 input_file_entry.grid(column=1, row=0, padx=5, pady=5)
 browse_button.grid(column=2, row=0, padx=5, pady=5)
 
-run_button = ttk.Button(buttons_frame, text="🏁 Run Post-processing", command=handle_post_processing)
+run_button = ttk.Button(
+    buttons_frame, text="🏁 Run Post-processing", command=handle_post_processing
+)
 run_button.grid(column=0, row=0, padx=5, pady=5)
 
 quit_button = ttk.Button(buttons_frame, text="Quit", command=root.destroy)

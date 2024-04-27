@@ -13,6 +13,7 @@ load_dotenv()
 API_KEY = os.getenv("apikey")  # may replace this
 ACCEPTED_DOMAINS_FILE = "data/accepted_domains.txt"
 
+
 def get_fetcher() -> Fetcher:
     """Return the standard video fetcher used by the Top 10 Pony Videos
     applications (currently configured for YouTube and yt-dlp)."""
@@ -46,5 +47,3 @@ def get_fetcher() -> Fetcher:
     suc(f"  * {len(fetch_services)} fetch services added.")
 
     return fetcher
-
-

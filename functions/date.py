@@ -142,7 +142,9 @@ def guess_voting_month_year(ballots: list[Ballot]) -> tuple[int, int, bool]:
 
     Returns a tuple of 3 values: month, year, and is_unanimous, which is set to
     True if all ballots agreed on the same month and year."""
-    voting_month_years = [(ballot.timestamp.month, ballot.timestamp.year) for ballot in ballots]
+    voting_month_years = [
+        (ballot.timestamp.month, ballot.timestamp.year) for ballot in ballots
+    ]
     voting_month_year_counts = get_freq_table(voting_month_years)
 
     sorted_voting_month_years = sorted(
@@ -156,10 +158,11 @@ def guess_voting_month_year(ballots: list[Ballot]) -> tuple[int, int, bool]:
 
     return (*most_common_month_year, is_unanimous)
 
+
 def get_freq_table(values: list) -> dict:
     """Given a list of values, return a dictionary mapping each value to the
     number of times it occurs in the list."""
-    
+
     freqs = {}
 
     for value in values:

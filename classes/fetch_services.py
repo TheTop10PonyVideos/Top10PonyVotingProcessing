@@ -133,7 +133,7 @@ class YtDlpFetchService:
 
         # bilibili.com sites don't seem to return information for the `channel`
         # response property, so use `uploader` instead.
-        if video_data['uploader'] is None:
-            video_data['uploader'] = response.get('uploader')
+        if video_data["uploader"] is None:
+            video_data["uploader"] = response.get("uploader")
 
         return video_data
