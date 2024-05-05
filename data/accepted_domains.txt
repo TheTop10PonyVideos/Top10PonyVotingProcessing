@@ -3,3 +3,8 @@ pony.tube
 vimeo.com
 bilibili.com
 thishorsie.rocks
+tiktok.com
+twitter.com
+x.com
+odysee.com
+newgrounds.com
