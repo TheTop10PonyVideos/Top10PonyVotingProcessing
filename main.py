@@ -38,6 +38,7 @@ from functions.ballot_rules import (
 from functions.messages import suc, inf, err
 from functions.services import get_fetcher
 from classes.ui import CSVEditor
+from classes.fetch_services import prompt_for_missing_durs
 
 # Application configuration
 CONFIG = {
@@ -145,6 +146,8 @@ def run_checks():
     inf(f"* Upload month:  {upload_month_year_str}")
     inf(f"* Voting month:  {voting_month_year_str}")
     inf(f"* Current month: {current_month_year_str}")
+
+    prompt_for_missing_durs(ensure_duration_var.get())
 
     # Fetch data for all video URLs that were voted on. The data is indexed by
     # URL to allow lookups when checking the votes. Note that some videos may
@@ -309,6 +312,12 @@ debug_checkbox = ttk.Checkbutton(
     main_frame, text="Enable Debug Files (Broken LOL)", variable=debug_var
 )
 debug_checkbox.pack()
+
+ensure_duration_var = tk.BooleanVar()
+ed_checkbox = ttk.Checkbutton(
+    main_frame, text="Ensure Durations", variable=ensure_duration_var
+)
+ed_checkbox.pack()
 
 run_button = ttk.Button(main_frame, text="📜 Run Checks", command=run_checks)
 run_button.pack(pady=20)
