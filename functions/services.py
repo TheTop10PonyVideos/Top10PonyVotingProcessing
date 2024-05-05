@@ -53,5 +53,3 @@ def get_fetcher(prompt_for_missing_durs: bool = False) -> Fetcher:
     suc(f"  * {len(fetch_services)} fetch services added.")
 
     return fetcher
-
-
