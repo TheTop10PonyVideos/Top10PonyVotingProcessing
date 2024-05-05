@@ -42,6 +42,7 @@ class YouTubeFetchService:
                 f'Could not request URL "{url}" via the YouTube Data API; unable to determine video id from URL'
             )
 
+        # TODO: Can we use url here instead of id?
         request = self.yt_service.videos().list(
             part="status,snippet,contentDetails", id=video_id
         )
@@ -133,7 +134,7 @@ class YtDlpFetchService:
 
         # bilibili.com sites don't seem to return information for the `channel`
         # response property, so use `uploader` instead.
-        if video_data['uploader'] is None:
-            video_data['uploader'] = response.get('uploader')
+        if video_data["uploader"] is None:
+            video_data["uploader"] = response.get("uploader")
 
         return video_data
