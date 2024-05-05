@@ -42,6 +42,7 @@ class YouTubeFetchService:
                 f'Could not request URL "{url}" via the YouTube Data API; unable to determine video id from URL'
             )
 
+        # TODO: Can we use url here instead of id?
         request = self.yt_service.videos().list(
             part="status,snippet,contentDetails", id=video_id
         )

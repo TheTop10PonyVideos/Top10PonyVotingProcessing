@@ -15,7 +15,7 @@ def parse_votes_csv_timestamp(timestamp: str) -> datetime:
     """
 
     timestamp = timestamp.strip()
-    pattern = "^(\d+)/(\d+)/(\d+) (\d+):(\d+):(\d+)$"
+    pattern = r"^(\d+)/(\d+)/(\d+) (\d+):(\d+):(\d+)$"
     match = re.match(pattern, timestamp)
     try:
         date_components = match.groups()
