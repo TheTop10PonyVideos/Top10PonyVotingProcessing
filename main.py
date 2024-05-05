@@ -38,7 +38,6 @@ from functions.ballot_rules import (
 from functions.messages import suc, inf, err
 from functions.services import get_fetcher
 from classes.ui import CSVEditor
-from classes.fetch_services import prompt_for_missing_durs
 
 # Application configuration
 CONFIG = {
@@ -85,7 +84,7 @@ def run_checks():
 
     inf(f'Preparing to run checks on "{selected_csv_file}"...')
 
-    fetcher = get_fetcher()
+    fetcher = get_fetcher(ensure_duration_var.get())
 
     # Load all ballots from the CSV file.
     inf(f'Loading all votes from CSV file "{selected_csv_file}"...')
@@ -146,8 +145,6 @@ def run_checks():
     inf(f"* Upload month:  {upload_month_year_str}")
     inf(f"* Voting month:  {voting_month_year_str}")
     inf(f"* Current month: {current_month_year_str}")
-
-    prompt_for_missing_durs(ensure_duration_var.get())
 
     # Fetch data for all video URLs that were voted on. The data is indexed by
     # URL to allow lookups when checking the votes. Note that some videos may

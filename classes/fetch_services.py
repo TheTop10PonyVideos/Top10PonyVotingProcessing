@@ -81,15 +81,13 @@ class YouTubeFetchService:
             "duration": convert_iso8601_duration_to_seconds(iso8601_duration),
         }
 
-def prompt_for_missing_durs(prompt_if_missing):
-    global prompt_dur
-    prompt_dur = prompt_if_missing
 
 class YtDlpFetchService:
     """Fetch service which makes requests for video data via yt-dlp."""
 
-    def __init__(self, accepted_domains: list[str]):
+    def __init__(self, accepted_domains: list[str], prompt_for_missing_durs):
         self.accepted_domains = accepted_domains
+        self.prompt_dur = prompt_for_missing_durs
 
     def can_fetch(self, url: str) -> bool:
         """Return True if the URL contains an accepted domain (other than
@@ -128,7 +126,7 @@ class YtDlpFetchService:
         upload_date = datetime.strptime(response.get("upload_date"), date_format)
         upload_date = upload_date.replace(tzinfo=timezone.utc)
 
-        if response.get("duration") is None and prompt_dur:
+        if response.get("duration") is None and self.prompt_dur:
             mins = None
             seconds = None
             err("Missing Duration, Please Add Manually:")
