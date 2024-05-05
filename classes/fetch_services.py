@@ -150,17 +150,17 @@ class YtDlpFetchService:
             # for an ideal response, which will skip this step if loaded from the cache
             match response["webpage_url_domain"]:
                 case "twitter.com":
-                    response['channel'] = response.get('uploader_id')
-                    response['title'] = response.get('title')[response.get('title').find("-") + 2 :]
+                    response["channel"] = response.get("uploader_id")
+                    response["title"] = response.get("title")[response.get("title").find("-") + 2 :]
                 case "tiktok.com":
-                    response['channel'] = response.get('uploader')
+                    response["channel"] = response.get("uploader")
                     # could be attached to the if condition, but would feel
                     # unorganizd if future sites are added that might need to use this
 
             # bilibili.com and newgrounds.com sites don't seem to return information for the `channel`
             # response property, so use `uploader` instead.
-            if response.get('channel') is None:
-                response['channel'] = response.get('uploader')
+            if response.get("channel") is None:
+                response["channel"] = response.get("uploader")
 
             response["idealized"] = True
 
