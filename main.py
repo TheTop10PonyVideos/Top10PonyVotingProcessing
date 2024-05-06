@@ -84,7 +84,7 @@ def run_checks():
 
     inf(f'Preparing to run checks on "{selected_csv_file}"...')
 
-    fetcher = get_fetcher()
+    fetcher = get_fetcher(ensure_duration_var.get())
 
     # Load all ballots from the CSV file.
     inf(f'Loading all votes from CSV file "{selected_csv_file}"...')
@@ -309,6 +309,12 @@ debug_checkbox = ttk.Checkbutton(
     main_frame, text="Enable Debug Files (Broken LOL)", variable=debug_var
 )
 debug_checkbox.pack()
+
+ensure_duration_var = tk.BooleanVar()
+ed_checkbox = ttk.Checkbutton(
+    main_frame, text="Ensure Durations", variable=ensure_duration_var
+)
+ed_checkbox.pack()
 
 run_button = ttk.Button(main_frame, text="📜 Run Checks", command=run_checks)
 run_button.pack(pady=20)

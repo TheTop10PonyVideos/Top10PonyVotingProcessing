@@ -66,6 +66,8 @@ def check_ballot_video_durations(ballots: list[Ballot], videos: dict[str, Video]
                 vote.annotations.add("VIDEO TOO SHORT")
             if video.annotations.has("VIDEO MAYBE TOO SHORT"):
                 vote.annotations.add("VIDEO MAYBE TOO SHORT")
+            if video.annotations.has("MISSING DURATION"):
+                vote.annotations.add("MISSING DURATION")
 
 
 def check_fuzzy(

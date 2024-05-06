@@ -8,6 +8,7 @@ from datetime import timezone
 from googleapiclient.discovery import build
 from yt_dlp import YoutubeDL
 from functions.date import convert_iso8601_duration_to_seconds
+from functions.messages import err
 from classes.exceptions import FetchRequestError, FetchParseError, VideoUnavailableError
 
 
@@ -85,8 +86,9 @@ class YouTubeFetchService:
 class YtDlpFetchService:
     """Fetch service which makes requests for video data via yt-dlp."""
 
-    def __init__(self, accepted_domains: list[str]):
+    def __init__(self, accepted_domains: list[str], prompt_for_missing_durs):
         self.accepted_domains = accepted_domains
+        self.prompt_dur = prompt_for_missing_durs
 
     def can_fetch(self, url: str) -> bool:
         """Return True if the URL contains an accepted domain (other than
@@ -125,16 +127,47 @@ class YtDlpFetchService:
         upload_date = datetime.strptime(response.get("upload_date"), date_format)
         upload_date = upload_date.replace(tzinfo=timezone.utc)
 
+        if response.get("duration") is None and self.prompt_dur:
+            mins = None
+            seconds = None
+            err("Missing Duration, Please Add Manually:")
+
+            while(True):
+                try:
+                    if mins is None:
+                        mins = int(input("Minutes: "))
+                    seconds = int(input("Seconds: "))
+                    break
+                except: continue
+
+            response["duration"] = mins * 60 + seconds
+
+        if not response.get("idealized"):
+            # some sites will return a display name rather than unique 
+            # usernames or they might return extra things in their
+            # response properties, so this is here to make adjustments
+            # for an ideal response, which will skip this step if loaded from the cache
+            match response["webpage_url_domain"]:
+                case "twitter.com":
+                    response["channel"] = response.get("uploader_id")
+                    response["title"] = response.get("title")[response.get("title").find("-") + 2 :]
+                case "tiktok.com":
+                    response["channel"] = response.get("uploader")
+                    # could be attached to the if condition, but would feel
+                    # unorganizd if future sites are added that might need to use this
+
+            # bilibili.com and newgrounds.com sites don't seem to return information for the `channel`
+            # response property, so use `uploader` instead.
+            if response.get("channel") is None:
+                response["channel"] = response.get("uploader")
+
+            response["idealized"] = True
+
         video_data = {
             "title": response.get("title"),
             "uploader": response.get("channel"),
             "upload_date": upload_date,
             "duration": response.get("duration"),
         }
-
-        # bilibili.com sites don't seem to return information for the `channel`
-        # response property, so use `uploader` instead.
-        if video_data["uploader"] is None:
-            video_data["uploader"] = response.get("uploader")
 
         return video_data
