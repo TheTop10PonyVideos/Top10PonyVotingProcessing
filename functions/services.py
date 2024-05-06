@@ -13,16 +13,18 @@ load_dotenv()
 API_KEY = os.getenv("apikey")  # may replace this
 ACCEPTED_DOMAINS_FILE = "data/accepted_domains.txt"
 
+
 def get_fetcher(prompt_for_missing_durs: bool = False) -> Fetcher:
     """Return the standard video fetcher used by the Top 10 Pony Videos
     applications (currently configured for YouTube and yt-dlp).
-    
+
     Parameters
     ----------
     prompt_when_missing_durs : bool, optional
         Determines the behavior when the response data is missing a duration.
         If set to True, the execution will be halted and the user will be prompted to manually enter a duration.
-        By default, it is set to False, so videos will be annotated as missing a duration instead of halting for manual input"""
+        By default, it is set to False, so videos will be annotated as missing a duration instead of halting for manual input
+    """
 
     inf("* Configuring video data fetcher...")
     fetcher = Fetcher()

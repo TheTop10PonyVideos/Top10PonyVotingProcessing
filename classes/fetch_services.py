@@ -5,6 +5,7 @@ and `parse` methods."""
 import re
 from datetime import datetime
 from datetime import timezone
+from urllib.parse import urlparse, parse_qs
 from googleapiclient.discovery import build
 from yt_dlp import YoutubeDL
 from functions.date import convert_iso8601_duration_to_seconds
@@ -21,16 +22,34 @@ class YouTubeFetchService:
             self.yt_service = build("youtube", "v3", developerKey=api_key)
 
     def extract_video_id(self, url: str) -> str:
-        """Given a YouTube video URL, extract the video id from it."""
+        """Given a YouTube video URL, extract the video id from it, or None if
+        no video id can be extracted."""
 
-        video_id_regex = r"(?:\?v=|/embed/|/watch\?v=|/youtu.be/|live/)([a-zA-Z0-9_-]+)"
+        video_id = None
 
-        video_id_match = re.search(video_id_regex, url)
+        url_components = urlparse(url)
+        netloc = url_components.netloc
+        path = url_components.path
+        query_params = parse_qs(url_components.query)
 
-        if video_id_match:
-            return video_id_match.group(1)
+        if netloc not in ["www.youtube.com", "youtu.be"]:
+            return None
 
-        return None
+        # Regular YouTube URL: eg. https://www.youtube.com/watch?v=9RT4lfvVFhA
+        if path == "/watch":
+            video_id = query_params["v"][0]
+        else:
+            livestream_match = re.match("^/live/([a-zA-Z0-9_-]+)", path)
+            shortened_match = re.match("^/([a-zA-Z0-9_-]+)", path)
+
+            if livestream_match:
+                # Livestream URL: eg. https://www.youtube.com/live/Q8k4UTf8jiI
+                video_id = livestream_match.group(1)
+            elif shortened_match:
+                # Shortened YouTube URL: eg. https://youtu.be/9RT4lfvVFhA
+                video_id = shortened_match.group(1)
+
+        return video_id
 
     def can_fetch(self, url: str) -> bool:
         return "youtube.com" in url or "youtu.be" in url
@@ -132,25 +151,28 @@ class YtDlpFetchService:
             seconds = None
             err("Missing Duration, Please Add Manually:")
 
-            while(True):
+            while True:
                 try:
                     if mins is None:
                         mins = int(input("Minutes: "))
                     seconds = int(input("Seconds: "))
                     break
-                except: continue
+                except:
+                    continue
 
             response["duration"] = mins * 60 + seconds
 
         if not response.get("idealized"):
-            # some sites will return a display name rather than unique 
+            # some sites will return a display name rather than unique
             # usernames or they might return extra things in their
             # response properties, so this is here to make adjustments
             # for an ideal response, which will skip this step if loaded from the cache
             match response["webpage_url_domain"]:
                 case "twitter.com":
                     response["channel"] = response.get("uploader_id")
-                    response["title"] = response.get("title")[response.get("title").find("-") + 2 :]
+                    response["title"] = response.get("title")[
+                        response.get("title").find("-") + 2 :
+                    ]
                 case "tiktok.com":
                     response["channel"] = response.get("uploader")
                     # could be attached to the if condition, but would feel
