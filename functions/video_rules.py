@@ -55,7 +55,7 @@ def check_duration(videos: list[Video]):
     for video in videos:
         duration = video.data["duration"]
         
-        if not duration:
+        if duration is None:
             video.annotations.add("MISSING DURATION")        
         elif duration <= 30:
             video.annotations.add("VIDEO TOO SHORT")

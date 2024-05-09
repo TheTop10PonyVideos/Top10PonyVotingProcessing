@@ -78,6 +78,7 @@ def check_fuzzy(
     uploader, and duration. For each vote that is found to be similar to others,
     annotate it with the properties in which it is similar.
     """
+    # TODO: Consider replacing this with the similarity matrix check.
     for ballot in ballots:
         # TODO: Is Levenshtein check on duration needed? I'm not sure it works
         # on numbers.

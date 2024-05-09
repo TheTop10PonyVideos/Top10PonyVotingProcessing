@@ -5,3 +5,4 @@ yt-dlp
 pytz
 python-Levenshtein
 pillow
+tkinter-tooltip
