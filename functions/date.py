@@ -3,6 +3,7 @@
 import re
 from datetime import datetime
 from pytz import timezone
+from functions.general import get_freq_table
 from classes.voting import Ballot
 
 
@@ -157,17 +158,3 @@ def guess_voting_month_year(ballots: list[Ballot]) -> tuple[int, int, bool]:
     is_unanimous = len(sorted_voting_month_years) == 1
 
     return (*most_common_month_year, is_unanimous)
-
-
-def get_freq_table(values: list) -> dict:
-    """Given a list of values, return a dictionary mapping each value to the
-    number of times it occurs in the list."""
-
-    freqs = {}
-
-    for value in values:
-        if value not in freqs:
-            freqs[value] = 0
-        freqs[value] += 1
-
-    return freqs

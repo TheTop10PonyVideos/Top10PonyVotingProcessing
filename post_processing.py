@@ -61,7 +61,7 @@ def handle_post_processing():
 
     archive_file = f"{output_dir}/{output_file_prefix}archive.csv"
     sharable_file = f"{output_dir}/{output_file_prefix}sharable.csv"
-    desc_file = f"{output_dir}/{output_file_prefix}description.csv"
+    desc_file = f"{output_dir}/{output_file_prefix}description.txt"
 
     archive_records = generate_archive_records(post_proc_records)
     generate_archive_csv(archive_records, archive_file)
