@@ -78,7 +78,9 @@ def run_checks():
         tk.messagebox.showinfo("Error", "Please select a CSV file first.")
         return
 
-    selected_checks = [name for name in ballot_check_vars if ballot_check_vars[name].get() == True]
+    selected_checks = [
+        name for name in ballot_check_vars if ballot_check_vars[name].get() == True
+    ]
 
     if len(selected_checks) == 0:
         tk.messagebox.showinfo("Error", "Please select at least one ballot check.")
@@ -117,7 +119,9 @@ def run_checks():
     voting_month_year_str = voting_month_date.strftime("%B %Y")
 
     if not is_voting_date_unanimous:
-        inf(f"Note: the majority of the ballot timestamps are for {voting_month_year_str}; however, some are for a different month and date. Assuming a voting month of {voting_month_year_str}.")
+        inf(
+            f"Note: the majority of the ballot timestamps are for {voting_month_year_str}; however, some are for a different month and date. Assuming a voting month of {voting_month_year_str}."
+        )
 
     upload_month_date = get_preceding_month_date(voting_month_date)
     upload_month_year_str = upload_month_date.strftime("%B %Y")
@@ -169,25 +173,27 @@ def run_checks():
         suc(f"* {label}: {len(labeled_videos)}")
 
     # Perform a check for cross-platform uploads.
-    if tools_vars['detect_cross_platform'].get():
+    if tools_vars["detect_cross_platform"].get():
         inf("Attempting to detect cross-platform or duplicate uploads...")
         similarity_table = detect_cross_platform_uploads(videos)
 
         if len(similarity_table) > 0:
-            err(f'Warning: {len(similarity_table)} videos look like they may be cross-platform uploads or duplicates:')
+            err(
+                f"Warning: {len(similarity_table)} videos look like they may be cross-platform uploads or duplicates:"
+            )
             for url, subtable in similarity_table.items():
                 title = None
                 if url in videos:
                     video = videos[url]
-                    title = video.data['title']
+                    title = video.data["title"]
                 if title is None:
-                    err(f'* {url}:')
+                    err(f"* {url}:")
                 else:
-                    err(f'* {title} ({url}):')
+                    err(f"* {title} ({url}):")
 
                 for similarity_url, similarity_props in subtable.items():
-                    similarity_props_str = ', '.join(similarity_props)
-                    err(f'  * Similar {similarity_props_str} to {similarity_url}')
+                    similarity_props_str = ", ".join(similarity_props)
+                    err(f"  * Similar {similarity_props_str} to {similarity_url}")
         else:
             inf("No cross-platform or duplicate uploads were detected.")
 
@@ -360,7 +366,11 @@ tools_layout = {
 # Create checkboxes for options
 ballot_check_vars = {key: tk.BooleanVar(value=True) for key in ballot_check_layout}
 ballot_check_checkboxes = {
-    key: ttk.Checkbutton(ballot_checks_frame, text=ballot_check_layout[key]['label'], variable=ballot_check_vars[key])
+    key: ttk.Checkbutton(
+        ballot_checks_frame,
+        text=ballot_check_layout[key]["label"],
+        variable=ballot_check_vars[key],
+    )
     for key in ballot_check_layout
 }
 for row, key in enumerate(ballot_check_checkboxes):
@@ -369,7 +379,9 @@ for row, key in enumerate(ballot_check_checkboxes):
 
 tools_vars = {key: tk.BooleanVar(value=False) for key in tools_layout}
 tools_checkboxes = {
-    key: ttk.Checkbutton(tools_frame, text=tools_layout[key]['label'], variable=tools_vars[key])
+    key: ttk.Checkbutton(
+        tools_frame, text=tools_layout[key]["label"], variable=tools_vars[key]
+    )
     for key in tools_layout
 }
 for row, key in enumerate(tools_checkboxes):
@@ -377,7 +389,7 @@ for row, key in enumerate(tools_checkboxes):
     checkbox.grid(row=row, sticky="W", padx=10)
 
 # Auto-set some options
-tools_vars['detect_cross_platform'].set(True)
+tools_vars["detect_cross_platform"].set(True)
 
 ballot_checks_frame.grid(row=0, column=0, sticky="N", padx=5, pady=5)
 tools_frame.grid(row=0, column=1, sticky="N", padx=5, pady=5)
@@ -389,12 +401,22 @@ ttip_delay = 0.5
 ttip_follow = False
 
 for key in ballot_check_layout:
-    if 'tooltip' in ballot_check_layout[key]:
-        ToolTip(ballot_check_checkboxes[key], msg=ballot_check_layout[key]['tooltip'], delay=ttip_delay, follow=ttip_follow)
+    if "tooltip" in ballot_check_layout[key]:
+        ToolTip(
+            ballot_check_checkboxes[key],
+            msg=ballot_check_layout[key]["tooltip"],
+            delay=ttip_delay,
+            follow=ttip_follow,
+        )
 
 for key in tools_layout:
-    if 'tooltip' in tools_layout[key]:
-        ToolTip(tools_checkboxes[key], msg=tools_layout[key]['tooltip'], delay=ttip_delay, follow=ttip_follow)
+    if "tooltip" in tools_layout[key]:
+        ToolTip(
+            tools_checkboxes[key],
+            msg=tools_layout[key]["tooltip"],
+            delay=ttip_delay,
+            follow=ttip_follow,
+        )
 
 run_button = ttk.Button(main_frame, text="📜 Run Checks", command=run_checks)
 run_button.pack(pady=20)

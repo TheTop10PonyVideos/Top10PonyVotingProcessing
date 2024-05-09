@@ -1,15 +1,18 @@
 """Small collection of functions for performing similarity checks."""
+
 from fuzzywuzzy import fuzz
 from functions.url import is_youtube_url, normalize_youtube_url
 from classes.voting import Video
 
+
 def get_string_similarity(string_a: str, string_b: str) -> float:
-    """Return the similarity between two strings as a number between 0 and 100.
-    """
+    """Return the similarity between two strings as a number between 0 and 100."""
     return fuzz.ratio(string_a, string_b)
 
 
-def get_duration_similarity(duration_a: float, duration_b: float, threshold: float=5) -> float:
+def get_duration_similarity(
+    duration_a: float, duration_b: float, threshold: float = 5
+) -> float:
     """Return the similarity between two durations (given in seconds) as a
     number between 0 and 100. Two durations are considered 100% similar if they
     are exactly the same, 0% similar if they are more than 5 seconds apart, and
@@ -56,7 +59,7 @@ def get_similarity_matrix(table: dict[str], similarity_func) -> list[list[float]
         similarity_matrix.append(row)
 
     return similarity_matrix
-    
+
 
 def detect_cross_platform_uploads(videos: dict[str, Video]) -> dict[str, list[str]]:
     """Given a dictionary mapping video URLs to Video objects, analyze each
@@ -83,28 +86,39 @@ def detect_cross_platform_uploads(videos: dict[str, Video]) -> dict[str, list[st
     * similar title and duration
     """
 
-    properties = ['title', 'uploader', 'duration']
+    properties = ["title", "uploader", "duration"]
     string_similarity_threshold = 90
 
-    videos_with_data = {url: video for url, video in videos.items() if video.data is not None}
+    videos_with_data = {
+        url: video for url, video in videos.items() if video.data is not None
+    }
 
     # Normalization step: The videos list may contain many variants of the same
     # URL - usually YouTube URLs with varying parameter orderings. For the
     # purpose of cross-platform comparisons, it's easier if we eliminate all
     # these variants and just have a single canonical URL for a given site.
-    videos_with_data = {normalize_youtube_url(url) if is_youtube_url(url) else url: video for url, video in videos_with_data.items()}
+    videos_with_data = {
+        normalize_youtube_url(url) if is_youtube_url(url) else url: video
+        for url, video in videos_with_data.items()
+    }
 
     # For each property we're interested in, get a table mapping each URL to its
     # value for that property.
     prop_tables = {}
     for prop in properties:
-        prop_tables[prop] = {url: video.data[prop] for url, video in videos_with_data.items()}
+        prop_tables[prop] = {
+            url: video.data[prop] for url, video in videos_with_data.items()
+        }
 
     # Use the property tables to get a similarity matrix for each property.
     similarity_matrices = {
-        'title': get_similarity_matrix(prop_tables['title'], get_string_similarity),
-        'uploader': get_similarity_matrix(prop_tables['uploader'], get_string_similarity),
-        'duration': get_similarity_matrix(prop_tables['duration'], get_duration_similarity),
+        "title": get_similarity_matrix(prop_tables["title"], get_string_similarity),
+        "uploader": get_similarity_matrix(
+            prop_tables["uploader"], get_string_similarity
+        ),
+        "duration": get_similarity_matrix(
+            prop_tables["duration"], get_duration_similarity
+        ),
     }
 
     # Using the similarity matrices, build a table which maps video URLs to a
@@ -116,7 +130,7 @@ def detect_cross_platform_uploads(videos: dict[str, Video]) -> dict[str, list[st
     for prop, similarity_matrix in similarity_matrices.items():
         # Use a threshold of 0 for duration similarities, as anything within
         # 5 seconds has a non-zero similarity.
-        similarity_threshold = 0 if prop == 'duration' else string_similarity_threshold
+        similarity_threshold = 0 if prop == "duration" else string_similarity_threshold
 
         for j, row in enumerate(similarity_matrix):
             # Use the row index to look up the URL being compared
@@ -126,12 +140,20 @@ def detect_cross_platform_uploads(videos: dict[str, Video]) -> dict[str, list[st
                 similarity_table[video_url] = {}
 
             # Get the indices of all URLs that pass the similarity threshold.
-            similarity_indices = [i for i, similarity in enumerate(row) if similarity > similarity_threshold]
+            similarity_indices = [
+                i
+                for i, similarity in enumerate(row)
+                if similarity > similarity_threshold
+            ]
 
             # Use the gathered indices to look up the URLs (ignoring the one
             # that's the same as the URL being compared, as we're not interested
             # in self-similarity).
-            similarity_urls = [ordered_urls[si] for si in similarity_indices if ordered_urls[si] != video_url]
+            similarity_urls = [
+                ordered_urls[si]
+                for si in similarity_indices
+                if ordered_urls[si] != video_url
+            ]
 
             # For each of the URLs that passed the similarity threshold, add
             # them to the similarity table against the URL being compared, and
@@ -140,19 +162,23 @@ def detect_cross_platform_uploads(videos: dict[str, Video]) -> dict[str, list[st
                 if similarity_url not in similarity_table[video_url]:
                     similarity_table[video_url][similarity_url] = []
                 similarity_table[video_url][similarity_url].append(prop)
-    
+
     # Filter out any property combinations we're not interested in.
     allowed_prop_combos = [
-        ['title', 'uploader', 'duration'],
-        ['title', 'uploader'],
-        ['title', 'duration'],
+        ["title", "uploader", "duration"],
+        ["title", "uploader"],
+        ["title", "duration"],
     ]
 
     for url, subtable in similarity_table.items():
-        similarity_table[url] = {u: props for u, props in subtable.items() if props in allowed_prop_combos}
+        similarity_table[url] = {
+            u: props for u, props in subtable.items() if props in allowed_prop_combos
+        }
 
     # Remove any empty entries from the similarity table (ie. videos that were
     # not similar to any others)
-    similarity_table = {url: subtable for url, subtable in similarity_table.items() if len(subtable) > 0}
+    similarity_table = {
+        url: subtable for url, subtable in similarity_table.items() if len(subtable) > 0
+    }
 
-    return similarity_table 
+    return similarity_table

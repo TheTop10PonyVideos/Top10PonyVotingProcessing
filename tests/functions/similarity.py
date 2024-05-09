@@ -1,5 +1,10 @@
 from unittest import TestCase
-from functions.similarity import get_string_similarity, get_duration_similarity, get_similarity_matrix, detect_cross_platform_uploads
+from functions.similarity import (
+    get_string_similarity,
+    get_duration_similarity,
+    get_similarity_matrix,
+    detect_cross_platform_uploads,
+)
 from classes.voting import Video
 
 
@@ -9,21 +14,19 @@ class TestFunctionsSimilarity(TestCase):
         self.assertEqual(0, get_duration_similarity(96, 90))
         self.assertEqual(50, get_duration_similarity(96, 98.5))
 
-
     def test_get_string_similarity(self):
-        self.assertEqual(100, get_string_similarity('Derpy', 'Derpy'))
-        self.assertTrue(get_string_similarity('Derpy', 'Deryp') < 100)
-
+        self.assertEqual(100, get_string_similarity("Derpy", "Derpy"))
+        self.assertTrue(get_string_similarity("Derpy", "Deryp") < 100)
 
     def test_get_similarity_matrix(self):
         table = {
-            'Applejack': 'earth pony',
-            'Pinkie Pie': 'earth pony',
-            'Fluttershy': 'pegasus',
-            'Rainbow Dash': 'pegasus',
-            'Rarity': 'unicorn',
-            'Twilight Sparkle': 'alicorn',
-            'Derpy': 'pegasus',
+            "Applejack": "earth pony",
+            "Pinkie Pie": "earth pony",
+            "Fluttershy": "pegasus",
+            "Rainbow Dash": "pegasus",
+            "Rarity": "unicorn",
+            "Twilight Sparkle": "alicorn",
+            "Derpy": "pegasus",
         }
 
         similarity_matrix = get_similarity_matrix(table, get_string_similarity)
@@ -74,49 +77,48 @@ class TestFunctionsSimilarity(TestCase):
         # Rarity/Twilight Sparkle (imperfect match)
         self.assertTrue(100, similarity_matrix[5][6] < 100)
 
-        
     def test_detect_cross_platform_uploads(self):
         videos = {
-            'https://example.com/1': Video(),
-            'https://example.com/2': Video(),
-            'https://example.com/3': Video(),
-            'https://example.com/4': Video(),
-            'https://example.com/5': Video(),
-            'https://example.com/6': Video(),
-            'https://example.com/7': Video(),
+            "https://example.com/1": Video(),
+            "https://example.com/2": Video(),
+            "https://example.com/3": Video(),
+            "https://example.com/4": Video(),
+            "https://example.com/5": Video(),
+            "https://example.com/6": Video(),
+            "https://example.com/7": Video(),
         }
 
-        videos['https://example.com/1'].data = {
-            'title': 'AAAAA',
-            'uploader': 'EEEEE',
-            'duration': 60,
+        videos["https://example.com/1"].data = {
+            "title": "AAAAA",
+            "uploader": "EEEEE",
+            "duration": 60,
         }
-        videos['https://example.com/2'].data = {
-            'title': 'AAAAA',
-            'uploader': 'EEEEE',
-            'duration': 60,
+        videos["https://example.com/2"].data = {
+            "title": "AAAAA",
+            "uploader": "EEEEE",
+            "duration": 60,
         }
-        videos['https://example.com/3'].data = {
-            'title': 'BBBBB',
-            'uploader': 'FFFFF',
-            'duration': 64,
+        videos["https://example.com/3"].data = {
+            "title": "BBBBB",
+            "uploader": "FFFFF",
+            "duration": 64,
         }
-        videos['https://example.com/4'].data = {
-            'title': 'BBBBB',
-            'uploader': 'FFFFF',
-            'duration': 120,
+        videos["https://example.com/4"].data = {
+            "title": "BBBBB",
+            "uploader": "FFFFF",
+            "duration": 120,
         }
-        videos['https://example.com/5'].data = {
-            'title': 'CCCCC',
-            'uploader': 'GGGGG',
-            'duration': 124.9,
+        videos["https://example.com/5"].data = {
+            "title": "CCCCC",
+            "uploader": "GGGGG",
+            "duration": 124.9,
         }
-        videos['https://example.com/6'].data = {
-            'title': 'DDDDD',
-            'uploader': 'HHHHH',
-            'duration': 9006,
+        videos["https://example.com/6"].data = {
+            "title": "DDDDD",
+            "uploader": "HHHHH",
+            "duration": 9006,
         }
-        
+
         similarity_table = detect_cross_platform_uploads(videos)
         self.assertEqual(4, len(similarity_table))
 
@@ -129,64 +131,74 @@ class TestFunctionsSimilarity(TestCase):
         #   enough for the cross-platform check.
         # * /6 isn't, because it's not similar in any properties.
         # * /7 isn't, because it has no data.
-        self.assertIn('https://example.com/1', similarity_table)
-        self.assertIn('https://example.com/2', similarity_table)
-        self.assertIn('https://example.com/3', similarity_table)
-        self.assertIn('https://example.com/4', similarity_table)
-        self.assertNotIn('https://example.com/5', similarity_table)
-        self.assertNotIn('https://example.com/6', similarity_table)
-        self.assertNotIn('https://example.com/7', similarity_table)
-        
-        self.assertEqual(1, len(similarity_table['https://example.com/1']))
-        self.assertIn('https://example.com/2', similarity_table['https://example.com/1'])
+        self.assertIn("https://example.com/1", similarity_table)
+        self.assertIn("https://example.com/2", similarity_table)
+        self.assertIn("https://example.com/3", similarity_table)
+        self.assertIn("https://example.com/4", similarity_table)
+        self.assertNotIn("https://example.com/5", similarity_table)
+        self.assertNotIn("https://example.com/6", similarity_table)
+        self.assertNotIn("https://example.com/7", similarity_table)
 
-        self.assertEqual(1, len(similarity_table['https://example.com/2']))
-        self.assertIn('https://example.com/1', similarity_table['https://example.com/2'])
+        self.assertEqual(1, len(similarity_table["https://example.com/1"]))
+        self.assertIn(
+            "https://example.com/2", similarity_table["https://example.com/1"]
+        )
 
-        self.assertEqual(1, len(similarity_table['https://example.com/3']))
-        self.assertIn('https://example.com/4', similarity_table['https://example.com/3'])
+        self.assertEqual(1, len(similarity_table["https://example.com/2"]))
+        self.assertIn(
+            "https://example.com/1", similarity_table["https://example.com/2"]
+        )
 
-        self.assertEqual(1, len(similarity_table['https://example.com/4']))
-        self.assertIn('https://example.com/3', similarity_table['https://example.com/4'])
+        self.assertEqual(1, len(similarity_table["https://example.com/3"]))
+        self.assertIn(
+            "https://example.com/4", similarity_table["https://example.com/3"]
+        )
 
-        self.assertEqual(['title', 'uploader', 'duration'], similarity_table['https://example.com/1']['https://example.com/2'])
+        self.assertEqual(1, len(similarity_table["https://example.com/4"]))
+        self.assertIn(
+            "https://example.com/3", similarity_table["https://example.com/4"]
+        )
 
+        self.assertEqual(
+            ["title", "uploader", "duration"],
+            similarity_table["https://example.com/1"]["https://example.com/2"],
+        )
 
     def test_detect_cross_platform_uploads_normalization(self):
         # Test normalization of YouTube URLs. Here, there are 2 YouTube URLs for
         # Tridashie's "Nightmare Virus" which should normalize to the same URL.
         videos = {
-            'https://youtu.be/9RT4lfvVFhA': Video(),
-            'https://www.youtube.com/watch?v=9RT4lfvVFhA': Video(),
-            'https://www.youtube.com/live/Q8k4UTf8jiI': Video(),
-            'https://www.bilibili.com/video/ABCDEFGHIJKL/': Video(),
-            'https://pony.tube/w/abcdefghijklmnopqrstuv': Video(),
+            "https://youtu.be/9RT4lfvVFhA": Video(),
+            "https://www.youtube.com/watch?v=9RT4lfvVFhA": Video(),
+            "https://www.youtube.com/live/Q8k4UTf8jiI": Video(),
+            "https://www.bilibili.com/video/ABCDEFGHIJKL/": Video(),
+            "https://pony.tube/w/abcdefghijklmnopqrstuv": Video(),
         }
 
-        videos['https://youtu.be/9RT4lfvVFhA'].data = {
-            'title': 'Nightmare Virus',
-            'uploader': 'Tridashie',
-            'duration': 99,
+        videos["https://youtu.be/9RT4lfvVFhA"].data = {
+            "title": "Nightmare Virus",
+            "uploader": "Tridashie",
+            "duration": 99,
         }
-        videos['https://www.youtube.com/watch?v=9RT4lfvVFhA'].data = {
-            'title': 'Nightmare Virus',
-            'uploader': 'Tridashie',
-            'duration': 99,
+        videos["https://www.youtube.com/watch?v=9RT4lfvVFhA"].data = {
+            "title": "Nightmare Virus",
+            "uploader": "Tridashie",
+            "duration": 99,
         }
-        videos['https://www.youtube.com/live/Q8k4UTf8jiI'].data = {
-            'title': 'Stream Ends When We Get One Wrong - PonyGuessr Permadeath #3',
-            'uploader': 'LittleshyFiM',
-            'duration': 500,
+        videos["https://www.youtube.com/live/Q8k4UTf8jiI"].data = {
+            "title": "Stream Ends When We Get One Wrong - PonyGuessr Permadeath #3",
+            "uploader": "LittleshyFiM",
+            "duration": 500,
         }
-        videos['https://www.bilibili.com/video/ABCDEFGHIJKL/'].data = {
-            'title': 'Nightmare Virus',
-            'uploader': 'Tridashie',
-            'duration': 99,
+        videos["https://www.bilibili.com/video/ABCDEFGHIJKL/"].data = {
+            "title": "Nightmare Virus",
+            "uploader": "Tridashie",
+            "duration": 99,
         }
-        videos['https://pony.tube/w/abcdefghijklmnopqrstuv'].data = {
-            'title': 'Stream Ends When We Get One Wrong - PonyGuessr Permadeath #3',
-            'uploader': 'LittleshyFiM',
-            'duration': 500,
+        videos["https://pony.tube/w/abcdefghijklmnopqrstuv"].data = {
+            "title": "Stream Ends When We Get One Wrong - PonyGuessr Permadeath #3",
+            "uploader": "LittleshyFiM",
+            "duration": 500,
         }
 
         similarity_table = detect_cross_platform_uploads(videos)
@@ -195,17 +207,17 @@ class TestFunctionsSimilarity(TestCase):
         # because two normalize to the same YouTube URL.
         self.assertEqual(4, len(similarity_table))
 
-        self.assertIn('https://www.youtube.com/watch?v=9RT4lfvVFhA', similarity_table)
-        self.assertIn('https://www.youtube.com/watch?v=Q8k4UTf8jiI', similarity_table)
-        self.assertIn('https://www.bilibili.com/video/ABCDEFGHIJKL/', similarity_table)
-        self.assertIn('https://pony.tube/w/abcdefghijklmnopqrstuv', similarity_table)
+        self.assertIn("https://www.youtube.com/watch?v=9RT4lfvVFhA", similarity_table)
+        self.assertIn("https://www.youtube.com/watch?v=Q8k4UTf8jiI", similarity_table)
+        self.assertIn("https://www.bilibili.com/video/ABCDEFGHIJKL/", similarity_table)
+        self.assertIn("https://pony.tube/w/abcdefghijklmnopqrstuv", similarity_table)
 
         # Although this URL was in the list, it should have been normalized to
         # "https://www.youtube.com/watch?v=9RT4lfvVFhA" - thus, it doesn't
         # appear in the similarity table.
-        self.assertNotIn('https://youtu.be/9RT4lfvVFhA', similarity_table)
+        self.assertNotIn("https://youtu.be/9RT4lfvVFhA", similarity_table)
 
         # Similarly, this URL should have been normalized to
         # "https://www.youtube.com/watch?v=Q8k4UTf8jiI" and thus also doesn't
         # appear.
-        self.assertNotIn('https://www.youtube.com/live/Q8k4UTf8jiI', similarity_table)
+        self.assertNotIn("https://www.youtube.com/live/Q8k4UTf8jiI", similarity_table)

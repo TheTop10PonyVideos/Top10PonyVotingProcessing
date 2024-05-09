@@ -132,25 +132,28 @@ class YtDlpFetchService:
             seconds = None
             err("Missing Duration, Please Add Manually:")
 
-            while(True):
+            while True:
                 try:
                     if mins is None:
                         mins = int(input("Minutes: "))
                     seconds = int(input("Seconds: "))
                     break
-                except: continue
+                except:
+                    continue
 
             response["duration"] = mins * 60 + seconds
 
         if not response.get("idealized"):
-            # some sites will return a display name rather than unique 
+            # some sites will return a display name rather than unique
             # usernames or they might return extra things in their
             # response properties, so this is here to make adjustments
             # for an ideal response, which will skip this step if loaded from the cache
             match response["webpage_url_domain"]:
                 case "twitter.com":
                     response["channel"] = response.get("uploader_id")
-                    response["title"] = response.get("title")[response.get("title").find("-") + 2 :]
+                    response["title"] = response.get("title")[
+                        response.get("title").find("-") + 2 :
+                    ]
                 case "tiktok.com":
                     response["channel"] = response.get("uploader")
                     # could be attached to the if condition, but would feel

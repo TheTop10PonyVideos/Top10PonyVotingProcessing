@@ -1,4 +1,5 @@
 """Functions for operating on video URLs."""
+
 import re
 from urllib.parse import urlparse, parse_qs
 
@@ -16,7 +17,7 @@ def normalize_youtube_url(url: str):
     """Given a YouTube URL which may contain various combinations and orderings
     of query parameters, return a "normalized" URL which contains the minimal
     set of parameters needed."""
-    
+
     # Use urllib to break the URL into its relevant components.
     url_components = urlparse(url)
     netloc = url_components.netloc
@@ -53,6 +54,6 @@ def normalize_youtube_url(url: str):
             video_id = shortened_match.group(1)
 
     # Using the video id, construct a normalized version of the YouTube URL.
-    normalized_url = f'https://www.youtube.com/watch?v={video_id}'
+    normalized_url = f"https://www.youtube.com/watch?v={video_id}"
 
     return normalized_url
