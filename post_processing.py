@@ -84,6 +84,7 @@ def handle_post_processing():
         f"Post-processing complete. The following output files have been created:\n\n{archive_file}\n{sharable_file}\n{desc_file}",
     )
 
+
 # Create application window
 root = tk.Tk()
 root.title("Top 10 Pony Videos: Post-processing")

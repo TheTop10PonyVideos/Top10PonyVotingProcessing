@@ -29,7 +29,7 @@ def handle_calc():
 
     tk.messagebox.showinfo(
         "Success",
-        f"Top 10 calculation complete. A file containing the video rankings has been created at:\n\n{output_csv_path}"
+        f"Top 10 calculation complete. A file containing the video rankings has been created at:\n\n{output_csv_path}",
     )
 
 
@@ -75,9 +75,7 @@ input_file_frame.pack()
 buttons_frame = tk.Frame(main_frame)
 buttons_frame.pack()
 
-run_button = ttk.Button(
-    buttons_frame, text="🧮 Calculate Top 10", command=handle_calc
-)
+run_button = ttk.Button(buttons_frame, text="🧮 Calculate Top 10", command=handle_calc)
 run_button.grid(column=0, row=0, padx=5, pady=5)
 
 quit_button = ttk.Button(buttons_frame, text="Quit", command=root.destroy)

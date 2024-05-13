@@ -1,4 +1,5 @@
 """Functions for calculating video rankings based on number of votes."""
+
 import csv
 
 urls_file = "outputs/shifted_cells.csv"
@@ -11,7 +12,7 @@ def analyze_and_write_titles_to_csv(input_file: str, output_file: str):
 
     The input CSV should be a processed votes CSV with a layout similar to the
     following:
-    
+
     Timestamp,,,,,,,,,,,,,,,,,,,,,
     4/1/2024 0:11:59,,Title A,,Title B, ... ,Title J,
     4/1/2024 0:11:59,,Title K,,Title L, ... ,Title T,
@@ -72,4 +73,3 @@ def analyze_and_write_titles_to_csv(input_file: str, output_file: str):
             total_votes = title_counts[title]
             url = title_urls.get(title, "")
             csvwriter.writerow([title, f"{percentage:.4f}%", total_votes, url])
-

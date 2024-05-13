@@ -281,11 +281,15 @@ def run_checks():
     suc("Finished checks.")
 
     proc_complete_msgs = []
-    proc_complete_msgs.append(f"Vote processing complete. An annotated ballot data file has been created at:\n\n{output_csv_path_str}")
+    proc_complete_msgs.append(
+        f"Vote processing complete. An annotated ballot data file has been created at:\n\n{output_csv_path_str}"
+    )
     if found_possible_cross_platform:
-        proc_complete_msgs.append("Detected some possible cross-platform uploads. See the console output for more details.")
+        proc_complete_msgs.append(
+            "Detected some possible cross-platform uploads. See the console output for more details."
+        )
 
-    proc_complete_msg = '\n\n'.join(proc_complete_msgs)
+    proc_complete_msg = "\n\n".join(proc_complete_msgs)
 
     tk.messagebox.showinfo("Processing Completed", proc_complete_msg)
 
@@ -461,6 +465,6 @@ quit_button.grid(column=1, row=0, padx=5, pady=5)
 
 # Editor main frame
 # Currently hidden, may be removed in future
-#csv_editor = CSVEditor(main_frame)
-#csv_editor.pack()
+# csv_editor = CSVEditor(main_frame)
+# csv_editor.pack()
 root.mainloop()
