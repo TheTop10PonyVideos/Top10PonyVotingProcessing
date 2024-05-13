@@ -21,8 +21,7 @@ from functions.messages import suc, inf, err
 
 def browse_input_file():
     """Handler for the "Choose Input CSV" button. Opens a file dialog and sets the
-    global variable `input_file_var` to the selected file.
-    """
+    global variable `input_file_var` to the selected file."""
     file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
     input_file_var.set(file_path)
 
@@ -54,6 +53,8 @@ def handle_post_processing():
 
         calc_records = [record for record in reader]
 
+    inf("Performing post-processing...")
+
     video_urls = [record["URL"] for record in calc_records]
     videos_data = fetch_videos_data(video_urls)
 
@@ -83,22 +84,27 @@ def handle_post_processing():
         f"Post-processing complete. The following output files have been created:\n\n{archive_file}\n{sharable_file}\n{desc_file}",
     )
 
-
+# Create application window
 root = tk.Tk()
 root.title("Top 10 Pony Videos: Post-processing")
 root.geometry(f"800x400")
 
+# Create main frame
 main_frame = tk.Frame(root)
 main_frame.pack(expand=True, fill="both", padx=10, pady=10)
 
+# Create banner image
 banner_image = ImageTk.PhotoImage(Image.open("images/post-processing.png"))
 banner_label = tk.Label(main_frame, image=banner_image)
+banner_label.pack()
 
+# Create title
 title_font = Font(size=16)
 title_label = tk.Label(main_frame, font=title_font, text="Post-processing")
-input_file_frame = tk.Frame(main_frame)
-buttons_frame = tk.Frame(main_frame)
+title_label.pack(pady=8)
 
+# Create "Choose Input CSV..." control
+input_file_frame = tk.Frame(main_frame)
 input_file_label = tk.Label(input_file_frame, text="Input CSV file:")
 
 default_input_file = "outputs/calculated_top_10.csv"
@@ -110,14 +116,15 @@ browse_button = ttk.Button(
     input_file_frame, text="📁 Choose Input CSV...", command=browse_input_file
 )
 
-banner_label.pack()
-title_label.pack(pady=8)
-input_file_frame.pack()
-buttons_frame.pack()
-
 input_file_label.grid(column=0, row=0, padx=5, pady=5)
 input_file_entry.grid(column=1, row=0, padx=5, pady=5)
 browse_button.grid(column=2, row=0, padx=5, pady=5)
+
+input_file_frame.pack()
+
+# Create buttons bar
+buttons_frame = tk.Frame(main_frame)
+buttons_frame.pack()
 
 run_button = ttk.Button(
     buttons_frame, text="🏁 Run Post-processing", command=handle_post_processing

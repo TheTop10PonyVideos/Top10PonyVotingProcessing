@@ -6,6 +6,8 @@ from pathlib import Path
 from pytz import timezone
 import tkinter as tk
 from tkinter import ttk, filedialog
+from tkinter.font import Font
+from PIL import ImageTk, Image
 from tktooltip import ToolTip
 from modules import init
 from functions.general import load_text_data
@@ -47,6 +49,7 @@ CONFIG = {
         "title": "Top 10 Pony Video Squeezer 3000",
         "width": 800,
         "height": 600,
+        "banner_image": "images/vote-processing-fs.png",
     },
     "paths": {
         "icon": "images/icon.ico",
@@ -75,7 +78,7 @@ def run_checks():
 
     selected_csv_file = entry_var.get()
     if selected_csv_file.strip() == "":
-        tk.messagebox.showinfo("Error", "Please select a CSV file first.")
+        tk.messagebox.showinfo("Error", "Please choose a votes CSV file first.")
         return
 
     selected_checks = [
@@ -173,11 +176,13 @@ def run_checks():
         suc(f"* {label}: {len(labeled_videos)}")
 
     # Perform a check for cross-platform uploads.
+    found_possible_cross_platform = False
     if tools_vars["detect_cross_platform"].get():
         inf("Attempting to detect cross-platform or duplicate uploads...")
         similarity_table = detect_cross_platform_uploads(videos)
 
         if len(similarity_table) > 0:
+            found_possible_cross_platform = True
             err(
                 f"Warning: {len(similarity_table)} videos look like they may be cross-platform uploads or duplicates:"
             )
@@ -274,7 +279,15 @@ def run_checks():
     init.add_empty_cells(selected_csv_file, "outputs/shifted_cells.csv")
 
     suc("Finished checks.")
-    tk.messagebox.showinfo("Processing Completed", "Processing Completed")
+
+    proc_complete_msgs = []
+    proc_complete_msgs.append(f"Vote processing complete. An annotated ballot data file has been created at:\n\n{output_csv_path_str}")
+    if found_possible_cross_platform:
+        proc_complete_msgs.append("Detected some possible cross-platform uploads. See the console output for more details.")
+
+    proc_complete_msg = '\n\n'.join(proc_complete_msgs)
+
+    tk.messagebox.showinfo("Processing Completed", proc_complete_msg)
 
 
 # TODO: Do we still need this?
@@ -295,18 +308,36 @@ root.geometry(f'{window_conf["width"]}x{window_conf["height"]}')
 if not sys.platform.startswith("linux"):
     root.iconbitmap(CONFIG["paths"]["icon"])
 
-# Create Main Object Frame
+# Create main frame
 main_frame = tk.Frame(root)
 main_frame.pack(expand=True, fill="both", padx=10, pady=10)
 
+# Create banner image
+banner_image = ImageTk.PhotoImage(Image.open(window_conf["banner_image"]))
+banner_label = tk.Label(main_frame, image=banner_image)
+
+# Create title
+title_font = Font(size=16)
+title_label = tk.Label(main_frame, font=title_font, text="Vote processing")
+
+banner_label.pack()
+title_label.pack(pady=16)
+
+# Create "Load Votes CSV..." control
+input_file_frame = tk.Frame(main_frame, borderwidth=2, relief="ridge")
+input_file_label = tk.Label(input_file_frame, text="Votes CSV file:")
+
 entry_var = tk.StringVar()
-entry = ttk.Entry(main_frame, textvariable=entry_var)
-entry.pack(padx=10, pady=10)
+input_file_entry = ttk.Entry(input_file_frame, textvariable=entry_var)
 
 browse_button = ttk.Button(
-    main_frame, text="📁 Load Votes CSV...", command=browse_file_csv
+    input_file_frame, text="📁 Choose...", command=browse_file_csv
 )
-browse_button.pack(pady=10)
+
+input_file_label.grid(column=0, row=0, padx=8, pady=8)
+input_file_entry.grid(column=1, row=0, padx=8, pady=8)
+browse_button.grid(column=2, row=0, padx=8, pady=8)
+input_file_frame.pack()
 
 # Create options frame
 options_frame = tk.Frame(main_frame)
@@ -418,10 +449,18 @@ for key in tools_layout:
             follow=ttip_follow,
         )
 
-run_button = ttk.Button(main_frame, text="📜 Run Checks", command=run_checks)
-run_button.pack(pady=20)
+# Create buttons bar
+buttons_frame = tk.Frame(main_frame)
+buttons_frame.pack()
+
+run_button = ttk.Button(buttons_frame, text="📜 Run Checks", command=run_checks)
+run_button.grid(column=0, row=0, padx=5, pady=5)
+
+quit_button = ttk.Button(buttons_frame, text="Quit", command=root.destroy)
+quit_button.grid(column=1, row=0, padx=5, pady=5)
 
 # Editor main frame
-csv_editor = CSVEditor(main_frame)
-csv_editor.pack()
+# Currently hidden, may be removed in future
+#csv_editor = CSVEditor(main_frame)
+#csv_editor.pack()
 root.mainloop()
