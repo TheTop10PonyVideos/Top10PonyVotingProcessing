@@ -1,13 +1,25 @@
+"""Functions for calculating video rankings based on number of votes."""
+
 import csv
 
-input_titles_path = "outputs/temp_outputs/titles_output.csv"
 urls_file = "outputs/shifted_cells.csv"
-output_titles_path = "outputs/calculated_top_10.csv"
-
-# Sorts videos by comparing the titles
 
 
-def analyze_and_write_titles_to_csv(input_file, output_file=output_titles_path):
+def analyze_and_write_titles_to_csv(input_file: str, output_file: str):
+    """Given an input CSV file containing rows of ballot data, count up the
+    number of occurrences of each video voted for, and write a CSV containing
+    the results sorted by number of votes.
+
+    The input CSV should be a processed votes CSV with a layout similar to the
+    following:
+
+    Timestamp,,,,,,,,,,,,,,,,,,,,,
+    4/1/2024 0:11:59,,Title A,,Title B, ... ,Title J,
+    4/1/2024 0:11:59,,Title K,,Title L, ... ,Title T,
+    ...
+
+    """
+    # TODO: Separate the CSV file operations and processing logic
     total_rows = 0
     title_counts = {}
     title_urls = {}
