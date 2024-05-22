@@ -91,7 +91,7 @@ def run_checks():
 
     inf(f'Preparing to run checks on "{selected_csv_file}"...')
 
-    fetcher = get_fetcher(tools_vars["ensure_durations"].get())
+    fetcher = get_fetcher(tools_vars["ensure_complete_data"].get())
 
     # Load all ballots from the CSV file.
     inf(f'Loading all votes from CSV file "{selected_csv_file}"...')
@@ -389,9 +389,9 @@ tools_layout = {
         "label": "Detect Cross-Platform Uploads",
         "tooltip": "Check for similarities in video titles/uploaders/durations and display a warning in the console if any videos appear to be cross-platform uploads or duplicates.",
     },
-    "ensure_durations": {
-        "label": "Ensure Durations",
-        "tooltip": "Prompt for a manually-input duration in the console if a fetched video has no duration data.",
+    "ensure_complete_data": {
+        "label": "Ensure Complete Data",
+        "tooltip": "Prompt for manual inputs in the console if a fetched video is missing data.",
     },
     "debug": {
         "label": "Enable Debug Files (Broken LOL)",
