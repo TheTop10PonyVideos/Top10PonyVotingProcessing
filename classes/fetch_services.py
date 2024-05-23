@@ -3,6 +3,7 @@ different site), create a class that implements the `can_fetch`, `request`,
 and `parse` methods."""
 
 import re
+import hashlib
 from datetime import datetime
 from datetime import timezone
 from urllib.parse import urlparse, parse_qs
@@ -104,7 +105,7 @@ class YouTubeFetchService:
 
         return {
             "title": video_data.get("title"),
-            "uploader": video_data.get("channel"),
+            "uploader": video_data.get("uploader"),
             "upload_date": upload_date,
             "duration": video_data.get("duration"),
         }
@@ -177,7 +178,7 @@ class YtDlpFetchService:
 
         return {
             "title": video_data.get("title"),
-            "uploader": video_data.get("channel"),
+            "uploader": video_data.get("uploader"),
             "upload_date": upload_date,
             "duration": video_data.get("duration"),
         }
@@ -200,7 +201,7 @@ class YtDlpFetchService:
             
             case "twitter":
                 changes["channel"] = "uploader_id"
-                changes["title"] = lambda video_data: f"X post by {video_data.get("uploader_id")}"
+                changes["title"] = lambda vid_data: f"X post by {vid_data.get("uploader_id")} ({self.hash_str(vid_data.get("title"))})"
                 if url[0 : url.rfind("/")].endswith("/video") and int(url[url.rfind("/") + 1:]) != 1:
                     err("This post has several videos and the fetched duration is innacurate. So it has been ignored")
                     changes["duration"] = None
@@ -211,9 +212,14 @@ class YtDlpFetchService:
             
             case "tiktok":
                 changes["channel"] = "uploader"
-                changes["title"] = lambda video_data: f"Tiktok video by {video_data.get("uploader")}"
+                changes["title"] = lambda vid_data: f"Tiktok video by {vid_data.get("uploader")} ({self.hash_str(vid_data.get("title"))})"
 
             case "bilibili":
                 changes["channel"] = "uploader"
                 
         return changes
+    
+    def hash_str(self, string):
+        h = hashlib.sha256()
+        h.update(string.encode())
+        return h.hexdigest()[:5]
