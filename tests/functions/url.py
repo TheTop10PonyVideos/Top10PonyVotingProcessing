@@ -7,6 +7,8 @@ class TestFunctionsUrl(TestCase):
         self.assertTrue(is_youtube_url("https://www.youtube.com/watch?v=9RT4lfvVFhA"))
         self.assertTrue(is_youtube_url("https://www.youtube.com/live/Q8k4UTf8jiI"))
         self.assertTrue(is_youtube_url("https://youtu.be/9RT4lfvVFhA"))
+        self.assertTrue(is_youtube_url("https://youtube.com/watch?v=9RT4lfvVFhA"))
+        self.assertTrue(is_youtube_url("https://m.youtube.com/watch?v=9RT4lfvVFhA"))
         self.assertFalse(is_youtube_url("https://www.bilibili.com/video/BV1HC411H7Po/"))
         self.assertFalse(is_youtube_url("https://pony.tube/w/bYSyWpjg6r6zo68o1imK5t"))
 

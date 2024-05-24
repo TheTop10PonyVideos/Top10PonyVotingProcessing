@@ -7,7 +7,7 @@ from urllib.parse import urlparse, parse_qs
 def is_youtube_url(url: str) -> bool:
     """Return True if the given URL contains one of the YouTube web domains."""
 
-    youtube_domains = ["www.youtube.com", "youtu.be"]
+    youtube_domains = ["m.youtube.com", "www.youtube.com", "youtube.com", "youtu.be"]
     url_components = urlparse(url)
 
     return url_components.netloc in youtube_domains
@@ -29,13 +29,15 @@ def normalize_youtube_url(url: str):
         raise ValueError(f"Cannot normalize URL {url}; this is not a YouTube URL")
 
     # Parse the URL to retrieve the video id, which is the only parameter we
-    # care about for the purpose of normalization. We currently recognize 3
-    # different types of YouTube URL, each of which has the video id in a
+    # care about for the purpose of normalization. We currently recognize the
+    # following types of YouTube URL, some of which have the video id in a
     # different place:
     #
-    # Regular YouTube URL: https://www.youtube.com/watch?v={VIDEO ID}
-    # Livestream URL:      https://www.youtube.com/live/{VIDEO ID}
-    # Shortened URL:       https://youtu.be/{VIDEO ID}
+    # Regular YouTube URL:      https://www.youtube.com/watch?v={VIDEO ID}
+    # No-subdomain YouTube URL: https://youtube.com/watch?v={VIDEO ID}
+    # Mobile YouTube URL:       https://m.youtube.com/watch?v={VIDEO ID}
+    # Livestream URL:           https://www.youtube.com/live/{VIDEO ID}
+    # Shortened URL:            https://youtu.be/{VIDEO ID}
 
     video_id = None
 
