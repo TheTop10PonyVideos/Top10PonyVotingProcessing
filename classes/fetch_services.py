@@ -3,6 +3,7 @@ different site), create a class that implements the `can_fetch`, `request`,
 and `parse` methods."""
 
 import re
+import hashlib
 from datetime import datetime
 from datetime import timezone
 from urllib.parse import urlparse, parse_qs
@@ -81,13 +82,9 @@ class YouTubeFetchService:
                 f'Could not request URL "{url}" via the YouTube Data API; no API response'
             )
 
-        return response
-
-    def parse(self, response) -> dict:
-        """Parse video data from a YouTube Data API response."""
         if not response["items"]:
             raise VideoUnavailableError(
-                f"Unable to parse response from YouTube Data API; response does not contain any items"
+                f"Response from YouTube Data API does not contain any items"
             )
 
         response_item = response["items"][0]
@@ -97,17 +94,31 @@ class YouTubeFetchService:
         return {
             "title": snippet["title"],
             "uploader": snippet["channelTitle"],
-            "upload_date": datetime.fromisoformat(snippet["publishedAt"]),
+            "upload_date": snippet["publishedAt"],
             "duration": convert_iso8601_duration_to_seconds(iso8601_duration),
+        }
+
+    def parse(self, video_data) -> dict:
+        """Parse video data from a YouTube Data API response."""
+
+        upload_date = datetime.fromisoformat(video_data.get("upload_date"))
+
+        return {
+            "title": video_data.get("title"),
+            "uploader": video_data.get("uploader"),
+            "upload_date": upload_date,
+            "duration": video_data.get("duration"),
         }
 
 
 class YtDlpFetchService:
     """Fetch service which makes requests for video data via yt-dlp."""
 
-    def __init__(self, accepted_domains: list[str], prompt_for_missing_durs):
+    def __init__(self, accepted_domains: list[str]):
         self.accepted_domains = accepted_domains
-        self.prompt_dur = prompt_for_missing_durs
+        self.ydl_opts = {
+            "quiet": True,
+        }
 
     def can_fetch(self, url: str) -> bool:
         """Return True if the URL contains an accepted domain (other than
@@ -120,12 +131,13 @@ class YtDlpFetchService:
 
         response = None
 
-        try:
-            ydl_opts = {
-                "quiet": True,
-            }
+        preprocess_changes = self.preprocess(url)
 
-            with YoutubeDL(ydl_opts) as ydl:
+        if preprocess_changes and preprocess_changes.get("url"):
+            url = preprocess_changes.pop("url")
+
+        try:
+            with YoutubeDL(self.ydl_opts) as ydl:
                 response = ydl.extract_info(url, download=False)
 
                 if "entries" in response:
@@ -136,60 +148,85 @@ class YtDlpFetchService:
                 f'Could not fetch URL "{url}" via yt-dlp; error while extracting video info: {e}'
             ) from e
 
-        return response
+        # preprocess_changes contains the response key that should be assigned a new value,
+        # and corrected, which can either be a different response key that has the value we
+        # originally wanted, None if the response key has an incorrect value with no substitutes,
+        # or a lambda function that modifies the value assigned to the respose key
+        if len(preprocess_changes):
+            for response_key, corrected in preprocess_changes.items():
+                if corrected is None:
+                    response[response_key] = None
+                elif isinstance(corrected, str):
+                    response[response_key] = response.get(corrected)
+                else:
+                    response[response_key] = corrected(response)
+            
+        return {
+            "title": response.get("title"),
+            "uploader": response.get("channel"),
+            "upload_date": response.get("upload_date"),
+            "duration": response.get("duration"),
+        }
 
-    def parse(self, response) -> dict:
+    def parse(self, video_data):
         # yt-dlp doesn't provide any timezone information with its timestamps,
         # but according to its source code, it looks like it uses UTC:
         # <https://github.com/yt-dlp/yt-dlp/blob/07f5b2f7570fd9ac85aed17f4c0118f6eac77beb/yt_dlp/YoutubeDL.py#L2631>
         date_format = "%Y%m%d"
-        upload_date = datetime.strptime(response.get("upload_date"), date_format)
+        upload_date = datetime.strptime(video_data.get("upload_date"), date_format)
         upload_date = upload_date.replace(tzinfo=timezone.utc)
 
-        if response.get("duration") is None and self.prompt_dur:
-            mins = None
-            seconds = None
-            err("Missing Duration, Please Add Manually:")
-
-            while True:
-                try:
-                    if mins is None:
-                        mins = int(input("Minutes: "))
-                    seconds = int(input("Seconds: "))
-                    break
-                except:
-                    continue
-
-            response["duration"] = mins * 60 + seconds
-
-        if not response.get("idealized"):
-            # some sites will return a display name rather than unique
-            # usernames or they might return extra things in their
-            # response properties, so this is here to make adjustments
-            # for an ideal response, which will skip this step if loaded from the cache
-            match response["webpage_url_domain"]:
-                case "twitter.com":
-                    response["channel"] = response.get("uploader_id")
-                    response["title"] = response.get("title")[
-                        response.get("title").find("-") + 2 :
-                    ]
-                case "tiktok.com":
-                    response["channel"] = response.get("uploader")
-                    # could be attached to the if condition, but would feel
-                    # unorganizd if future sites are added that might need to use this
-
-            # bilibili.com and newgrounds.com sites don't seem to return information for the `channel`
-            # response property, so use `uploader` instead.
-            if response.get("channel") is None:
-                response["channel"] = response.get("uploader")
-
-            response["idealized"] = True
-
-        video_data = {
-            "title": response.get("title"),
-            "uploader": response.get("channel"),
+        return {
+            "title": video_data.get("title"),
+            "uploader": video_data.get("uploader"),
             "upload_date": upload_date,
-            "duration": response.get("duration"),
+            "duration": video_data.get("duration"),
         }
 
-        return video_data
+    # Some urls might have specific issues that should
+    # be handled here before they can be properly processed
+    # If yt-dlp gets any updates that resolve any of these issues
+    # then the respective case should be updated accordingly
+    def preprocess(self, url: str) -> dict:
+        pattern = r'https?://(www\.)?([^/#?\.]+)'
+        match = re.search(pattern, url)
+        site = match.group(2)
+        changes = {}
+
+        match site:
+            case "x":
+                url = "https://twitter" + url[url.find("://") + 4 :]
+                changes = self.preprocess(url)
+                changes["url"] = url
+            
+            case "twitter":
+                changes["channel"] = "uploader_id"
+                changes["title"] = lambda vid_data: f"X post by {vid_data.get("uploader_id")} ({self.hash_str(vid_data.get("title"))})"
+                
+                # This type of url means that the post has more than one video
+                # and ytdlp will only successfully retrieve the duration if
+                # the video is at index one
+                if url[0 : url.rfind("/")].endswith("/video") and int(url[url.rfind("/") + 1:]) != 1:
+                    err("This X post has several videos and the fetched duration is innacurate. So it has been ignored")
+                    changes["duration"] = None
+
+            case "newgrounds":
+                changes["channel"] = "uploader"
+                err("Response from Newgrounds does not contain video duration")
+            
+            case "tiktok":
+                changes["channel"] = "uploader"
+                changes["title"] = lambda vid_data: f"Tiktok video by {vid_data.get("uploader")} ({self.hash_str(vid_data.get("title"))})"
+
+            case "bilibili":
+                changes["channel"] = "uploader"
+                
+        return changes
+    
+    # Some sites like X and Tiktok don't have a designated place to put a title for
+    # posts so the 'titles' are hashed here to reduce the chance of similarity detection
+    # between different posts by the same uploader. Larger hash substrings decrease this chance
+    def hash_str(self, string):
+        h = hashlib.sha256()
+        h.update(string.encode())
+        return h.hexdigest()[:5]

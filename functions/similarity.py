@@ -31,6 +31,13 @@ def get_duration_similarity(
     5 seconds is the default threshold, but this can be changed via the
     threshold argument."""
 
+    # Although it is possible that two videos with one or both
+    # having missing durations may be the same, in practice, all
+    # missing durations would likely have been manually entered
+    # Otherwise they would only be caught if they share a title and uploader
+    if duration_a is None or duration_b is None:
+        return 0
+
     difference = abs(duration_b - duration_a)
     difference = min(difference, threshold)
     percent_diff = (difference / threshold) * 100

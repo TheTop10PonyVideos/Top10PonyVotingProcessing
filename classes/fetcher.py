@@ -1,4 +1,5 @@
-from classes.exceptions import UnsupportedHostError, FetchRequestError, FetchParseError
+from classes.exceptions import UnsupportedHostError, FetchRequestError
+from functions.manual_input import resolve
 
 
 class Fetcher:
@@ -8,10 +9,11 @@ class Fetcher:
     requests.
     """
 
-    def __init__(self):
+    def __init__(self, ensure_complete_data = False):
         self.services = {}
         self.cache = None
         self.printer = None
+        self.ensure_complete_data = ensure_complete_data
 
     def add_service(self, name: str, fetch_service):
         """Add a fetch service to the fetcher."""
@@ -59,49 +61,48 @@ class Fetcher:
 
         service_name = [name for name in capable_services][0]
         service = capable_services[service_name]
-        parsed_data = None
+        video_data = None
 
-        # Cache check: If using a cache, and the response for this service
+        # Cache check: If using a cache, and the video data for this service
         # and URL is already cached, skip the request phase.
         cache_key = self.generate_cache_key(service_name, url)
-        cached_response = None
-        if self.cache is not None and self.cache.has(cache_key):
-            self.print(f"[cache]: Response for {url} loaded from cache.", "suc")
-            cached_response = self.cache.get(cache_key)
+        cached_video_data = None
 
-        if cached_response is not None:
-            response = cached_response
+        if self.cache is not None and self.cache.has(cache_key):
+            cached_video_data = self.cache.get(cache_key)
+            self.print(f"[cache]: Video data for {url} loaded from cache.", "suc")
+
+        if cached_video_data is not None:
+            video_data = cached_video_data
+
+            if self.ensure_complete_data and not self.is_complete_video_data(video_data):
+                resolve(video_data)
+                self.save_to_cache(video_data, cache_key, url)
+
         else:
             # Request phase: Use a capable service to request video data
             # from the URL.
             try:
                 self.print(f"[{service_name}]: Requesting data from {url}...")
-                response = service.request(url)
+                video_data = service.request(url)
             except Exception as e:
                 self.print(f"[{service_name}]: Request error: {e}", "err")
                 raise e
+            
+            if self.ensure_complete_data and not self.is_complete_video_data(video_data):
+                resolve(video_data)
 
-        # Parse phase: If the service managed to retrieve a response, use it
-        # to extract the video data.
+            self.save_to_cache(video_data, cache_key, url)
+
+        # Parse phase: If the service managed to retrieve video data, use it
+        # to parse any fields into objects that couldn't have been serialized during the request phase.
         try:
-            parsed_data = service.parse(response)
+            parsed_video_data = service.parse(video_data)
         except Exception as e:
             self.print(f"[{service_name}]: Parse error: {e}", "err")
             raise e
 
-        # If using a cache, and if the response object is JSON-serializable,
-        # cache the response object so we don't need to retrieve it again.
-        if self.cache is not None:
-            try:
-                self.cache.set(cache_key, response)
-            except TypeError as e:
-                # If we can't cache the response (because the response isn't
-                # JSON-serializable), give a warning, but continue.
-                self.print(
-                    f"[cache]: Unable to cache response from URL {url}; {e}", "err"
-                )
-
-        return parsed_data
+        return parsed_video_data
 
     def set_cache(self, cache):
         """Set the fetcher to use a cache object. Fetched video data will be
@@ -116,6 +117,23 @@ class Fetcher:
         them).
         """
         return f"{service_name}-{url}"
+    
+    def save_to_cache(self, video_data, cache_key, url):
+        # If using a cache, and if the response object is JSON-serializable,
+        # cache the response object so we don't need to retrieve it again.
+        if self.cache is None: return
+
+        try:
+            self.cache.set(cache_key, video_data)
+        except TypeError as e:
+            # If we can't cache the response (because the response isn't
+            # JSON-serializable), give a warning, but continue.
+            self.print(
+                f"[cache]: Unable to cache video data from URL {url}; {e}", "err"
+            )
+    
+    def is_complete_video_data(self, video_data: dict):
+        return all(val is not None for val in video_data.values())
 
     def set_printer(self, printer):
         """Set the fetcher to use a printer. Output will be sent to the printer."""
