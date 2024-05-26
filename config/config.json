@@ -1,0 +1,11 @@
+{
+    "description": "Main configuration file for the Top 10 Pony Videos applications.",
+    "paths": {
+        "icon": "images/icon.ico",
+        "uploader_blacklist": "data/uploader_blacklist.txt",
+        "uploader_whitelist": "data/uploader_whitelist.txt",
+        "accepted_domains": "data/accepted_domains.txt",
+        "output": "outputs/processed.csv",
+        "cache": "cache.json"
+    }
+}

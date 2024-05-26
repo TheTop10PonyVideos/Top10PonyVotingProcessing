@@ -1,9 +1,8 @@
-"""Top 10 Pony Video Squeezer 3000 application."""
+"""Top 10 Pony Video Squeezer 3000 (vote processing) application."""
 
 import csv, os, shutil, sys
 from datetime import datetime
 from pathlib import Path
-from pytz import timezone
 import tkinter as tk
 from tkinter import ttk, filedialog
 from tkinter.font import Font
@@ -11,6 +10,7 @@ from PIL import ImageTk, Image
 from tktooltip import ToolTip
 from modules import init
 from functions.general import load_text_data
+from functions.config import load_config_json
 from functions.voting import (
     load_votes_csv,
     fetch_video_data_for_ballots,
@@ -43,22 +43,14 @@ from functions.services import get_fetcher
 from functions.similarity import detect_cross_platform_uploads
 from classes.ui import CSVEditor
 
+
 # Application configuration
-CONFIG = {
-    "window": {
-        "title": "Top 10 Pony Video Squeezer 3000",
-        "width": 800,
-        "height": 600,
-        "banner_image": "images/vote-processing-fs.png",
-    },
-    "paths": {
-        "icon": "images/icon.ico",
-        "uploader_blacklist": "data/uploader_blacklist.txt",
-        "uploader_whitelist": "data/uploader_whitelist.txt",
-        "output": "outputs/processed.csv",
-    },
-    "fuzzy_similarity_threshold": 80,
-    "timezone": timezone("Etc/GMT-14"),
+config = load_config_json("config/config.json")
+window_config = {
+    "title": "Top 10 Pony Video Squeezer 3000",
+    "width": 800,
+    "height": 600,
+    "banner_image": "images/vote-processing-fs.png",
 }
 
 
@@ -91,7 +83,10 @@ def run_checks():
 
     inf(f'Preparing to run checks on "{selected_csv_file}"...')
 
-    fetcher = get_fetcher(tools_vars["ensure_complete_data"].get())
+    # TODO: Replace youtube_api_key with the value from the API key field, once
+    # the UI is implemented
+    youtube_api_key = None
+    fetcher = get_fetcher(youtube_api_key, tools_vars["ensure_complete_data"].get())
 
     # Load all ballots from the CSV file.
     inf(f'Loading all votes from CSV file "{selected_csv_file}"...')
@@ -209,11 +204,11 @@ def run_checks():
     }
 
     inf("* Checking for videos from blacklisted uploaders...")
-    uploader_blacklist = load_text_data(CONFIG["paths"]["uploader_blacklist"])
+    uploader_blacklist = load_text_data(config["paths"]["uploader_blacklist"])
     check_uploader_blacklist(videos_with_data.values(), uploader_blacklist)
 
     inf("* Checking for videos from whitelisted uploaders...")
-    uploader_whitelist = load_text_data(CONFIG["paths"]["uploader_whitelist"])
+    uploader_whitelist = load_text_data(config["paths"]["uploader_whitelist"])
     check_uploader_whitelist(videos_with_data.values(), uploader_whitelist)
 
     inf(f"* Checking video upload dates...")
@@ -253,7 +248,8 @@ def run_checks():
 
     if do_check("fuzzy"):
         inf("* Performing fuzzy matching checks...")
-        check_fuzzy(ballots, videos, CONFIG["fuzzy_similarity_threshold"])
+        fuzzy_similarity_threshold = 80
+        check_fuzzy(ballots, videos, fuzzy_similarity_threshold)
 
     if do_check("uploader_occurrence"):
         inf("* Checking for ballot uploader occurrences...")
@@ -265,7 +261,7 @@ def run_checks():
 
     suc(f"Ballot checks complete.")
 
-    output_csv_path_str = CONFIG["paths"]["output"]
+    output_csv_path_str = config["paths"]["output"]
     inf(f"Writing annotated ballot data...")
     output_csv_data = generate_annotated_csv_data(ballots, videos)
     output_csv_path = Path(output_csv_path_str)
@@ -303,21 +299,20 @@ def delete_if_present(filepath):
 
 # Create application window and GUI.
 root = tk.Tk()
-window_conf = CONFIG["window"]
-root.title(window_conf["title"])
-root.geometry(f'{window_conf["width"]}x{window_conf["height"]}')
+root.title(window_config["title"])
+root.geometry(f'{window_config["width"]}x{window_config["height"]}')
 
 # .ico files unfortunately don't work on Linux due to a known Tkinter issue.
 # Current fix is simply to not use the icon on Linux.
 if not sys.platform.startswith("linux"):
-    root.iconbitmap(CONFIG["paths"]["icon"])
+    root.iconbitmap(config["paths"]["icon"])
 
 # Create main frame
 main_frame = tk.Frame(root)
 main_frame.pack(expand=True, fill="both", padx=10, pady=10)
 
 # Create banner image
-banner_image = ImageTk.PhotoImage(Image.open(window_conf["banner_image"]))
+banner_image = ImageTk.PhotoImage(Image.open(window_config["banner_image"]))
 banner_label = tk.Label(main_frame, image=banner_image)
 
 # Create title

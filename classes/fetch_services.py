@@ -160,7 +160,7 @@ class YtDlpFetchService:
                     response[response_key] = response.get(corrected)
                 else:
                     response[response_key] = corrected(response)
-            
+
         return {
             "title": response.get("title"),
             "uploader": response.get("channel"),
@@ -188,7 +188,7 @@ class YtDlpFetchService:
     # If yt-dlp gets any updates that resolve any of these issues
     # then the respective case should be updated accordingly
     def preprocess(self, url: str) -> dict:
-        pattern = r'https?://(www\.)?([^/#?\.]+)'
+        pattern = r"https?://(www\.)?([^/#?\.]+)"
         match = re.search(pattern, url)
         site = match.group(2)
         changes = {}
@@ -198,31 +198,40 @@ class YtDlpFetchService:
                 url = "https://twitter" + url[url.find("://") + 4 :]
                 changes = self.preprocess(url)
                 changes["url"] = url
-            
+
             case "twitter":
                 changes["channel"] = "uploader_id"
-                changes["title"] = lambda vid_data: f"X post by {vid_data.get("uploader_id")} ({self.hash_str(vid_data.get("title"))})"
-                
+                changes["title"] = (
+                    lambda vid_data: f"X post by {vid_data.get("uploader_id")} ({self.hash_str(vid_data.get("title"))})"
+                )
+
                 # This type of url means that the post has more than one video
                 # and ytdlp will only successfully retrieve the duration if
                 # the video is at index one
-                if url[0 : url.rfind("/")].endswith("/video") and int(url[url.rfind("/") + 1:]) != 1:
-                    err("This X post has several videos and the fetched duration is innacurate. So it has been ignored")
+                if (
+                    url[0 : url.rfind("/")].endswith("/video")
+                    and int(url[url.rfind("/") + 1 :]) != 1
+                ):
+                    err(
+                        "This X post has several videos and the fetched duration is innacurate. So it has been ignored"
+                    )
                     changes["duration"] = None
 
             case "newgrounds":
                 changes["channel"] = "uploader"
                 err("Response from Newgrounds does not contain video duration")
-            
+
             case "tiktok":
                 changes["channel"] = "uploader"
-                changes["title"] = lambda vid_data: f"Tiktok video by {vid_data.get("uploader")} ({self.hash_str(vid_data.get("title"))})"
+                changes["title"] = (
+                    lambda vid_data: f"Tiktok video by {vid_data.get("uploader")} ({self.hash_str(vid_data.get("title"))})"
+                )
 
             case "bilibili":
                 changes["channel"] = "uploader"
-                
+
         return changes
-    
+
     # Some sites like X and Tiktok don't have a designated place to put a title for
     # posts so the 'titles' are hashed here to reduce the chance of similarity detection
     # between different posts by the same uploader. Larger hash substrings decrease this chance
