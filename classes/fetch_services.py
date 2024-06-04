@@ -189,21 +189,20 @@ class YtDlpFetchService:
     # If yt-dlp gets any updates that resolve any of these issues
     # then the respective case should be updated accordingly
     def preprocess(self, url: str) -> dict:
-        pattern = r"https?://(www\.)?([^/#?\.]+)"
-        match = re.search(pattern, url)
-        site = match.group(2)
+        url_components = urlparse(url)
+        site = url_components.netloc.split(".")[0]
         changes = {}
 
         match site:
             case "x":
-                url = "https://twitter" + url[url.find("://") + 4 :]
+                url = "https://twitter.com" + url_components.path
                 changes = self.preprocess(url)
                 changes["url"] = url
 
             case "twitter":
                 changes["channel"] = "uploader_id"
                 changes["title"] = (
-                    lambda vid_data: f"X post by {vid_data.get("uploader_id")} ({self.hash_str(vid_data.get("title"))})"
+                    lambda vid_data: f"X post by {vid_data.get('uploader_id')} ({self.hash_str(vid_data.get('title'))})"
                 )
 
                 # This type of url means that the post has more than one video
@@ -225,7 +224,7 @@ class YtDlpFetchService:
             case "tiktok":
                 changes["channel"] = "uploader"
                 changes["title"] = (
-                    lambda vid_data: f"Tiktok video by {vid_data.get("uploader")} ({self.hash_str(vid_data.get("title"))})"
+                    lambda vid_data: f"Tiktok video by {vid_data.get('uploader')} ({self.hash_str(vid_data.get('title'))})"
                 )
 
             case "bilibili":
