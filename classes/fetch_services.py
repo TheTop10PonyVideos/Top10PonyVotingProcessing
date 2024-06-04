@@ -10,6 +10,7 @@ from urllib.parse import urlparse, parse_qs
 from googleapiclient.discovery import build
 from yt_dlp import YoutubeDL
 from functions.date import convert_iso8601_duration_to_seconds
+from functions.url import is_youtube_url
 from functions.messages import err
 from classes.exceptions import FetchRequestError, FetchParseError, VideoUnavailableError
 
@@ -26,15 +27,15 @@ class YouTubeFetchService:
         """Given a YouTube video URL, extract the video id from it, or None if
         no video id can be extracted."""
 
+        if not is_youtube_url(url):
+            return None
+
         video_id = None
 
         url_components = urlparse(url)
         netloc = url_components.netloc
         path = url_components.path
         query_params = parse_qs(url_components.query)
-
-        if netloc not in ["www.youtube.com", "youtu.be"]:
-            return None
 
         # Regular YouTube URL: eg. https://www.youtube.com/watch?v=9RT4lfvVFhA
         if path == "/watch":
