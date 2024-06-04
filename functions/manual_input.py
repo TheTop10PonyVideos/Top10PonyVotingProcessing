@@ -1,7 +1,7 @@
 from classes.printers import err
 
 
-def input_duration():        
+def input_duration():
     mins = None
     seconds = None
 
@@ -20,15 +20,18 @@ def input_duration():
 def input_string():
     return input(">> ")
 
+
 def input_date():
     raise NotImplementedError()
+
 
 n = {
     "title": input_string,
     "uploader": input_string,
     "upload_date": input_date,
-    "duration": input_duration
+    "duration": input_duration,
 }
+
 
 def resolve(video_data: dict):
     for key, value in video_data.items():

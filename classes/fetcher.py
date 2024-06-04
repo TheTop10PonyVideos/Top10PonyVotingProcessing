@@ -9,7 +9,7 @@ class Fetcher:
     requests.
     """
 
-    def __init__(self, ensure_complete_data = False):
+    def __init__(self, ensure_complete_data=False):
         self.services = {}
         self.cache = None
         self.printer = None
@@ -75,7 +75,9 @@ class Fetcher:
         if cached_video_data is not None:
             video_data = cached_video_data
 
-            if self.ensure_complete_data and not self.is_complete_video_data(video_data):
+            if self.ensure_complete_data and not self.is_complete_video_data(
+                video_data
+            ):
                 resolve(video_data)
                 self.save_to_cache(video_data, cache_key, url)
 
@@ -88,8 +90,10 @@ class Fetcher:
             except Exception as e:
                 self.print(f"[{service_name}]: Request error: {e}", "err")
                 raise e
-            
-            if self.ensure_complete_data and not self.is_complete_video_data(video_data):
+
+            if self.ensure_complete_data and not self.is_complete_video_data(
+                video_data
+            ):
                 resolve(video_data)
 
             self.save_to_cache(video_data, cache_key, url)
@@ -117,11 +121,12 @@ class Fetcher:
         them).
         """
         return f"{service_name}-{url}"
-    
+
     def save_to_cache(self, video_data, cache_key, url):
         # If using a cache, and if the response object is JSON-serializable,
         # cache the response object so we don't need to retrieve it again.
-        if self.cache is None: return
+        if self.cache is None:
+            return
 
         try:
             self.cache.set(cache_key, video_data)
@@ -131,7 +136,7 @@ class Fetcher:
             self.print(
                 f"[cache]: Unable to cache video data from URL {url}; {e}", "err"
             )
-    
+
     def is_complete_video_data(self, video_data: dict):
         return all(val is not None for val in video_data.values())
 

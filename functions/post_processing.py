@@ -1,8 +1,8 @@
 import csv
 from datetime import datetime
 from pathlib import Path
-from functions.services import get_fetcher
 from functions.general import get_freq_table
+from functions.services import get_fetcher
 from functions.messages import suc, inf, err
 from classes.fetcher import Fetcher
 
