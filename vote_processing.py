@@ -1,13 +1,16 @@
-"""Top 10 Pony Video Squeezer 3000 application."""
+"""Top 10 Pony Video Squeezer 3000 (vote processing) application."""
 
 import csv, os, shutil, sys
 from datetime import datetime
 from pathlib import Path
-from pytz import timezone
 import tkinter as tk
 from tkinter import ttk, filedialog
+from tkinter.font import Font
+from PIL import ImageTk, Image
+from tktooltip import ToolTip
 from modules import init
 from functions.general import load_text_data
+from functions.config import load_config_json
 from functions.voting import (
     load_votes_csv,
     fetch_video_data_for_ballots,
@@ -37,23 +40,17 @@ from functions.ballot_rules import (
 )
 from functions.messages import suc, inf, err
 from functions.services import get_fetcher
+from functions.similarity import detect_cross_platform_uploads
 from classes.ui import CSVEditor
 
+
 # Application configuration
-CONFIG = {
-    "window": {
-        "title": "Top 10 Pony Video Squeezer 3000",
-        "width": 800,
-        "height": 600,
-    },
-    "paths": {
-        "icon": "images/icon.ico",
-        "uploader_blacklist": "data/uploader_blacklist.txt",
-        "uploader_whitelist": "data/uploader_whitelist.txt",
-        "output": "outputs/processed.csv",
-    },
-    "fuzzy_similarity_threshold": 80,
-    "timezone": timezone("Etc/GMT-14"),
+config = load_config_json("config/config.json")
+window_config = {
+    "title": "Top 10 Pony Video Squeezer 3000",
+    "width": 800,
+    "height": 600,
+    "banner_image": "images/vote-processing-fs.png",
 }
 
 
@@ -73,18 +70,23 @@ def run_checks():
 
     selected_csv_file = entry_var.get()
     if selected_csv_file.strip() == "":
-        tk.messagebox.showinfo("Error", "Please select a CSV file first.")
+        tk.messagebox.showinfo("Error", "Please choose a votes CSV file first.")
         return
 
-    selected_checks = [name for name in check_vars if check_vars[name].get() == True]
+    selected_checks = [
+        name for name in ballot_check_vars if ballot_check_vars[name].get() == True
+    ]
 
     if len(selected_checks) == 0:
-        tk.messagebox.showinfo("Error", "Please select at least one check type.")
+        tk.messagebox.showinfo("Error", "Please select at least one ballot check.")
         return
 
     inf(f'Preparing to run checks on "{selected_csv_file}"...')
 
-    fetcher = get_fetcher()
+    # TODO: Replace youtube_api_key with the value from the API key field, once
+    # the UI is implemented
+    youtube_api_key = None
+    fetcher = get_fetcher(youtube_api_key, tools_vars["ensure_complete_data"].get())
 
     # Load all ballots from the CSV file.
     inf(f'Loading all votes from CSV file "{selected_csv_file}"...')
@@ -115,9 +117,9 @@ def run_checks():
     voting_month_year_str = voting_month_date.strftime("%B %Y")
 
     if not is_voting_date_unanimous:
-        voting_date_discrepancy_warning = f"Warning: the majority of the ballot timestamps are for {voting_month_year_str}; however, some are for a different month and date. Assuming a voting month of {voting_month_year_str}."
-        err(voting_date_discrepancy_warning)
-        tk.messagebox.showinfo("Warning", voting_date_discrepancy_warning)
+        inf(
+            f"Note: the majority of the ballot timestamps are for {voting_month_year_str}; however, some are for a different month and date. Assuming a voting month of {voting_month_year_str}."
+        )
 
     upload_month_date = get_preceding_month_date(voting_month_date)
     upload_month_year_str = upload_month_date.strftime("%B %Y")
@@ -168,6 +170,33 @@ def run_checks():
     for label, labeled_videos in sorted(videos_by_label.items(), key=lambda i: i[0]):
         suc(f"* {label}: {len(labeled_videos)}")
 
+    # Perform a check for cross-platform uploads.
+    found_possible_cross_platform = False
+    if tools_vars["detect_cross_platform"].get():
+        inf("Attempting to detect cross-platform or duplicate uploads...")
+        similarity_table = detect_cross_platform_uploads(videos)
+
+        if len(similarity_table) > 0:
+            found_possible_cross_platform = True
+            err(
+                f"Warning: {len(similarity_table)} videos look like they may be cross-platform uploads or duplicates:"
+            )
+            for url, subtable in similarity_table.items():
+                title = None
+                if url in videos:
+                    video = videos[url]
+                    title = video.data["title"]
+                if title is None:
+                    err(f"* {url}:")
+                else:
+                    err(f"* {title} ({url}):")
+
+                for similarity_url, similarity_props in subtable.items():
+                    similarity_props_str = ", ".join(similarity_props)
+                    err(f"  * Similar {similarity_props_str} to {similarity_url}")
+        else:
+            inf("No cross-platform or duplicate uploads were detected.")
+
     # Run some checks to annotate any issues with the videos themselves.
     inf("Performing video checks...")
     videos_with_data = {
@@ -175,11 +204,11 @@ def run_checks():
     }
 
     inf("* Checking for videos from blacklisted uploaders...")
-    uploader_blacklist = load_text_data(CONFIG["paths"]["uploader_blacklist"])
+    uploader_blacklist = load_text_data(config["paths"]["uploader_blacklist"])
     check_uploader_blacklist(videos_with_data.values(), uploader_blacklist)
 
     inf("* Checking for videos from whitelisted uploaders...")
-    uploader_whitelist = load_text_data(CONFIG["paths"]["uploader_whitelist"])
+    uploader_whitelist = load_text_data(config["paths"]["uploader_whitelist"])
     check_uploader_whitelist(videos_with_data.values(), uploader_whitelist)
 
     inf(f"* Checking video upload dates...")
@@ -195,7 +224,7 @@ def run_checks():
     # Run checks on the ballots to annotate problematic votes.
     inf("Performing ballot checks...")
 
-    do_check = lambda k: check_vars[k].get() == True
+    do_check = lambda k: ballot_check_vars[k].get() == True
 
     if do_check("duplicate"):
         inf("* Checking for duplicate votes...")
@@ -219,7 +248,8 @@ def run_checks():
 
     if do_check("fuzzy"):
         inf("* Performing fuzzy matching checks...")
-        check_fuzzy(ballots, videos, CONFIG["fuzzy_similarity_threshold"])
+        fuzzy_similarity_threshold = 80
+        check_fuzzy(ballots, videos, fuzzy_similarity_threshold)
 
     if do_check("uploader_occurrence"):
         inf("* Checking for ballot uploader occurrences...")
@@ -231,7 +261,7 @@ def run_checks():
 
     suc(f"Ballot checks complete.")
 
-    output_csv_path_str = CONFIG["paths"]["output"]
+    output_csv_path_str = config["paths"]["output"]
     inf(f"Writing annotated ballot data...")
     output_csv_data = generate_annotated_csv_data(ballots, videos)
     output_csv_path = Path(output_csv_path_str)
@@ -245,7 +275,19 @@ def run_checks():
     init.add_empty_cells(selected_csv_file, "outputs/shifted_cells.csv")
 
     suc("Finished checks.")
-    tk.messagebox.showinfo("Processing Completed", "Processing Completed")
+
+    proc_complete_msgs = []
+    proc_complete_msgs.append(
+        f"Vote processing complete. An annotated ballot data file has been created at:\n\n{output_csv_path_str}"
+    )
+    if found_possible_cross_platform:
+        proc_complete_msgs.append(
+            "Detected some possible cross-platform uploads. See the console output for more details."
+        )
+
+    proc_complete_msg = "\n\n".join(proc_complete_msgs)
+
+    tk.messagebox.showinfo("Processing Completed", proc_complete_msg)
 
 
 # TODO: Do we still need this?
@@ -257,62 +299,167 @@ def delete_if_present(filepath):
 
 # Create application window and GUI.
 root = tk.Tk()
-window_conf = CONFIG["window"]
-root.title(window_conf["title"])
-root.geometry(f'{window_conf["width"]}x{window_conf["height"]}')
+root.title(window_config["title"])
+root.geometry(f'{window_config["width"]}x{window_config["height"]}')
 
 # .ico files unfortunately don't work on Linux due to a known Tkinter issue.
 # Current fix is simply to not use the icon on Linux.
 if not sys.platform.startswith("linux"):
-    root.iconbitmap(CONFIG["paths"]["icon"])
+    root.iconbitmap(config["paths"]["icon"])
 
-# Create Main Object Frame
+# Create main frame
 main_frame = tk.Frame(root)
 main_frame.pack(expand=True, fill="both", padx=10, pady=10)
 
+# Create banner image
+banner_image = ImageTk.PhotoImage(Image.open(window_config["banner_image"]))
+banner_label = tk.Label(main_frame, image=banner_image)
+
+# Create title
+title_font = Font(size=16)
+title_label = tk.Label(main_frame, font=title_font, text="Vote processing")
+
+banner_label.pack()
+title_label.pack(pady=16)
+
+# Create "Load Votes CSV..." control
+input_file_frame = tk.Frame(main_frame, borderwidth=2, relief="ridge")
+input_file_label = tk.Label(input_file_frame, text="Votes CSV file:")
+
 entry_var = tk.StringVar()
-entry = ttk.Entry(main_frame, textvariable=entry_var)
-entry.pack(padx=10, pady=10)
+input_file_entry = ttk.Entry(input_file_frame, textvariable=entry_var)
 
 browse_button = ttk.Button(
-    main_frame, text="📁 Load Votes CSV...", command=browse_file_csv
+    input_file_frame, text="📁 Choose...", command=browse_file_csv
 )
-browse_button.pack(pady=10)
 
-checks_frame = tk.LabelFrame(main_frame, text="Checks")
-# Create checkboxes and the variables bound to them.
-check_labels = {
-    "duplicate": "Duplicate Check",
-    "blacklist": "Blacklist Check",
-    "whitelist": "Whitelist Check",
-    "upload_date": "Upload Date Check",
-    "duration": "Duration Check",
-    "fuzzy": "Fuzzy Check",
-    "uploader_occurrence": "Uploader Occurrence Check",
-    "uploader_diversity": "Uploader Diversity Check",
+input_file_label.grid(column=0, row=0, padx=8, pady=8)
+input_file_entry.grid(column=1, row=0, padx=8, pady=8)
+browse_button.grid(column=2, row=0, padx=8, pady=8)
+input_file_frame.pack()
+
+# Create options frame
+options_frame = tk.Frame(main_frame)
+ballot_checks_frame = tk.LabelFrame(options_frame, text="Ballot Checks")
+tools_frame = tk.LabelFrame(options_frame, text="Tools")
+
+# Create labels and tooltips for options frames
+ballot_check_layout = {
+    "duplicate": {
+        "label": "Duplicate Check",
+        "tooltip": "Annotate ballots that contain multiple votes for the same video.",
+    },
+    "blacklist": {
+        "label": "Blacklist Check",
+        "tooltip": "Annotate ballots that contain votes for videos from blacklisted uploaders.",
+    },
+    "whitelist": {
+        "label": "Whitelist Check",
+        "tooltip": "Annotate ballots that contain votes for videos from non-whitelisted uploaders.",
+    },
+    "upload_date": {
+        "label": "Upload Date Check",
+        "tooltip": "Annotate ballots that contain votes for videos that do not fall within the voting month.",
+    },
+    "duration": {
+        "label": "Duration Check",
+        "tooltip": "Annotate ballots that contain votes for videos that appear to be too short.",
+    },
+    "fuzzy": {
+        "label": "Fuzzy Check",
+        "tooltip": "Annotate ballots that contain votes with similar titles, uploaders, or durations.",
+    },
+    "uploader_occurrence": {
+        "label": "Uploader Occurrence Check",
+        "tooltip": "Annotate ballots that contain too many videos from the same uploader.",
+    },
+    "uploader_diversity": {
+        "label": "Uploader Diversity Check",
+        "tooltip": "Annotate ballots that do not contain videos from enough different uploaders.",
+    },
 }
 
-check_vars = {key: tk.BooleanVar(value=True) for key in check_labels}
-check_checkboxes = {
-    key: ttk.Checkbutton(checks_frame, text=check_labels[key], variable=check_vars[key])
-    for key in check_labels
+tools_layout = {
+    "detect_cross_platform": {
+        "label": "Detect Cross-Platform Uploads",
+        "tooltip": "Check for similarities in video titles/uploaders/durations and display a warning in the console if any videos appear to be cross-platform uploads or duplicates.",
+    },
+    "ensure_complete_data": {
+        "label": "Ensure Complete Data",
+        "tooltip": "Prompt for manual inputs in the console if a fetched video is missing data.",
+    },
+    "debug": {
+        "label": "Enable Debug Files (Broken LOL)",
+    },
 }
 
-for row, key in enumerate(check_checkboxes):
-    checkbox = check_checkboxes[key]
+# Create checkboxes for options
+ballot_check_vars = {key: tk.BooleanVar(value=True) for key in ballot_check_layout}
+ballot_check_checkboxes = {
+    key: ttk.Checkbutton(
+        ballot_checks_frame,
+        text=ballot_check_layout[key]["label"],
+        variable=ballot_check_vars[key],
+    )
+    for key in ballot_check_layout
+}
+for row, key in enumerate(ballot_check_checkboxes):
+    checkbox = ballot_check_checkboxes[key]
     checkbox.grid(row=row, sticky="W", padx=10)
 
-checks_frame.pack(pady=20)
+tools_vars = {key: tk.BooleanVar(value=False) for key in tools_layout}
+tools_checkboxes = {
+    key: ttk.Checkbutton(
+        tools_frame, text=tools_layout[key]["label"], variable=tools_vars[key]
+    )
+    for key in tools_layout
+}
+for row, key in enumerate(tools_checkboxes):
+    checkbox = tools_checkboxes[key]
+    checkbox.grid(row=row, sticky="W", padx=10)
 
-debug_var = tk.BooleanVar()
-debug_checkbox = ttk.Checkbutton(
-    main_frame, text="Enable Debug Files (Broken LOL)", variable=debug_var
-)
-debug_checkbox.pack()
+# Auto-set some options
+tools_vars["detect_cross_platform"].set(True)
 
-run_button = ttk.Button(main_frame, text="📜 Run Checks", command=run_checks)
-run_button.pack(pady=20)
+ballot_checks_frame.grid(row=0, column=0, sticky="N", padx=5, pady=5)
+tools_frame.grid(row=0, column=1, sticky="N", padx=5, pady=5)
 
-csv_editor = CSVEditor(main_frame)  # Editor main frame
-csv_editor.pack()
+options_frame.pack(pady=10)
+
+# Add explanatory tooltips
+ttip_delay = 0.5
+ttip_follow = False
+
+for key in ballot_check_layout:
+    if "tooltip" in ballot_check_layout[key]:
+        ToolTip(
+            ballot_check_checkboxes[key],
+            msg=ballot_check_layout[key]["tooltip"],
+            delay=ttip_delay,
+            follow=ttip_follow,
+        )
+
+for key in tools_layout:
+    if "tooltip" in tools_layout[key]:
+        ToolTip(
+            tools_checkboxes[key],
+            msg=tools_layout[key]["tooltip"],
+            delay=ttip_delay,
+            follow=ttip_follow,
+        )
+
+# Create buttons bar
+buttons_frame = tk.Frame(main_frame)
+buttons_frame.pack()
+
+run_button = ttk.Button(buttons_frame, text="📜 Run Checks", command=run_checks)
+run_button.grid(column=0, row=0, padx=5, pady=5)
+
+quit_button = ttk.Button(buttons_frame, text="Quit", command=root.destroy)
+quit_button.grid(column=1, row=0, padx=5, pady=5)
+
+# Editor main frame
+# Currently hidden, may be removed in future
+# csv_editor = CSVEditor(main_frame)
+# csv_editor.pack()
 root.mainloop()

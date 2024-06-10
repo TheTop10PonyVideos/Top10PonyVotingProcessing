@@ -4,3 +4,5 @@ google-api-python-client
 yt-dlp
 pytz
 python-Levenshtein
+pillow
+tkinter-tooltip

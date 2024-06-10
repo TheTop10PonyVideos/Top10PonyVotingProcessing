@@ -3,6 +3,7 @@
 import re
 from datetime import datetime
 from pytz import timezone
+from functions.general import get_freq_table
 from classes.voting import Ballot
 
 
@@ -15,7 +16,7 @@ def parse_votes_csv_timestamp(timestamp: str) -> datetime:
     """
 
     timestamp = timestamp.strip()
-    pattern = "^(\d+)/(\d+)/(\d+) (\d+):(\d+):(\d+)$"
+    pattern = r"^(\d+)/(\d+)/(\d+) (\d+):(\d+):(\d+)$"
     match = re.match(pattern, timestamp)
     try:
         date_components = match.groups()
@@ -142,7 +143,9 @@ def guess_voting_month_year(ballots: list[Ballot]) -> tuple[int, int, bool]:
 
     Returns a tuple of 3 values: month, year, and is_unanimous, which is set to
     True if all ballots agreed on the same month and year."""
-    voting_month_years = [(ballot.timestamp.month, ballot.timestamp.year) for ballot in ballots]
+    voting_month_years = [
+        (ballot.timestamp.month, ballot.timestamp.year) for ballot in ballots
+    ]
     voting_month_year_counts = get_freq_table(voting_month_years)
 
     sorted_voting_month_years = sorted(
@@ -155,16 +158,3 @@ def guess_voting_month_year(ballots: list[Ballot]) -> tuple[int, int, bool]:
     is_unanimous = len(sorted_voting_month_years) == 1
 
     return (*most_common_month_year, is_unanimous)
-
-def get_freq_table(values: list) -> dict:
-    """Given a list of values, return a dictionary mapping each value to the
-    number of times it occurs in the list."""
-    
-    freqs = {}
-
-    for value in values:
-        if value not in freqs:
-            freqs[value] = 0
-        freqs[value] += 1
-
-    return freqs

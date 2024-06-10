@@ -66,6 +66,8 @@ def check_ballot_video_durations(ballots: list[Ballot], videos: dict[str, Video]
                 vote.annotations.add("VIDEO TOO SHORT")
             if video.annotations.has("VIDEO MAYBE TOO SHORT"):
                 vote.annotations.add("VIDEO MAYBE TOO SHORT")
+            if video.annotations.has("MISSING DURATION"):
+                vote.annotations.add("MISSING DURATION")
 
 
 def check_fuzzy(
@@ -76,6 +78,7 @@ def check_fuzzy(
     uploader, and duration. For each vote that is found to be similar to others,
     annotate it with the properties in which it is similar.
     """
+    # TODO: Consider replacing this with the similarity matrix check.
     for ballot in ballots:
         # TODO: Is Levenshtein check on duration needed? I'm not sure it works
         # on numbers.

@@ -14,3 +14,17 @@ def load_text_data(path_str: str) -> list[str]:
         lines = [line for line in file if line.strip() != ""]
         lines = [line.strip("\n") for line in lines]
         return lines
+
+
+def get_freq_table(values: list) -> dict:
+    """Given a list of values, return a dictionary mapping each value to the
+    number of times it occurs in the list."""
+
+    freqs = {}
+
+    for value in values:
+        if value not in freqs:
+            freqs[value] = 0
+        freqs[value] += 1
+
+    return freqs
