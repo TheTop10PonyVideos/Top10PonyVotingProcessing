@@ -137,24 +137,61 @@ def is_date_between(
 
 
 def guess_voting_month_year(ballots: list[Ballot]) -> tuple[int, int, bool]:
-    """Given a list of ballots, attempt to determine what month and year is
-    being voted on. This uses a simple heuristic of counting the most common
-    month-year in the ballot timestamps.
+    """Given a list of ballots, attempt to determine what month and year the
+    votes are being cast in. This uses a simple heuristic of counting the most
+    common month-year in the ballot timestamps.
+
+    Remember that votes are cast in the month after the videos are uploaded, so
+    if the voting month year is April 2024, the videos were uploaded in March
+    2024 (and would be featured in the "Top 10 Pony Videos of March 2024"
+    showcase).
 
     Returns a tuple of 3 values: month, year, and is_unanimous, which is set to
     True if all ballots agreed on the same month and year."""
-    voting_month_years = [
-        (ballot.timestamp.month, ballot.timestamp.year) for ballot in ballots
-    ]
-    voting_month_year_counts = get_freq_table(voting_month_years)
 
-    sorted_voting_month_years = sorted(
-        voting_month_year_counts,
-        key=lambda my: voting_month_year_counts[my],
+    ballot_timestamps = [ballot.timestamp for ballot in ballots]
+    return get_most_common_month_year(ballot_timestamps)
+
+
+def get_most_common_month_year(dates: list[datetime]) -> tuple[int, int, bool]:
+    """Given a list of dates, return the most common month and year among
+    them.
+
+    Returns a tuple of 3 values: month, year, and is_unanimous, which is set to
+    True if all dates agree on the same month and year."""
+    month_years = [(date.month, date.year) for date in dates]
+    month_year_counts = get_freq_table(month_years)
+
+    sorted_month_years = sorted(
+        month_year_counts,
+        key=lambda my: month_year_counts[my],
         reverse=True,
     )
 
-    most_common_month_year = sorted_voting_month_years[0]
-    is_unanimous = len(sorted_voting_month_years) == 1
+    most_common_month_year = sorted_month_years[0]
+    is_unanimous = len(sorted_month_years) == 1
 
     return (*most_common_month_year, is_unanimous)
+
+
+def rel_anni_date_to_abs(rel_date: str, from_date: datetime) -> datetime:
+    """Given a date of the relative form "N years ago", and an absolute from
+    date, return the date in absolute form. For example, if the date is "5 years
+    ago" and the from date is 2024-04-01, the result should be 2019-04-01."""
+
+    rel_date_words = rel_date.split(' ')
+    if len(rel_date_words) != 3:
+        raise ValueError(f'Cannot convert relative date "{rel_date}" to absolute date; date must be given in form "N year ago" or "N years ago"')
+
+    years_ago = None
+    try:
+        years_ago = int(rel_date_words[0])
+    except ValueError as error:
+        raise ValueError(f'Cannot convert relative date "{rel_date}" to absolute date; first word of relative date must be an integer number of years"') from error
+
+    if ' '.join(rel_date_words[1:]) not in ['year ago', 'years ago']:
+        raise ValueError(f'Cannot convert relative date "{rel_date}" to absolute date; date must end in "year ago" or "years ago""')
+
+    abs_date = from_date.replace(year=from_date.year - years_ago) 
+
+    return abs_date

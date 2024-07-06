@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from functions.general import get_freq_table
 from functions.services import get_fetcher
+from functions.date import get_most_common_month_year, rel_anni_date_to_abs
 from functions.messages import suc, inf, err
 from classes.fetcher import Fetcher
 
@@ -29,63 +30,10 @@ def fetch_videos_data(urls: list[str]) -> dict[str, dict]:
     return videos_data
 
 
-def create_post_processed_records(
-    calc_records: list[dict], videos_data: dict[str, dict], silent: bool = False
-) -> list[str]:
-    """Given a "calc record" (a record obtained from the output of the calc
-    script) and a dictionary mapping each video URL to its data, return a
-    "post-processed record", which contains all of the information needed for
-    post-processing operations."""
-
-    # Sort the vote counts and assign a rank to each.
-    vote_counts = set([int(record["Total Votes"]) for record in calc_records])
-    sorted_vote_counts = sorted(vote_counts, reverse=True)
-    ranked_vote_counts = {
-        vote_count: i + 1 for i, vote_count in enumerate(sorted_vote_counts)
-    }
-
-    post_proc_records = []
-    for calc_record in calc_records:
-        url = calc_record["URL"]
-        video_data = None
-        if url in videos_data:
-            video_data = videos_data[url]
-        else:
-            if not silent:
-                err(f"WARNING: No video data available for URL {url}.")
-
-        # Probably shouldn't do this, but since one of the fields requested by
-        # the sharable spreadsheet is the total number of voters, we can
-        # actually reverse-engineer that figure from votes and percentage:
-        percentage = float(calc_record["Percentage"].strip("%"))
-        votes = int(calc_record["Total Votes"])
-        total_voters = round((100 * votes) / percentage)
-
-        post_proc_record = {
-            "url": url,
-            "title": calc_record["Title"],
-            "uploader": None,
-            "upload_date": None,
-            "rank": ranked_vote_counts[votes],
-            "votes": votes,
-            "percentage": percentage,
-            "total_voters": total_voters,
-        }
-
-        # If video data is available, use that to supply some of the field data.
-        if video_data is not None:
-            post_proc_record["title"] = video_data["title"]
-            post_proc_record["uploader"] = video_data["uploader"]
-            post_proc_record["upload_date"] = video_data["upload_date"]
-
-        post_proc_records.append(post_proc_record)
-
-    return post_proc_records
-
-
-def generate_archive_records(post_proc_records: list[dict]) -> list[dict]:
-    """Given a list of post-processed records, generate a list of data records
-    in the format used by [Flynn's Top 10 Pony Videos List][1].
+def generate_archive_records(top_10_records: list[dict], videos_data: dict) -> list[dict]:
+    """Given a list of top 10 records and a collection of accompanying video
+    data indexed by video URL, generate a list of data records in the format
+    used by [Flynn's Top 10 Pony Videos List][1].
 
     [1]: https://docs.google.com/spreadsheets/d/1rEofPkliKppvttd8pEX8H6DtSljlfmQLdFR-SlyyX7E
     """
@@ -93,33 +41,33 @@ def generate_archive_records(post_proc_records: list[dict]) -> list[dict]:
     records = []
     # Note: records created in reverse order as per the convention used in the
     # master archive spreadsheet.
-    for post_proc_record in reversed(post_proc_records):
+    for i, top_10_record in enumerate(reversed(top_10_records)):
+        rank = len(top_10_records) - i
+        url = top_10_record['URL']
+        video_data = videos_data[url]
+
+        year = ''
+        month = ''
+        channel = ''
+        upload_date = ''
+
+        # TODO: Warn the user if video data is not available for some reason.
+        if video_data is not None:
+            year = video_data['upload_date'].year
+            month = video_data['upload_date'].month
+            channel = video_data['uploader']
+            upload_date = video_data['upload_date'].strftime('%Y-%m-%d')
+        
         record = {
-            "year": (
-                post_proc_record["upload_date"].year
-                if post_proc_record["upload_date"] is not None
-                else ""
-            ),
-            "month": (
-                post_proc_record["upload_date"].month
-                if post_proc_record["upload_date"] is not None
-                else ""
-            ),
-            "rank": post_proc_record["rank"],
-            "link": post_proc_record["url"],
-            "title": post_proc_record["title"],
-            "channel": (
-                post_proc_record["uploader"]
-                if post_proc_record["uploader"] is not None
-                else ""
-            ),
-            "upload date": (
-                post_proc_record["upload_date"].strftime("%Y-%m-%d")
-                if post_proc_record["upload_date"] is not None
-                else ""
-            ),
+            "year": year,
+            "month": month,
+            "rank": rank,
+            "link": url,
+            "title": top_10_record["Title"],
+            "channel": channel,
+            "upload date": upload_date,
             "state": "",
-            "alternate link": post_proc_record["url"],
+            "alternate link": url,
             "found": "",
             "notes": "",
         }
@@ -129,24 +77,51 @@ def generate_archive_records(post_proc_records: list[dict]) -> list[dict]:
     return records
 
 
-def generate_sharable_records(post_proc_records: list[dict]) -> list[dict]:
-    """Given a list of post-processed records, generate a list of data records
-    in the format used by the sharable spreadsheet included with each Top 10
-    Pony Videos showcase ([example from February 2024][2]).
+def generate_sharable_records(top_10_records: list[dict], hm_records: list[dict]) -> list[dict]:
+    """Given a list of top 10 records and a list of honorable mention records,
+    generate a list of data records in the format used by the sharable
+    spreadsheet included with each Top 10 Pony Videos showcase ([example from
+    February 2024][2]).
 
     [2]: https://docs.google.com/spreadsheets/d/1CCXeLR18mdDx6T2wQcxjTW-LRauTNFmG88OKvfSHy_M
     """
 
+    # Probably shouldn't do this, but since one of the fields requested by the
+    # sharable spreadsheet is the total number of voters, we can
+    # reverse-engineer that figure from votes and percentage:
+    percentage = float(top_10_records[0]["Percentage"].strip("%"))
+    votes = int(top_10_records[0]["Total Votes"])
+    total_voters = round((100 * votes) / percentage)
+
     records = []
-    for post_proc_record in post_proc_records:
+
+    for i, top_10_record in enumerate(top_10_records):
+        rank = i + 1
         record = {
-            "Rank": post_proc_record["rank"],
-            "Title": post_proc_record["title"],
-            "Link": f'=VLOOKUP("{post_proc_record["url"]}", IMPORTRANGE("{MASTER_ARCHIVE_URL}", "top10!D:I"), 6, FALSE)',
-            "Votes": post_proc_record["votes"],
-            "Popularity": f'{post_proc_record["percentage"]}%',
-            "Total voters": post_proc_record["total_voters"],
-            "Notes": "",
+            "Rank": rank,
+            "Title": top_10_record["Title"],
+            "Link": f'=VLOOKUP("{top_10_record["URL"]}", IMPORTRANGE("{MASTER_ARCHIVE_URL}", "top10!D:I"), 6, FALSE)',
+            "Votes": top_10_record["Total Votes"],
+            "Popularity": top_10_record["Percentage"],
+            "Total voters": total_voters,
+            "Notes": top_10_record['Notes'],
+        }
+
+        records.append(record)
+
+    for hm_record in hm_records:
+        hm_notes = 'HM'
+        if hm_record["Notes"].strip() != '':
+            hm_notes = f'{hm_notes}. {hm_record["Notes"]}'
+
+        record = {
+            "Rank": "HM",
+            "Title": hm_record["Title"],
+            "Link": f'=VLOOKUP("{hm_record["URL"]}", IMPORTRANGE("{MASTER_ARCHIVE_URL}", "top10!D:I"), 6, FALSE)',
+            "Votes": hm_record["Total Votes"],
+            "Popularity": hm_record["Percentage"],
+            "Total voters": total_voters,
+            "Notes": hm_notes
         }
 
         records.append(record)
@@ -204,56 +179,32 @@ def generate_sharable_csv(records: list[dict], filename: str):
 
 
 def generate_showcase_description(
-    post_proc_records: list[dict], silent: bool = False
+    top_10_records: list[dict], hm_records: list[dict], history_records: dict[dict], top_10_videos_data: dict, hm_videos_data: dict, history_videos_data: dict, silent: bool = False
 ) -> str:
-    """Given a list of URLs, generate the description for the showcase video
-    ([example from February 2024][3]).
+    """Generate the description for the showcase video ([example from February
+    2024][3]).
+
+    The showcase description has 3 sections: the top 10 videos, honorable
+    mentions, and a history section. To populate each, records must be supplied
+    for each of those sections, along with accompanying video data for each URL
+    in each section.
 
     [3]: https://www.youtube.com/watch?v=JOcVLEL-bgg
     """
 
-    # Filter out any records for which we don't have sufficient data available,
-    # as we have no way to handle those.
-    insufficient_data = lambda r: r["upload_date"] is None or r["uploader"] is None
-    records_with_insufficient_data = [
-        record for record in post_proc_records if insufficient_data(record)
-    ]
-
-    records_with_sufficient_data = [
-        record for record in post_proc_records if not insufficient_data(record)
-    ]
-
-    if len(records_with_insufficient_data) > 0:
-        if not silent:
-            urls_with_insufficient_data = [
-                record["url"] for record in records_with_insufficient_data
-            ]
-            err(
-                f'WARNING: Insufficient data for the following {len(urls_with_insufficient_data)} URLs: {", ".join(urls_with_insufficient_data)}. These URLs will not be represented in the output.'
-            )
-
-    post_proc_records = records_with_sufficient_data
-
-    # Guess the upload month and year based on most common
-    upload_dates = [record["upload_date"] for record in post_proc_records]
-    upload_month_years = [date.strftime("%B %Y") for date in upload_dates]
-    upload_month_year_freqs = get_freq_table(upload_month_years)
-    upload_month_year_str = sorted(
-        upload_month_year_freqs, key=lambda my: upload_month_year_freqs[my]
-    )[-1]
+    # Guess the voting month and year from the upload dates of the top 10
+    # videos.
+    upload_dates = [data['upload_date'] for url, data in top_10_videos_data.items() if data is not None]
+    upload_month, upload_year, is_unanimous = get_most_common_month_year(upload_dates)
+    upload_date = datetime(upload_year, upload_month, 1)
+    upload_month_year_str = upload_date.strftime("%B %Y")
 
     if not silent:
         inf(
             f"Assuming showcase date of {upload_month_year_str} based on most common upload month and year."
         )
 
-    # Calculate historical showcase dates
-    upload_month_year_date = datetime.strptime(upload_month_year_str, "%B %Y")
-    upload_year = upload_month_year_date.year
-    last_year_date = upload_month_year_date.replace(year=upload_year - 1)
-    five_years_ago_date = upload_month_year_date.replace(year=upload_year - 5)
-    ten_years_ago_date = upload_month_year_date.replace(year=upload_year - 10)
-
+    # Define various text strings used in the description.
     opening = "Be sure to check out the videos in the description below! The Top 10 Pony Videos is a long-running project to document and showcase the most popular My Little Pony videos in the brony community. Videos featured on the list are voted upon during a week-long voting process at the beginning of each month. This project has been active every single month since 2011!"
 
     project_links = {
@@ -278,76 +229,88 @@ https://creativecommons.org/licenses/by-sa/3.0/"""
         "[Mandatory swearing to help avoid being blacklisted as MFK: Fuck YouTube.]"
     )
 
-    desc = f"""{opening}
-
-
-"""
+    # Build the description from the text strings.
+    desc = f"{opening}\n\n\n"
 
     for link_text, url in project_links.items():
         desc += f"{link_text}:\n"
         desc += f"► {url}\n"
 
-    desc += """
-
-► VIDEO LINKS:
-
-"""
+    desc += "\n\n"
+    desc += "► VIDEO LINKS:\n\n"
 
     for link_text, url in sharable_links.items():
         desc += f"• {link_text}: {url}\n"
 
     desc += "\n"
 
-    # Note: URLs are listed in reverse order of popularity, as that's the way
-    # they're presented in the video.
-    for record in reversed(post_proc_records):
-        desc += f"""○ {record["title"]}
-{record["url"]}
-{record["uploader"]}
+    # Add the top 10, honorable mentions, and history lists. Note that the top
+    # 10 URLs are listed in reverse order of popularity, to match how they're
+    # presented in the video.
+    videos_desc = create_videos_desc(reversed(top_10_records), top_10_videos_data, silent)
+    hm_desc = create_videos_desc(hm_records, hm_videos_data, silent)
+    history_desc = create_history_desc(history_records, history_videos_data, upload_date, silent)
 
-"""
-
-    desc += """
-
-► Honorable mentions:
-
-○ 
-
-○ 
-
-○ 
-
-○ 
-
-"""
-
-    desc += f"""
-
-► The Top 10 Pony Videos of {last_year_date.strftime('%B %Y')}:
-
-○ 
-
-► The Top 10 Pony Videos of {five_years_ago_date.strftime('%B %Y')}:
-
-○ 
-
-► The Top 10 Pony Videos of {ten_years_ago_date.strftime('%B %Y')}:
-
-○ 
-
-"""
-
-    desc += f"""
-
-
-{disclosures}
-
-"""
-
-    desc += f"""{licensing}
-
-"""
-
+    desc += f"{videos_desc}\n\n"
+    desc += "► Honorable mentions:\n\n"
+    desc += f"{hm_desc}\n\n"
+    desc += f"{history_desc}\n\n"
+    desc += f"{disclosures}\n\n"
+    desc += f"{licensing}\n\n"
     desc += f"{mandatory_swearing}\n"
 
     return desc
+
+
+def create_videos_desc(records: list[dict], videos_data: dict, silent: bool=True) -> str:
+    """Given a list of top 10 records and a collection of video data indexed by
+    URL, generate a videos list for the description. This also works for the
+    Honorable mentions records."""
+
+    video_descs = []
+
+    for record in records:
+        video_data = videos_data[record['URL']]
+
+        # Create a barebones video description based on what we know about it
+        # from the calculated Top 10 spreadsheet.
+        video_desc = f'○ {record["Title"]}\n'
+        video_desc += f'{record["URL"]}\n'
+
+        # Warn the user if we didn't have any video data for this video.
+        if video_data is None:
+            if not silent:
+                err(
+                    f'WARNING: No video data available for URL {record["URL"]}. The title and URL have been added to the showcase description based on the entry in the calculated Top 10 spreadsheet, but uploader information is not available.'
+                )
+        else:
+            # We do have video data, so create a full description.
+            video_desc = f'○ {video_data["title"]}\n'
+            video_desc += f'{record["URL"]}\n'
+            video_desc += f'{video_data["uploader"]}\n'
+
+        video_descs.append(video_desc)
+
+    return '\n'.join(video_descs)
+
+
+def create_history_desc(records: dict[dict], videos_data: dict, from_date: datetime, silent: bool=True) -> str:
+    """Given a collection of history records and a collection of video data
+    indexed by URL, generate a history section for the description. The
+    collection should be a dictionary indexed by relative dates of the form
+    "N years ago"."""
+
+    anni_descs = []
+
+    for rel_anni_date, video_records in records.items():
+        abs_anni_date = rel_anni_date_to_abs(rel_anni_date, from_date)
+        history_month_year = abs_anni_date.strftime('%B %Y')
+        heading = f'► The Top 10 Pony Videos of {history_month_year}'
+        link_placeholder = '[ADD SHOWCASE LINK]'
+
+        anni_desc = heading + '\n\n' + link_placeholder + create_videos_desc(video_records, videos_data, silent)
+        anni_descs.append(anni_desc)
+
+    history_desc = '\n'.join(anni_descs)
+
+    return history_desc

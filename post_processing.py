@@ -9,13 +9,13 @@ from tkinter.font import Font
 from PIL import ImageTk, Image
 from functions.post_processing import (
     fetch_videos_data,
-    create_post_processed_records,
     generate_archive_records,
     generate_sharable_records,
     generate_archive_csv,
     generate_sharable_csv,
     generate_showcase_description,
 )
+from functions.top_10_parser import parse_calculated_top_10_csv
 from functions.messages import suc, inf, err
 
 
@@ -40,7 +40,7 @@ def handle_post_processing():
     calc_records = []
     with input_file_path.open("r", newline="", encoding="utf-8") as file:
         reader = csv.DictReader(file)
-        required_header = ["Title", "Percentage", "Total Votes", "URL"]
+        required_header = ["Title", "Percentage", "Total Votes", "URL", "Notes"]
         if reader.fieldnames != required_header:
             err(
                 f'Selected CSV file "{input_file_str}" has an invalid header: {",".join(reader.fieldnames)}'
@@ -55,24 +55,38 @@ def handle_post_processing():
 
     inf("Performing post-processing...")
 
-    video_urls = [record["URL"] for record in calc_records]
-    videos_data = fetch_videos_data(video_urls)
+    grouped_records = parse_calculated_top_10_csv(calc_records)
 
-    post_proc_records = create_post_processed_records(calc_records, videos_data)
+    top_10_records = grouped_records['Top 10']
+    hm_records = grouped_records['HONORABLE MENTIONS']
+    history_records = grouped_records['HISTORY']
+
+    top_10_video_urls = [record["URL"] for record in top_10_records]
+    hm_video_urls = [record["URL"] for record in hm_records]
+
+    history_video_url_groups = {anni_year: {r["URL"] for r in records} for anni_year, records in history_records.items()}
+    history_video_urls = []
+    for anni_year, group in history_video_url_groups.items():
+        for url in group:
+            history_video_urls.append(url)
+
+    top_10_videos_data = fetch_videos_data(top_10_video_urls)
+    hm_videos_data = fetch_videos_data(hm_video_urls)
+    history_videos_data = fetch_videos_data(history_video_urls)
+
+    archive_records = generate_archive_records(top_10_records, top_10_videos_data)
+    sharable_records = generate_sharable_records(top_10_records, hm_records)
+    showcase_desc = generate_showcase_description(top_10_records, hm_records, history_records, top_10_videos_data, hm_videos_data, history_videos_data)
 
     archive_file = f"{output_dir}/{output_file_prefix}archive.csv"
     sharable_file = f"{output_dir}/{output_file_prefix}sharable.csv"
     desc_file = f"{output_dir}/{output_file_prefix}description.txt"
 
-    archive_records = generate_archive_records(post_proc_records)
     generate_archive_csv(archive_records, archive_file)
     suc(f"Wrote archive data to {archive_file}.")
-
-    sharable_records = generate_sharable_records(post_proc_records)
     generate_sharable_csv(sharable_records, sharable_file)
     suc(f"Wrote sharable spreadsheet data to {sharable_file}.")
 
-    showcase_desc = generate_showcase_description(post_proc_records)
     with open(desc_file, "w", encoding="utf8") as file:
         file.write(showcase_desc)
 
