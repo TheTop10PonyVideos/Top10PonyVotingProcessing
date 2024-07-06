@@ -1,5 +1,6 @@
 """General-use functions."""
 
+from random import randint
 from pathlib import Path
 
 
@@ -28,3 +29,16 @@ def get_freq_table(values: list) -> dict:
         freqs[value] += 1
 
     return freqs
+
+
+def sample_item_without_replacement(items: list):
+    """Given a list of items, sample one random item, remove it from the list,
+    and return the item."""
+    if len(items) == 0:
+        raise ValueError('Cannot sample from empty list')
+
+    random_index = randint(0, len(items) - 1)
+    sampled_item = items[random_index]
+    del items[random_index]
+
+    return sampled_item
