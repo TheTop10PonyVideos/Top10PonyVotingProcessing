@@ -13,17 +13,21 @@ class TestFunctionsTop10Calc(TestCase):
 
         data_rows = process_shifted_voting_data(rows)
 
-        self.assertEqual(2, len(data_rows))
+        self.assertEqual(3, len(data_rows))
         self.assertEqual(10, len(data_rows[0]))
-        self.assertEqual(9, len(data_rows[1]))
+        self.assertEqual(10, len(data_rows[1]))
+        self.assertEqual(9, len(data_rows[2]))
         self.assertEqual('Title A', data_rows[0][0])
         self.assertEqual('Title B', data_rows[0][1])
         self.assertEqual('Title C', data_rows[0][2])
         self.assertEqual('Title J', data_rows[0][9])
-        self.assertEqual('Title K', data_rows[1][0])
-        self.assertEqual('Title L', data_rows[1][1])
-        self.assertEqual('Title M', data_rows[1][2])
-        self.assertEqual('Title S', data_rows[1][8])
+        self.assertEqual('', data_rows[1][0])
+        self.assertEqual('', data_rows[1][1])
+        self.assertEqual('', data_rows[1][2])
+        self.assertEqual('Title K', data_rows[2][0])
+        self.assertEqual('Title L', data_rows[2][1])
+        self.assertEqual('Title M', data_rows[2][2])
+        self.assertEqual('Title S', data_rows[2][8])
 
 
     def test_calc_ranked_records(self):
