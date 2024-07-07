@@ -77,20 +77,14 @@ def analyze_and_write_titles_to_csv(input_file: str, output_file: str):
 
 
 def process_shifted_voting_data(rows: list[list[str]]) -> list[list[str]]:
-    """Given a set of data obtained from the "shifted" CSV (ie. a votes CSV with
+    """Given a set of data obtained from a "shifted" CSV (ie. a votes CSV with
     annotation columns inserted after every original column), return a list of
-    rows containing just the nonempty data fields."""
+    rows containing just the data fields, with the "shifted" cells removed."""
     # Remove the header row
     data_rows = rows[1:]
 
     # Ignore the first column and odd-indexed columns
     data_rows = [row[2::2] for row in data_rows]
-
-    # Ignore empty values
-    data_rows = [[cell for cell in row if cell.strip() != ''] for row in data_rows]
-
-    # Ignore empty lines
-    data_rows = [row for row in data_rows if ''.join(row) != '']
 
     return data_rows
 
@@ -101,7 +95,7 @@ def get_titles_to_urls_mapping(title_rows: list[list[str]], url_rows: list[list[
     titles_to_urls = {}
 
     for title_row, url_row in zip(title_rows, url_rows, strict=True):
-        for title, url in zip(title_row, url_row, strict=True):
+        for title, url in zip(title_row, url_row):
             titles_to_urls[title] = url
 
     return titles_to_urls

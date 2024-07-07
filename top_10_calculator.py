@@ -81,13 +81,8 @@ def handle_calc():
     title_rows = process_shifted_voting_data(shifted_title_rows)
     url_rows = process_shifted_voting_data(shifted_url_rows)
 
-    # Sanity check: Make sure each row of titles and URLs has the same number of
-    # cells. If they don't, then these CSVs aren't matching and something is
-    # wrong.
-    for i, title_row in enumerate(title_rows):
-        url_row = url_rows[i]
-        if len(title_row) != len(url_row):
-            raise Exception(f'Error while processing voting data; number of title and URL fields do not match')
+    if len(title_rows) != len(url_rows):
+        raise Exception(f'Error while processing voting data; number of title and URL rows do not match')
 
     # Create a dictionary which maps video titles to URLs for each title in the
     # CSV.
