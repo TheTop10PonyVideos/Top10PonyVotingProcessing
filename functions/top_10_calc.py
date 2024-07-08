@@ -178,7 +178,7 @@ def load_top_10_master_archive() -> list[dict]:
         except FileNotFoundError:
             inf('No local copy of the master Top 10 Pony Videos archive exists, downloading one...')
             response = requests.get(top_10_archive_csv_url)
-            Path(local_top_10_archive_csv_path).write_text(response.text)
+            Path(local_top_10_archive_csv_path).write_text(response.text, encoding='utf-8')
             suc(f'Local copy of master Top 10 Pony Videos archive saved to {local_top_10_archive_csv_path}.')
 
     return archive_records
