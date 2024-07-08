@@ -111,10 +111,21 @@ def calc_ranked_records(title_rows: list[list[str]], titles_to_urls: dict[str, s
             if title not in title_counts:
                 title_counts[title] = 0
             title_counts[title] += 1
+    
+    if '' in title_counts: del title_counts['']
 
-    title_percentages = {title: (count / len(title_rows)) * 100 for title, count in title_counts.items()}
+    counted_voters = 0
+    for i, title_row in enumerate(title_rows):
+        vote_count = len(list(filter(lambda title: title, title_row)))
+        if vote_count >= 5:
+            counted_voters += 1
+            continue
 
-    sorted_titles = sorted(title_percentages, key=lambda t: title_percentages[t], reverse=True)
+        if vote_count != 0:
+            # +1 since most editors display 1 as the starting index and +1 to skip header
+            raise ValueError(f"Only {vote_count} votes included in ballot line ~{i + 2} when at least 5 are required")
+
+    title_percentages = {title: (count / counted_voters) * 100 for title, count in title_counts.items()}
 
     # If any titles have the same percentage of votes, then they are tied, and
     # we need to break such ties in order to produce a ranked top 10. To do this
