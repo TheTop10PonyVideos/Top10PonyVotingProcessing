@@ -104,10 +104,11 @@ def handle_calc():
     # If any of the non-top 10 videos would have made it into the top 10 but
     # were excluded due to a tie break, add a special note for them.
 
+    tenth_place_record = top_10_records[9]
     for record in non_top_10_records:
-        tenth_place_record = top_10_records[9]
         if record['Total Votes'] == tenth_place_record['Total Votes']:
             record['Notes'] = 'Missed out on top 10 due to tie break'
+        else: break
     
 
     # Create some heading rows and blank rows.
