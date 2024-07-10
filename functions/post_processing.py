@@ -30,7 +30,9 @@ def fetch_videos_data(urls: list[str]) -> dict[str, dict]:
     return videos_data
 
 
-def generate_archive_records(top_10_records: list[dict], videos_data: dict) -> list[dict]:
+def generate_archive_records(
+    top_10_records: list[dict], videos_data: dict
+) -> list[dict]:
     """Given a list of top 10 records and a collection of accompanying video
     data indexed by video URL, generate a list of data records in the format
     used by [Flynn's Top 10 Pony Videos List][1].
@@ -43,21 +45,21 @@ def generate_archive_records(top_10_records: list[dict], videos_data: dict) -> l
     # master archive spreadsheet.
     for i, top_10_record in enumerate(reversed(top_10_records)):
         rank = len(top_10_records) - i
-        url = top_10_record['URL']
+        url = top_10_record["URL"]
         video_data = videos_data[url]
 
-        year = ''
-        month = ''
-        channel = ''
-        upload_date = ''
+        year = ""
+        month = ""
+        channel = ""
+        upload_date = ""
 
         # TODO: Warn the user if video data is not available for some reason.
         if video_data is not None:
-            year = video_data['upload_date'].year
-            month = video_data['upload_date'].month
-            channel = video_data['uploader']
-            upload_date = video_data['upload_date'].strftime('%Y-%m-%d')
-        
+            year = video_data["upload_date"].year
+            month = video_data["upload_date"].month
+            channel = video_data["uploader"]
+            upload_date = video_data["upload_date"].strftime("%Y-%m-%d")
+
         record = {
             "year": year,
             "month": month,
@@ -77,7 +79,9 @@ def generate_archive_records(top_10_records: list[dict], videos_data: dict) -> l
     return records
 
 
-def generate_sharable_records(top_10_records: list[dict], hm_records: list[dict]) -> list[dict]:
+def generate_sharable_records(
+    top_10_records: list[dict], hm_records: list[dict]
+) -> list[dict]:
     """Given a list of top 10 records and a list of honorable mention records,
     generate a list of data records in the format used by the sharable
     spreadsheet included with each Top 10 Pony Videos showcase ([example from
@@ -104,14 +108,14 @@ def generate_sharable_records(top_10_records: list[dict], hm_records: list[dict]
             "Votes": top_10_record["Total Votes"],
             "Popularity": top_10_record["Percentage"],
             "Total voters": total_voters,
-            "Notes": top_10_record['Notes'],
+            "Notes": top_10_record["Notes"],
         }
 
         records.append(record)
 
     for hm_record in hm_records:
-        hm_notes = 'HM'
-        if hm_record["Notes"].strip() != '':
+        hm_notes = "HM"
+        if hm_record["Notes"].strip() != "":
             hm_notes = f'{hm_notes}. {hm_record["Notes"]}'
 
         record = {
@@ -121,7 +125,7 @@ def generate_sharable_records(top_10_records: list[dict], hm_records: list[dict]
             "Votes": hm_record["Total Votes"],
             "Popularity": hm_record["Percentage"],
             "Total voters": total_voters,
-            "Notes": hm_notes
+            "Notes": hm_notes,
         }
 
         records.append(record)
@@ -179,7 +183,13 @@ def generate_sharable_csv(records: list[dict], filename: str):
 
 
 def generate_showcase_description(
-    top_10_records: list[dict], hm_records: list[dict], history_records: dict[dict], top_10_videos_data: dict, hm_videos_data: dict, history_videos_data: dict, silent: bool = False
+    top_10_records: list[dict],
+    hm_records: list[dict],
+    history_records: dict[dict],
+    top_10_videos_data: dict,
+    hm_videos_data: dict,
+    history_videos_data: dict,
+    silent: bool = False,
 ) -> str:
     """Generate the description for the showcase video ([example from February
     2024][3]).
@@ -194,7 +204,11 @@ def generate_showcase_description(
 
     # Guess the voting month and year from the upload dates of the top 10
     # videos.
-    upload_dates = [data['upload_date'] for url, data in top_10_videos_data.items() if data is not None]
+    upload_dates = [
+        data["upload_date"]
+        for url, data in top_10_videos_data.items()
+        if data is not None
+    ]
     upload_month, upload_year, is_unanimous = get_most_common_month_year(upload_dates)
     upload_date = datetime(upload_year, upload_month, 1)
     upload_month_year_str = upload_date.strftime("%B %Y")
@@ -247,9 +261,13 @@ https://creativecommons.org/licenses/by-sa/3.0/"""
     # Add the top 10, honorable mentions, and history lists. Note that the top
     # 10 URLs are listed in reverse order of popularity, to match how they're
     # presented in the video.
-    videos_desc = create_videos_desc(reversed(top_10_records), top_10_videos_data, silent)
+    videos_desc = create_videos_desc(
+        reversed(top_10_records), top_10_videos_data, silent
+    )
     hm_desc = create_videos_desc(hm_records, hm_videos_data, silent)
-    history_desc = create_history_desc(history_records, history_videos_data, upload_date, silent)
+    history_desc = create_history_desc(
+        history_records, history_videos_data, upload_date, silent
+    )
 
     desc += f"{videos_desc}\n\n"
     desc += "► Honorable mentions:\n\n"
@@ -262,7 +280,9 @@ https://creativecommons.org/licenses/by-sa/3.0/"""
     return desc
 
 
-def create_videos_desc(records: list[dict], videos_data: dict, silent: bool=True) -> str:
+def create_videos_desc(
+    records: list[dict], videos_data: dict, silent: bool = True
+) -> str:
     """Given a list of top 10 records and a collection of video data indexed by
     URL, generate a videos list for the description. This also works for the
     Honorable mentions records."""
@@ -270,7 +290,7 @@ def create_videos_desc(records: list[dict], videos_data: dict, silent: bool=True
     video_descs = []
 
     for record in records:
-        video_data = videos_data[record['URL']]
+        video_data = videos_data[record["URL"]]
 
         # Create a barebones video description based on what we know about it
         # from the calculated Top 10 spreadsheet.
@@ -291,10 +311,12 @@ def create_videos_desc(records: list[dict], videos_data: dict, silent: bool=True
 
         video_descs.append(video_desc)
 
-    return '\n'.join(video_descs)
+    return "\n".join(video_descs)
 
 
-def create_history_desc(records: dict[dict], videos_data: dict, from_date: datetime, silent: bool=True) -> str:
+def create_history_desc(
+    records: dict[dict], videos_data: dict, from_date: datetime, silent: bool = True
+) -> str:
     """Given a collection of history records and a collection of video data
     indexed by URL, generate a history section for the description. The
     collection should be a dictionary indexed by relative dates of the form
@@ -304,13 +326,19 @@ def create_history_desc(records: dict[dict], videos_data: dict, from_date: datet
 
     for rel_anni_date, video_records in records.items():
         abs_anni_date = rel_anni_date_to_abs(rel_anni_date, from_date)
-        history_month_year = abs_anni_date.strftime('%B %Y')
-        heading = f'► The Top 10 Pony Videos of {history_month_year}'
-        link_placeholder = '[ADD SHOWCASE LINK HERE]'
+        history_month_year = abs_anni_date.strftime("%B %Y")
+        heading = f"► The Top 10 Pony Videos of {history_month_year}"
+        link_placeholder = "[ADD SHOWCASE LINK HERE]"
 
-        anni_desc = heading + '\n\n' + link_placeholder + '\n\n' + create_videos_desc(video_records, videos_data, silent)
+        anni_desc = (
+            heading
+            + "\n\n"
+            + link_placeholder
+            + "\n\n"
+            + create_videos_desc(video_records, videos_data, silent)
+        )
         anni_descs.append(anni_desc)
 
-    history_desc = '\n'.join(anni_descs)
+    history_desc = "\n".join(anni_descs)
 
     return history_desc

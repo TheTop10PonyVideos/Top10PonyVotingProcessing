@@ -8,6 +8,7 @@ def get_youtube_domains() -> list[str]:
     """Return a list of permitted YouTube web domains."""
     return ["m.youtube.com", "www.youtube.com", "youtube.com", "youtu.be"]
 
+
 def is_youtube_url(url: str) -> bool:
     """Return True if the given URL contains one of the YouTube web domains."""
 

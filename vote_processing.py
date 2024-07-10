@@ -17,7 +17,7 @@ from functions.voting import (
     process_voting_data,
     fetch_video_data_for_ballots,
     generate_annotated_csv_data,
-    shift_columns
+    shift_columns,
 )
 from functions.date import (
     get_preceding_month_date,
@@ -94,12 +94,12 @@ def run_checks():
     # Load all ballots from the CSV file.
     inf(f'Loading all votes from CSV file "{selected_csv_file}"...')
     voting_data = load_votes_csv(selected_csv_file)
-    inf(f' * Loaded {len(voting_data)} data rows.')
+    inf(f" * Loaded {len(voting_data)} data rows.")
 
-    inf(' * Performing URL normalization...')
+    inf(" * Performing URL normalization...")
     normalized_voting_data = normalize_voting_data(voting_data)
 
-    inf(' * Creating ballots...')
+    inf(" * Creating ballots...")
     ballots = process_voting_data(normalized_voting_data)
 
     total_votes = sum([len(ballot.votes) for ballot in ballots])
@@ -284,13 +284,15 @@ def run_checks():
     # Write the voting data to the "shifted cells" CSV. This is needed in order
     # to ensure that we can match the cells in the annotated voting CSV (which
     # contains only video titles) to the URLs that correspond to those titles.
-    shifted_cells_path = Path(config['paths']['shifted_cells'])
+    shifted_cells_path = Path(config["paths"]["shifted_cells"])
 
     inf(f'Writing "shifted cells" CSV...')
     shifted_voting_data = shift_columns(normalized_voting_data)
 
     with (
-        shifted_cells_path.open("w", newline="", encoding="utf-8") as shifted_cells_file,
+        shifted_cells_path.open(
+            "w", newline="", encoding="utf-8"
+        ) as shifted_cells_file,
     ):
         writer = csv.writer(shifted_cells_file)
         writer.writerows(shifted_voting_data)

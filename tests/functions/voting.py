@@ -8,7 +8,7 @@ from functions.voting import (
     validate_video_data,
     generate_annotated_csv_data,
     shift_cells,
-    shift_columns
+    shift_columns,
 )
 from classes.voting import Ballot, Vote, Video
 
@@ -53,13 +53,27 @@ class TestFunctionsVoting(TestCase):
         self.assertEqual("Timestamp", norm_voting_data[0][0])
         self.assertEqual("4/1/2024 9:00:00", norm_voting_data[1][0])
         self.assertEqual("https://example.com/1", norm_voting_data[1][1])
-        self.assertEqual("https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][2])
-        self.assertEqual("https://www.youtube.com/watch?v=Q8k4UTf8jiI", norm_voting_data[1][3])
-        self.assertEqual("https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][4])
-        self.assertEqual("https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][5])
-        self.assertEqual("https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][6])
-        self.assertEqual("https://www.bilibili.com/video/BV1HC411H7Po/", norm_voting_data[1][7])
-        self.assertEqual("https://pony.tube/w/bYSyWpjg6r6zo68o1imK5t", norm_voting_data[1][8])
+        self.assertEqual(
+            "https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][2]
+        )
+        self.assertEqual(
+            "https://www.youtube.com/watch?v=Q8k4UTf8jiI", norm_voting_data[1][3]
+        )
+        self.assertEqual(
+            "https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][4]
+        )
+        self.assertEqual(
+            "https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][5]
+        )
+        self.assertEqual(
+            "https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][6]
+        )
+        self.assertEqual(
+            "https://www.bilibili.com/video/BV1HC411H7Po/", norm_voting_data[1][7]
+        )
+        self.assertEqual(
+            "https://pony.tube/w/bYSyWpjg6r6zo68o1imK5t", norm_voting_data[1][8]
+        )
         self.assertEqual("", norm_voting_data[1][9])
         self.assertEqual("", norm_voting_data[1][10])
 
@@ -315,44 +329,44 @@ class TestFunctionsVoting(TestCase):
             self.assertEqual("", csv_rows[4][i])
 
     def test_shift_cells(self):
-        cells = ['a', 'b', 'c']
+        cells = ["a", "b", "c"]
         shifted_cells = shift_cells(cells)
-        self.assertEqual(6, len(shifted_cells)) 
-        self.assertEqual('a', shifted_cells[0]) 
-        self.assertEqual('', shifted_cells[1]) 
-        self.assertEqual('b', shifted_cells[2]) 
-        self.assertEqual('', shifted_cells[3]) 
-        self.assertEqual('c', shifted_cells[4]) 
-        self.assertEqual('', shifted_cells[5]) 
+        self.assertEqual(6, len(shifted_cells))
+        self.assertEqual("a", shifted_cells[0])
+        self.assertEqual("", shifted_cells[1])
+        self.assertEqual("b", shifted_cells[2])
+        self.assertEqual("", shifted_cells[3])
+        self.assertEqual("c", shifted_cells[4])
+        self.assertEqual("", shifted_cells[5])
 
     def test_shift_columns(self):
         rows = [
-            ['a', 'b', 'c'],
-            ['d', 'e', 'f'],
-            ['g', 'h', 'i'],
+            ["a", "b", "c"],
+            ["d", "e", "f"],
+            ["g", "h", "i"],
         ]
 
         rows_shifted = shift_columns(rows)
-        self.assertEqual(3, len(rows_shifted)) 
-        self.assertEqual(6, len(rows_shifted[0])) 
-        self.assertEqual(6, len(rows_shifted[1])) 
-        self.assertEqual(6, len(rows_shifted[2])) 
+        self.assertEqual(3, len(rows_shifted))
+        self.assertEqual(6, len(rows_shifted[0]))
+        self.assertEqual(6, len(rows_shifted[1]))
+        self.assertEqual(6, len(rows_shifted[2]))
 
-        self.assertEqual('a', rows_shifted[0][0]) 
-        self.assertEqual('', rows_shifted[0][1]) 
-        self.assertEqual('b', rows_shifted[0][2]) 
-        self.assertEqual('', rows_shifted[0][3]) 
-        self.assertEqual('c', rows_shifted[0][4]) 
-        self.assertEqual('', rows_shifted[0][5]) 
-        self.assertEqual('d', rows_shifted[1][0]) 
-        self.assertEqual('', rows_shifted[1][1]) 
-        self.assertEqual('e', rows_shifted[1][2]) 
-        self.assertEqual('', rows_shifted[1][3]) 
-        self.assertEqual('f', rows_shifted[1][4]) 
-        self.assertEqual('', rows_shifted[1][5]) 
-        self.assertEqual('g', rows_shifted[2][0]) 
-        self.assertEqual('', rows_shifted[2][1]) 
-        self.assertEqual('h', rows_shifted[2][2]) 
-        self.assertEqual('', rows_shifted[2][3]) 
-        self.assertEqual('i', rows_shifted[2][4]) 
-        self.assertEqual('', rows_shifted[2][5]) 
+        self.assertEqual("a", rows_shifted[0][0])
+        self.assertEqual("", rows_shifted[0][1])
+        self.assertEqual("b", rows_shifted[0][2])
+        self.assertEqual("", rows_shifted[0][3])
+        self.assertEqual("c", rows_shifted[0][4])
+        self.assertEqual("", rows_shifted[0][5])
+        self.assertEqual("d", rows_shifted[1][0])
+        self.assertEqual("", rows_shifted[1][1])
+        self.assertEqual("e", rows_shifted[1][2])
+        self.assertEqual("", rows_shifted[1][3])
+        self.assertEqual("f", rows_shifted[1][4])
+        self.assertEqual("", rows_shifted[1][5])
+        self.assertEqual("g", rows_shifted[2][0])
+        self.assertEqual("", rows_shifted[2][1])
+        self.assertEqual("h", rows_shifted[2][2])
+        self.assertEqual("", rows_shifted[2][3])
+        self.assertEqual("i", rows_shifted[2][4])
+        self.assertEqual("", rows_shifted[2][5])

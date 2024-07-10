@@ -179,19 +179,25 @@ def rel_anni_date_to_abs(rel_date: str, from_date: datetime) -> datetime:
     date, return the date in absolute form. For example, if the date is "5 years
     ago" and the from date is 2024-04-01, the result should be 2019-04-01."""
 
-    rel_date_words = rel_date.split(' ')
+    rel_date_words = rel_date.split(" ")
     if len(rel_date_words) != 3:
-        raise ValueError(f'Cannot convert relative date "{rel_date}" to absolute date; date must be given in form "N year ago" or "N years ago"')
+        raise ValueError(
+            f'Cannot convert relative date "{rel_date}" to absolute date; date must be given in form "N year ago" or "N years ago"'
+        )
 
     years_ago = None
     try:
         years_ago = int(rel_date_words[0])
     except ValueError as error:
-        raise ValueError(f'Cannot convert relative date "{rel_date}" to absolute date; first word of relative date must be an integer number of years"') from error
+        raise ValueError(
+            f'Cannot convert relative date "{rel_date}" to absolute date; first word of relative date must be an integer number of years"'
+        ) from error
 
-    if ' '.join(rel_date_words[1:]) not in ['year ago', 'years ago']:
-        raise ValueError(f'Cannot convert relative date "{rel_date}" to absolute date; date must end in "year ago" or "years ago""')
+    if " ".join(rel_date_words[1:]) not in ["year ago", "years ago"]:
+        raise ValueError(
+            f'Cannot convert relative date "{rel_date}" to absolute date; date must end in "year ago" or "years ago""'
+        )
 
-    abs_date = from_date.replace(year=from_date.year - years_ago) 
+    abs_date = from_date.replace(year=from_date.year - years_ago)
 
     return abs_date
