@@ -306,9 +306,9 @@ def create_history_desc(records: dict[dict], videos_data: dict, from_date: datet
         abs_anni_date = rel_anni_date_to_abs(rel_anni_date, from_date)
         history_month_year = abs_anni_date.strftime('%B %Y')
         heading = f'► The Top 10 Pony Videos of {history_month_year}'
-        link_placeholder = '[ADD SHOWCASE LINK]'
+        link_placeholder = '[ADD SHOWCASE LINK HERE]'
 
-        anni_desc = heading + '\n\n' + link_placeholder + create_videos_desc(video_records, videos_data, silent)
+        anni_desc = heading + '\n\n' + link_placeholder + '\n\n' + create_videos_desc(video_records, videos_data, silent)
         anni_descs.append(anni_desc)
 
     history_desc = '\n'.join(anni_descs)

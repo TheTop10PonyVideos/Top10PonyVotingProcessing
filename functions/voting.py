@@ -5,6 +5,7 @@ from pathlib import Path
 from datetime import datetime
 from pytz import timezone
 from functions.date import parse_votes_csv_timestamp, format_votes_csv_timestamp
+from functions.url import is_youtube_url, normalize_youtube_url
 from classes.voting import Ballot, Vote, Video
 from classes.fetcher import Fetcher
 from classes.exceptions import (
@@ -14,10 +15,9 @@ from classes.exceptions import (
 )
 
 
-def load_votes_csv(csv_file_path_str: str) -> list[Ballot]:
+def load_votes_csv(csv_file_path_str: str) -> list[list[str]]:
     """Given the path to a CSV file containing votes, load the votes, and return
-    a list of corresponding Ballot objects.
-    """
+    a list of data rows."""
 
     csv_file_path = Path(csv_file_path_str)
     rows = None
@@ -25,13 +25,37 @@ def load_votes_csv(csv_file_path_str: str) -> list[Ballot]:
         csv_reader = csv.reader(csv_file)
         rows = [row for row in csv_reader]
 
-    ballots = process_votes_csv(rows)
-
-    return ballots
+    return rows
 
 
-def process_votes_csv(csv_rows: list[list[str]]) -> list[Ballot]:
-    """Process the data in a votes CSV into a list of ballots.
+def normalize_voting_data(rows: list[list[str]]) -> list[list[str]]:
+    """Given a set of data rows from a voting CSV, replace all of the URLs with
+    "normalized" forms, such that different forms of the same URL become
+    identical. This makes the output neater and prevents accidental
+    undercounting.
+
+    The data is assumed to be from the "unshifted" version of the voting data
+    (ie. the voting CSV as obtained from Google Forms)."""
+    normalized_rows = [[cell for cell in row] for row in rows]
+
+    for row_idx, row in enumerate(normalized_rows):
+        # Skip header row
+        if row_idx == 0:
+            continue
+
+        for cell_idx, cell in enumerate(row):
+            # Skip "Timestamp" column
+            if cell_idx == 0:
+                continue
+
+            if is_youtube_url(cell):
+                normalized_rows[row_idx][cell_idx] = normalize_youtube_url(cell)
+
+    return normalized_rows
+
+
+def process_voting_data(csv_rows: list[list[str]]) -> list[Ballot]:
+    """Process the data from a (unshifted) votes CSV into a list of ballots.
 
     As a validity check, the header row of a votes CSV is required to begin with
     a "Timestamp" cell.
@@ -164,3 +188,21 @@ def generate_annotated_csv_data(
         csv_rows.append(data_row)
 
     return csv_rows
+
+
+def shift_cells(row: list[str]) -> list[str]:
+    """Given a list of string values, return a "shifted" list in which each cell
+    is succeeded by an empty cell."""
+    shifted_row = []
+    for cell in row:
+        shifted_row.extend([cell, ""])
+
+    return shifted_row
+
+
+def shift_columns(rows: list[list[str]]) -> list[list[str]]:
+    """Given a list of rows of string values, return a list in which each cell
+    of each row is succeeded by an empty cell. This results in a grid of cells
+    interlaced with blank columns."""
+
+    return [shift_cells(row) for row in rows]

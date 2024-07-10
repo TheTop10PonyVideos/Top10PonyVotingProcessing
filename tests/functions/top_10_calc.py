@@ -40,7 +40,7 @@ class TestFunctionsTop10Calc(TestCase):
             ['Title A',  'Title B', 'Title R', 'Title S', 'Title T'],
             ['Title A',  'Title B', 'Title U', 'Title V', 'Title W'],
             ['Title A',  'Title X', 'Title Y', 'Title Z', 'Title 0'],
-            ['Title A',  'Title 1', 'Title 2', 'Title 3'],
+            ['Title A',  'Title 1', 'Title 2', 'Title 3', 'Title 8'],
             ['Title F',  'Title 4', 'Title 5', 'Title 6', 'Title 7'],
         ]
 
@@ -69,6 +69,7 @@ class TestFunctionsTop10Calc(TestCase):
             'Title 1': 'https://example.com',
             'Title 2': 'https://example.com',
             'Title 3': 'https://example.com',
+            'Title 8': 'https://example.com',
             'Title F': 'https://example.com',
             'Title 4': 'https://example.com',
             'Title 5': 'https://example.com',
@@ -77,7 +78,7 @@ class TestFunctionsTop10Calc(TestCase):
         }
 
         records = calc_ranked_records(title_rows, titles_to_urls)
-        self.assertEqual(29, len(records))
+        self.assertEqual(30, len(records))
         self.assertEqual('Title A', records[0]['Title'])
         self.assertEqual('90.0000%', records[0]['Percentage'])
         self.assertEqual(9, records[0]['Total Votes'])

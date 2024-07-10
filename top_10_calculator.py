@@ -18,10 +18,6 @@ from functions.messages import suc, inf, err
 # each of the annotated titles in the processed voting CSV to their URLs. The
 # shifting is performed so that the two files exactly match each other in
 # structure.
-#
-# TODO: We don't actually need to create a "shifted" version of this CSV any
-# more - we could just store the unshifted version and change the mapping
-# function to account for shifted columns.
 urls_csv_path = 'outputs/shifted_cells.csv'
 
 # A list of year-anniversaries used for the History section (eg. 1 year, 5 year,
@@ -169,7 +165,6 @@ def handle_calc():
     output_csv_path_str = "outputs/calculated_top_10.csv"
     output_csv_path = Path(output_csv_path_str)
 
-    #analyze_and_write_titles_to_csv(input_csv_path, output_csv_path)
     with output_csv_path.open("w", newline="", encoding="utf-8") as output_file:
         output_csv_writer = csv.DictWriter(output_file, fieldnames=header)
         output_csv_writer.writeheader()

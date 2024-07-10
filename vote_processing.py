@@ -13,8 +13,11 @@ from functions.general import load_text_data
 from functions.config import load_config_json
 from functions.voting import (
     load_votes_csv,
+    normalize_voting_data,
+    process_voting_data,
     fetch_video_data_for_ballots,
     generate_annotated_csv_data,
+    shift_columns
 )
 from functions.date import (
     get_preceding_month_date,
@@ -90,9 +93,16 @@ def run_checks():
 
     # Load all ballots from the CSV file.
     inf(f'Loading all votes from CSV file "{selected_csv_file}"...')
-    ballots = load_votes_csv(selected_csv_file)
-    total_votes = sum([len(ballot.votes) for ballot in ballots])
+    voting_data = load_votes_csv(selected_csv_file)
+    inf(f' * Loaded {len(voting_data)} data rows.')
 
+    inf(' * Performing URL normalization...')
+    normalized_voting_data = normalize_voting_data(voting_data)
+
+    inf(' * Creating ballots...')
+    ballots = process_voting_data(normalized_voting_data)
+
+    total_votes = sum([len(ballot.votes) for ballot in ballots])
     suc(f"Loaded {len(ballots)} ballots containing a total of {total_votes} votes.")
 
     # Date calculations. There are 3 dates we need to be aware of:
@@ -271,8 +281,21 @@ def run_checks():
 
     suc(f'Wrote annotated ballot data to "{output_csv_path_str}".')
 
-    # Write the old-style "shifted cells" CSV. Kept for historical reasons.
-    init.add_empty_cells(selected_csv_file, "outputs/shifted_cells.csv")
+    # Write the voting data to the "shifted cells" CSV. This is needed in order
+    # to ensure that we can match the cells in the annotated voting CSV (which
+    # contains only video titles) to the URLs that correspond to those titles.
+    shifted_cells_path = Path(config['paths']['shifted_cells'])
+
+    inf(f'Writing "shifted cells" CSV...')
+    shifted_voting_data = shift_columns(normalized_voting_data)
+
+    with (
+        shifted_cells_path.open("w", newline="", encoding="utf-8") as shifted_cells_file,
+    ):
+        writer = csv.writer(shifted_cells_file)
+        writer.writerows(shifted_voting_data)
+
+    suc(f'Wrote "shifted cells" data to "{shifted_cells_path}".')
 
     suc("Finished checks.")
 
