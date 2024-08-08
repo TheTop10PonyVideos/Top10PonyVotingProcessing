@@ -51,7 +51,12 @@ categories:
 """
 
 
-def group_records_by_headings(records: list, headings: list, heading_field: str, empty_heading: str='(NO HEADING)') -> dict:
+def group_records_by_headings(
+    records: list,
+    headings: list,
+    heading_field: str,
+    empty_heading: str = "(NO HEADING)",
+) -> dict:
     """Given an ordered list of records, some of which are acting as headings,
     split the records into the groups delimited by each heading.
 
@@ -68,7 +73,9 @@ def group_records_by_headings(records: list, headings: list, heading_field: str,
             curr_heading = cand_heading
 
             if curr_heading in grouped_records:
-                raise ValueError(f'Cannot group records by headings; the heading "{curr_heading}" is not unique')
+                raise ValueError(
+                    f'Cannot group records by headings; the heading "{curr_heading}" is not unique'
+                )
 
             grouped_records[curr_heading] = []
             continue
@@ -86,18 +93,24 @@ def parse_calculated_top_10_csv(records: list[dict]) -> dict:
     file into a collection of records grouped by category."""
 
     # Remove empty row records (these are only included for readability)
-    records = [record for record in records if ''.join([record[k] for k in record]).strip() != '']
+    records = [
+        record
+        for record in records
+        if "".join([record[k] for k in record]).strip() != ""
+    ]
 
     # Group the records by heading. (The "Top 10" heading is the implicit empty
     # heading).
-    headings = ['HONORABLE MENTIONS', 'HISTORY']
-    grouped_records = group_records_by_headings(records, headings, 'Title', 'Top 10')
+    headings = ["HONORABLE MENTIONS", "HISTORY"]
+    grouped_records = group_records_by_headings(records, headings, "Title", "Top 10")
 
     # For the history records, further group them by anniversary name.
-    is_anni_record = lambda r: ' year ago' in r['Title'] or ' years ago' in r['Title']
-    anni_names = [r['Title'] for r in grouped_records['HISTORY'] if is_anni_record(r)]
+    is_anni_record = lambda r: " year ago" in r["Title"] or " years ago" in r["Title"]
+    anni_names = [r["Title"] for r in grouped_records["HISTORY"] if is_anni_record(r)]
 
-    grouped_hist_records = group_records_by_headings(grouped_records['HISTORY'], anni_names, 'Title')
-    grouped_records['HISTORY'] = grouped_hist_records
+    grouped_hist_records = group_records_by_headings(
+        grouped_records["HISTORY"], anni_names, "Title"
+    )
+    grouped_records["HISTORY"] = grouped_hist_records
 
     return grouped_records

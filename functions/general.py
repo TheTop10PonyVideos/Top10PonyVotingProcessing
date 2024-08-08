@@ -35,7 +35,7 @@ def sample_item_without_replacement(items: list):
     """Given a list of items, sample one random item, remove it from the list,
     and return the item."""
     if len(items) == 0:
-        raise ValueError('Cannot sample from empty list')
+        raise ValueError("Cannot sample from empty list")
 
     random_index = randint(0, len(items) - 1)
     sampled_item = items[random_index]

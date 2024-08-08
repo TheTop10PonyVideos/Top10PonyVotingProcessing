@@ -57,14 +57,17 @@ def handle_post_processing():
 
     grouped_records = parse_calculated_top_10_csv(calc_records)
 
-    top_10_records = grouped_records['Top 10']
-    hm_records = grouped_records['HONORABLE MENTIONS']
-    history_records = grouped_records['HISTORY']
+    top_10_records = grouped_records["Top 10"]
+    hm_records = grouped_records["HONORABLE MENTIONS"]
+    history_records = grouped_records["HISTORY"]
 
     top_10_video_urls = [record["URL"] for record in top_10_records]
     hm_video_urls = [record["URL"] for record in hm_records]
 
-    history_video_url_groups = {anni_year: {r["URL"] for r in records} for anni_year, records in history_records.items()}
+    history_video_url_groups = {
+        anni_year: {r["URL"] for r in records}
+        for anni_year, records in history_records.items()
+    }
     history_video_urls = []
     for anni_year, group in history_video_url_groups.items():
         for url in group:
@@ -76,7 +79,14 @@ def handle_post_processing():
 
     archive_records = generate_archive_records(top_10_records, top_10_videos_data)
     sharable_records = generate_sharable_records(top_10_records, hm_records)
-    showcase_desc = generate_showcase_description(top_10_records, hm_records, history_records, top_10_videos_data, hm_videos_data, history_videos_data)
+    showcase_desc = generate_showcase_description(
+        top_10_records,
+        hm_records,
+        history_records,
+        top_10_videos_data,
+        hm_videos_data,
+        history_videos_data,
+    )
 
     archive_file = f"{output_dir}/{output_file_prefix}archive.csv"
     sharable_file = f"{output_dir}/{output_file_prefix}sharable.csv"

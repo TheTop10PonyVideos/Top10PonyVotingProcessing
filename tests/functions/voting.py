@@ -2,19 +2,89 @@ from unittest import TestCase
 from datetime import datetime
 from pytz import timezone
 from functions.voting import (
-    process_votes_csv,
+    normalize_voting_data,
+    process_voting_data,
     process_votes_csv_row,
     validate_video_data,
     generate_annotated_csv_data,
+    shift_cells,
+    shift_columns,
 )
 from classes.voting import Ballot, Vote, Video
 
 
 class TestFunctionsVoting(TestCase):
-    def test_process_votes_csv(self):
+    def test_normalize_voting_data(self):
+        voting_data = [
+            ["Timestamp", "", "", "", "", "", "", "", "", "", ""],
+            [
+                "4/1/2024 9:00:00",
+                "https://example.com/1",
+                "https://www.youtube.com/watch?v=9RT4lfvVFhA",
+                "https://www.youtube.com/live/Q8k4UTf8jiI",
+                "https://youtu.be/9RT4lfvVFhA",
+                "https://youtube.com/watch?v=9RT4lfvVFhA",
+                "https://m.youtube.com/watch?v=9RT4lfvVFhA",
+                "https://www.bilibili.com/video/BV1HC411H7Po/",
+                "https://pony.tube/w/bYSyWpjg6r6zo68o1imK5t",
+                "",
+                "",
+            ],
+            [
+                "12/31/2024 23:59:59",
+                "https://example.com/2",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+        ]
+
+        norm_voting_data = normalize_voting_data(voting_data)
+        self.assertEqual(3, len(norm_voting_data))
+        self.assertEqual(11, len(norm_voting_data[0]))
+        self.assertEqual(11, len(norm_voting_data[1]))
+        self.assertEqual(11, len(norm_voting_data[2]))
+        self.assertEqual("Timestamp", norm_voting_data[0][0])
+        self.assertEqual("4/1/2024 9:00:00", norm_voting_data[1][0])
+        self.assertEqual("https://example.com/1", norm_voting_data[1][1])
+        self.assertEqual(
+            "https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][2]
+        )
+        self.assertEqual(
+            "https://www.youtube.com/watch?v=Q8k4UTf8jiI", norm_voting_data[1][3]
+        )
+        self.assertEqual(
+            "https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][4]
+        )
+        self.assertEqual(
+            "https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][5]
+        )
+        self.assertEqual(
+            "https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][6]
+        )
+        self.assertEqual(
+            "https://www.bilibili.com/video/BV1HC411H7Po/", norm_voting_data[1][7]
+        )
+        self.assertEqual(
+            "https://pony.tube/w/bYSyWpjg6r6zo68o1imK5t", norm_voting_data[1][8]
+        )
+        self.assertEqual("", norm_voting_data[1][9])
+        self.assertEqual("", norm_voting_data[1][10])
+
+        self.assertEqual("12/31/2024 23:59:59", norm_voting_data[2][0])
+        self.assertEqual("https://example.com/2", norm_voting_data[2][1])
+        self.assertEqual("", norm_voting_data[2][2])
+
+    def test_process_voting_data(self):
         tz = timezone("Etc/UTC")
 
-        csv_rows = [
+        voting_data = [
             ["Timestamp", "", "", "", "", "", "", "", "", ""],
             [
                 "4/1/2024 9:00:00",
@@ -66,7 +136,7 @@ class TestFunctionsVoting(TestCase):
             ],
         ]
 
-        ballots = process_votes_csv(csv_rows)
+        ballots = process_voting_data(voting_data)
         self.assertEqual(4, len(ballots))
         self.assertEqual("2024-04-01T09:00:00", ballots[0].timestamp.isoformat())
         self.assertEqual("2024-12-31T23:59:59", ballots[1].timestamp.isoformat())
@@ -80,7 +150,7 @@ class TestFunctionsVoting(TestCase):
         ]
 
         with self.assertRaises(ValueError):
-            ballots = process_votes_csv(invalid_csv_rows)
+            ballots = process_voting_data(invalid_csv_rows)
 
     def test_process_votes_csv_row(self):
         tz = timezone("Etc/UTC")
@@ -257,3 +327,46 @@ class TestFunctionsVoting(TestCase):
         self.assertEqual("4/4/2024 9:00:00", csv_rows[4][0])
         for i in range(1, 22):
             self.assertEqual("", csv_rows[4][i])
+
+    def test_shift_cells(self):
+        cells = ["a", "b", "c"]
+        shifted_cells = shift_cells(cells)
+        self.assertEqual(6, len(shifted_cells))
+        self.assertEqual("a", shifted_cells[0])
+        self.assertEqual("", shifted_cells[1])
+        self.assertEqual("b", shifted_cells[2])
+        self.assertEqual("", shifted_cells[3])
+        self.assertEqual("c", shifted_cells[4])
+        self.assertEqual("", shifted_cells[5])
+
+    def test_shift_columns(self):
+        rows = [
+            ["a", "b", "c"],
+            ["d", "e", "f"],
+            ["g", "h", "i"],
+        ]
+
+        rows_shifted = shift_columns(rows)
+        self.assertEqual(3, len(rows_shifted))
+        self.assertEqual(6, len(rows_shifted[0]))
+        self.assertEqual(6, len(rows_shifted[1]))
+        self.assertEqual(6, len(rows_shifted[2]))
+
+        self.assertEqual("a", rows_shifted[0][0])
+        self.assertEqual("", rows_shifted[0][1])
+        self.assertEqual("b", rows_shifted[0][2])
+        self.assertEqual("", rows_shifted[0][3])
+        self.assertEqual("c", rows_shifted[0][4])
+        self.assertEqual("", rows_shifted[0][5])
+        self.assertEqual("d", rows_shifted[1][0])
+        self.assertEqual("", rows_shifted[1][1])
+        self.assertEqual("e", rows_shifted[1][2])
+        self.assertEqual("", rows_shifted[1][3])
+        self.assertEqual("f", rows_shifted[1][4])
+        self.assertEqual("", rows_shifted[1][5])
+        self.assertEqual("g", rows_shifted[2][0])
+        self.assertEqual("", rows_shifted[2][1])
+        self.assertEqual("h", rows_shifted[2][2])
+        self.assertEqual("", rows_shifted[2][3])
+        self.assertEqual("i", rows_shifted[2][4])
+        self.assertEqual("", rows_shifted[2][5])
