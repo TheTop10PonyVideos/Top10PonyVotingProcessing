@@ -107,7 +107,7 @@ def calc_ranked_records(
             "Percentage": f"{title_percentages[title]:.4f}%",
             "Total Votes": title_counts[title],
             "URL": titles_to_urls[title],
-            "Notes": "Tie broken by random choice" if tie_broken[title] else "",
+            "Notes": "Tie broken randomly by computer" if tie_broken[title] else "",
         }
 
         records.append(record)
