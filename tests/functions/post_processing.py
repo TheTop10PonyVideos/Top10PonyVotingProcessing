@@ -174,7 +174,7 @@ class TestFunctionsPostProcessing(TestCase):
         self.assertEqual("HM", records[3]["Rank"])
         self.assertEqual("Example 4", records[3]["Title"])
         self.assertEqual(
-            '=VLOOKUP("https://example.com/4", IMPORTRANGE("https://docs.google.com/spreadsheets/d/1rEofPkliKppvttd8pEX8H6DtSljlfmQLdFR-SlyyX7E/edit", "top10!D:I"), 6, FALSE)',
+            'https://example.com/4',
             records[3]["Link"],
         )
         self.assertEqual("12", records[3]["Votes"])
@@ -187,7 +187,7 @@ class TestFunctionsPostProcessing(TestCase):
         self.assertEqual("HM", records[4]["Rank"])
         self.assertEqual("Example 5", records[4]["Title"])
         self.assertEqual(
-            '=VLOOKUP("https://example.com/5", IMPORTRANGE("https://docs.google.com/spreadsheets/d/1rEofPkliKppvttd8pEX8H6DtSljlfmQLdFR-SlyyX7E/edit", "top10!D:I"), 6, FALSE)',
+            'https://example.com/5',
             records[4]["Link"],
         )
         self.assertEqual("10", records[4]["Votes"])
