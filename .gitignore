@@ -18,5 +18,6 @@ Pipfile.lock
 FebruarVotes.csv
 cache.json
 launch.json
-unimplemented
 data/top_10_master_archive.csv
+outputs/*.csv
+outputs/*.txt
