@@ -40,6 +40,7 @@ class States(Enum):
                 return state
 
 blocked_everywhere_indicator = 'EVERYWHERE EXCEPT:'
+video_not_found = "Video not found"
 lock = asyncio.Lock()
 
 
@@ -47,10 +48,14 @@ class ArchiveStatusChecker(GUI):
     def __init__(self):
         super().__init__()
         self.running = False
+
+        # Overridden with new paths whenever they are used for convenience
         self.output_csv_path = "outputs/archive_check_results.csv"
 
     def gui(self, root):
 
+        # Only get archive or check for updates when it's not being checked so full progress
+        # label and output path is displayed upon revisiting
         if not self.running:     
             csv_str: str = requests.get('https://docs.google.com/spreadsheets/d/1rEofPkliKppvttd8pEX8H6DtSljlfmQLdFR-SlyyX7E/export?format=csv').content.decode()
 
@@ -96,7 +101,7 @@ class ArchiveStatusChecker(GUI):
         settings_frame.pack(pady=5)
 
         range_frame = tk.Frame(settings_frame)
-        range_frame.pack(pady=4)
+        range_frame.grid(column=0, row=0, pady=4)
 
         range_label = tk.Label(range_frame, text="Range")
         range_label.pack(padx=(5, 5), side="left")
@@ -115,13 +120,17 @@ class ArchiveStatusChecker(GUI):
 
         self.check_titles_var = tk.BooleanVar()
         check_titles = tk.Checkbutton(settings_frame, text="Check Title Differences", variable=self.check_titles_var)
-        check_titles.pack(padx=(5, 0), side="left")
+        check_titles.grid(column=0, row=1, padx=(5, 0), sticky="w")
 
+        self.use_async_var = tk.BooleanVar()
+        use_async = tk.Checkbutton(settings_frame, text="Use Async (experimental)", variable=self.use_async_var)
+        use_async.grid(column=0, row=2, padx=(5, 0), sticky="w")
+        
         run_frame = tk.Frame(root)
         run_frame.pack(pady=(10, 5))
 
-        start_button = ttk.Button(run_frame, text="Run Status Checker", command=self.run_status_checker)
-        start_button.grid(column=0, row=0, padx=5, pady=5)
+        self.start_button = ttk.Button(run_frame, text="Run Status Checker", command=self.run_status_checker, state=tk.DISABLED if self.running else tk.NORMAL)
+        self.start_button.grid(column=0, row=0, padx=5, pady=5)
 
         quit_button = ttk.Button(run_frame, text="Quit", command=lambda: GUI.run("MainMenu", root))
         quit_button.grid(column=1, row=0, padx=5, pady=5)
@@ -143,6 +152,7 @@ class ArchiveStatusChecker(GUI):
         self.output_file_var.set(file_path)
         self.output_csv_path = file_path
 
+    # Function to check video status using yt-dlp
     def check_non_youtube_video_status(self, video_url) -> Tuple[str, List[States], List[str]]:  
         # Note: During debugging, no videos were found to have any bad status
         # Most of this was copilot generated since it'd be difficult or tedious
@@ -184,7 +194,7 @@ class ArchiveStatusChecker(GUI):
                 print(f"\n{video_url} requires a manual check\n")
                 return "[COULDN'T FETCH VIMEO DATA]", [], []
             
-            return "Video not found", [States.UNAVAILABLE], []
+            return video_not_found, [States.UNAVAILABLE], []
 
     # Function to check video status using YouTube Data API
     async def check_youtube_video_status(self, video_id, tries=0) -> Tuple[str, List[States], List[str]]:
@@ -215,19 +225,20 @@ class ArchiveStatusChecker(GUI):
                         states.append(States.BLOCKED)
 
 
-                    return video_title, states, blocked_countries #status_to_str(privacy_status, blocked_countries, age_restricted), blocked_countries
+                    return video_title, states, blocked_countries
                 else:
-                    return "Video not found", [States.UNAVAILABLE], []
+                    return video_not_found, [States.UNAVAILABLE], []
 
         except HttpError as e:
             if e.resp.status == 404:
-                return "Video not found", [States.UNAVAILABLE], []
+                return video_not_found, [States.UNAVAILABLE], []
             elif e.resp.status == 400 and tries < 3:
                 return self.check_youtube_video_status(video_id, tries + 1)
             
             print(f"\033[91m\n{e.reason}")
             quit(1)
 
+    # Function to delegate status checking to the function tailored to using the url's domain
     async def get_video_status(self, video_url, video_title):
         if "youtube.com" in video_url or "youtu.be" in video_url:
             video_id = video_url.split("v=")[-1] if "youtube.com" in video_url else video_url.split("/")[-1]
@@ -238,11 +249,12 @@ class ArchiveStatusChecker(GUI):
             blocked_countries = []
 
 
-        if updated_video_title == "Video not found":
+        if updated_video_title == video_not_found:
             updated_video_title = video_title
         
         return updated_video_title, video_states, blocked_countries
     
+    # Function to output all found archive discrepancies to the output csv
     def write_to_output_csv(self):
         # Write to the output CSV with headers
         header = ["", "Archive Row", "Video URL", "Video Title", "Video Status", "Blocked Countries"]
@@ -253,17 +265,20 @@ class ArchiveStatusChecker(GUI):
 
         self.result_label.config(text=f"Output CSV saved at: {self.output_csv_path}")
     
+    # Increment the progress counter and signal when the checking process is done
     async def update_progress(self):
         self.processed_videos += 1
-        self.progress_label.config(text=f"Progress: {self.processed_videos}/{self.videos_to_fetch} videos checked")
+        if self == GUI.active_gui and self.ready:
+            self.progress_label.config(text=f"Progress: {self.processed_videos}/{self.videos_to_fetch} videos checked")
 
         if self.processed_videos == len(self.checking_range):
             self.write_to_output_csv()
             self.running = False
+            self.start_button.config(state=tk.NORMAL)
             await self.session.close()
 
 
-    # Function to check video status and generate the result CSV
+    # The starting point for main part of this process
     def run_status_checker(self):
         self.youtube_api_key = self.youtube_api_key_entry.get().strip()
         if not self.youtube_api_key: return
@@ -287,13 +302,18 @@ class ArchiveStatusChecker(GUI):
         self.updated_rows = []
         self.processed_videos = 0
         self.check_titles = self.check_titles_var.get()
-
-        async_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(async_loop)
         
         # Run the check_videos function in a separate thread
         self.running = True
-        threading.Thread(target=lambda: async_loop.run_until_complete(self.check_videos())).start()
+        self.start_button.config(state=tk.DISABLED)
+
+        if self.use_async_var.get():
+            async_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(async_loop)
+
+            threading.Thread(target=lambda: async_loop.run_until_complete(self.check_videos_async())).start()
+        else:
+            threading.Thread(target=lambda: asyncio.run(self.check_videos_sync())).start()
 
     async def check_video(self, row_index: int, archive_row: List[str]):
         initial_states = archive_row[ArchiveIndices.STATE].split('/') if len(archive_row[ArchiveIndices.STATE].split('/')) != 1 else archive_row[ArchiveIndices.STATE].split(' & ')
@@ -339,7 +359,7 @@ class ArchiveStatusChecker(GUI):
 
             await self.update_progress()
 
-    async def check_videos(self):
+    async def check_videos_async(self):
         self.session = aiohttp.ClientSession()
 
         tasks = []
@@ -348,6 +368,12 @@ class ArchiveStatusChecker(GUI):
             tasks.append(asyncio.create_task(self.check_video(i, archive_row)))
 
         await asyncio.gather(*tasks)
+    
+    async def check_videos_sync(self):
+        self.session = aiohttp.ClientSession()
+
+        for i, archive_row in enumerate(self.checking_range):
+            await self.check_video(i, archive_row)
 
 
     def clamp_to_archive_range(self, e: Event):
