@@ -81,7 +81,7 @@ class MainMenu(GUI):
     # Moving the mouse over the window seems to show an increased fps past the cap
     # it for whatever reason, as well as having more than one recursive loop of play_gif
     def play_gif(self):
-        if self.next_fps < 0:
+        if self.next_fps < 0 or self != GUI.active_gui:
             self.next_fps = 0
             self.gif_playing = False  
             return
