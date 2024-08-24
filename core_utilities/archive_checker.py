@@ -139,8 +139,9 @@ class ArchiveStatusChecker(GUI):
         check_titles = tk.Checkbutton(settings_frame, text="Check Title Differences", variable=self.check_titles_var)
         check_titles.grid(column=0, row=1, padx=(5, 0), sticky="w")
 
-        self.use_async_var = tk.BooleanVar()
-        use_async = tk.Checkbutton(settings_frame, text="Use Async (experimental)", variable=self.use_async_var)
+        self.use_async_var = tk.BooleanVar(value=True)
+        # Still be kept optional in case something goes wrong in which case synchronous fetching can stil be used
+        use_async = tk.Checkbutton(settings_frame, text="Async Requests (faster)", variable=self.use_async_var)
         use_async.grid(column=0, row=2, padx=(5, 0), sticky="w")
         
         run_frame = tk.Frame(root)
