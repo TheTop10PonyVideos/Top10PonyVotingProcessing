@@ -81,21 +81,32 @@ class VoteProcessing(GUI):
         banner_label.pack()
         title_label.pack(pady=16)
 
-        # Create "Load Votes CSV..." control
-        input_file_frame = tk.Frame(main_frame, borderwidth=2, relief="ridge")
-        input_file_label = tk.Label(input_file_frame, text="Votes CSV file:")
+        # Create frames for text input control
+        inputs_frame = tk.Frame(main_frame, borderwidth=2, relief="ridge")
+        api_key_input_frame = tk.Frame(inputs_frame)
+        csv_input_frame = tk.Frame(inputs_frame)
+        inputs_frame.pack()
+        api_key_input_frame.pack()
+        csv_input_frame.pack()
 
-        self.entry_var = tk.StringVar()
-        input_file_entry = ttk.Entry(input_file_frame, textvariable=self.entry_var)
+        input_api_key_label = tk.Label(api_key_input_frame, text="YT API key:")
+        input_file_label = tk.Label(csv_input_frame, text="Votes CSV file:")
+
+        self.api_key_entry_var = tk.StringVar()
+        self.csv_entry_var = tk.StringVar()
+
+        input_api_key_entry = ttk.Entry(api_key_input_frame, show="*", textvariable=self.api_key_entry_var, width=35)
+        input_file_entry = ttk.Entry(csv_input_frame, textvariable=self.csv_entry_var)
 
         browse_button = ttk.Button(
-            input_file_frame, text="📁 Choose...", command=self.browse_file_csv
+            csv_input_frame, text="📁 Choose...", command=self.browse_file_csv
         )
 
-        input_file_label.grid(column=0, row=0, padx=8, pady=8)
-        input_file_entry.grid(column=1, row=0, padx=8, pady=8)
-        browse_button.grid(column=2, row=0, padx=8, pady=8)
-        input_file_frame.pack()
+        input_api_key_label.grid(column=0, row=0, padx=(8, 30), pady=(8, 2))
+        input_api_key_entry.grid(column=1, row=0, padx=(5, 8), pady=(8, 2))
+        input_file_label.grid(column=0, row=0, padx=8, pady=(2, 8))
+        input_file_entry.grid(column=1, row=0, padx=8, pady=(2, 8))
+        browse_button.grid(column=2, row=0, padx=8, pady=(2, 8))
 
         # Create options frame
         options_frame = tk.Frame(main_frame)
@@ -229,7 +240,7 @@ class VoteProcessing(GUI):
         variable `entry_var` to the selected file.
         """
         file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
-        self.entry_var.set(file_path)
+        self.csv_entry_var.set(file_path)
 
 
     def run_checks(self):
@@ -238,7 +249,7 @@ class VoteProcessing(GUI):
         the CSV with problematic votes labeled.
         """
 
-        selected_csv_file = self.entry_var.get()
+        selected_csv_file = self.csv_entry_var.get()
         if selected_csv_file.strip() == "":
             tk.messagebox.showinfo("Error", "Please choose a votes CSV file first.")
             return
@@ -253,9 +264,7 @@ class VoteProcessing(GUI):
 
         inf(f'Preparing to run checks on "{selected_csv_file}"...')
 
-        # TODO: Replace youtube_api_key with the value from the API key field, once
-        # the UI is implemented
-        youtube_api_key = None
+        youtube_api_key = self.api_key_entry_var.get()
         fetcher = get_fetcher(youtube_api_key, self.tools_vars["ensure_complete_data"].get())
 
         # Load all ballots from the CSV file.

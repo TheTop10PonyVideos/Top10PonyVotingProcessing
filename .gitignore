@@ -14,7 +14,6 @@ upload_master.py
 e.csv
 Pipfile
 Pipfile.lock
-.env
 FebruarVotes.csv
 cache.json
 launch.json

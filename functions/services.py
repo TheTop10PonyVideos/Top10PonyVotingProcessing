@@ -50,7 +50,7 @@ def get_fetcher(
 
     # Fallback to the API key specified in the .env file if no YouTube API key
     # was supplied.
-    if youtube_api_key is None:
+    if not youtube_api_key:
         load_dotenv()
         youtube_api_key = os.getenv("apikey")
 
