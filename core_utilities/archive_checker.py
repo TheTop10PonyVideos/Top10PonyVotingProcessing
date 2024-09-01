@@ -18,6 +18,13 @@ from yt_dlp import YoutubeDL, DownloadError
 from enum import Enum
 from classes.gui import GUI
 
+
+blocked_everywhere_indicator = 'EVERYWHERE EXCEPT:'
+video_not_found = "Video not found"
+lock = asyncio.Lock()
+archive_url = 'https://docs.google.com/spreadsheets/d/1rEofPkliKppvttd8pEX8H6DtSljlfmQLdFR-SlyyX7E/export?format=csv'
+
+
 class ArchiveIndices:
     LINK = 3
     TITLE = 4
@@ -26,6 +33,7 @@ class ArchiveIndices:
     ALT_LINK = 8
     FOUND = 9
     NOTES = 10
+
 
 class States(Enum):
     NON_EMBEDDABLE = ('non-embedable', 'non-embeddable')
@@ -38,10 +46,6 @@ class States(Enum):
         for state in cls:
             if value.lower() in state.value:
                 return state
-
-blocked_everywhere_indicator = 'EVERYWHERE EXCEPT:'
-video_not_found = "Video not found"
-lock = asyncio.Lock()
 
 
 class ArchiveStatusChecker(GUI):
@@ -60,7 +64,7 @@ class ArchiveStatusChecker(GUI):
         # Only get archive or check for updates when it's not being checked so full progress
         # label and output path is displayed upon revisiting
         if not self.running:     
-            csv_str: str = requests.get('https://docs.google.com/spreadsheets/d/1rEofPkliKppvttd8pEX8H6DtSljlfmQLdFR-SlyyX7E/export?format=csv').content.decode()
+            csv_str: str = requests.get(archive_url).content.decode()
 
             # The requested archive csv comes with extra sets of quotes around titles that include
             # quotation marks so a csv_reader is necessary to accomodate for that
