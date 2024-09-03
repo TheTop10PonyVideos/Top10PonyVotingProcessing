@@ -23,14 +23,14 @@ class TestFunctionsPostProcessing(TestCase):
                 "Percentage": "80.0000%",
                 "Total Votes": "16",
                 "URL": "https://example.com/2",
-                "Notes": "Tie broken by random choice",
+                "Notes": "Tie broken randomly by computer",
             },
             {
                 "Title": "Example 3",
                 "Percentage": "80.0000%",
                 "Total Votes": "16",
                 "URL": "https://example.com/3",
-                "Notes": "Tie broken by random choice",
+                "Notes": "Tie broken randomly by computer",
             },
         ]
 
@@ -106,14 +106,14 @@ class TestFunctionsPostProcessing(TestCase):
                 "Percentage": "80.0000%",
                 "Total Votes": "16",
                 "URL": "https://example.com/2",
-                "Notes": "Tie broken by random choice",
+                "Notes": "Tie broken randomly by computer",
             },
             {
                 "Title": "Example 3",
                 "Percentage": "80.0000%",
                 "Total Votes": "16",
                 "URL": "https://example.com/3",
-                "Notes": "Tie broken by random choice",
+                "Notes": "Tie broken randomly by computer",
             },
         ]
 
@@ -158,7 +158,7 @@ class TestFunctionsPostProcessing(TestCase):
         self.assertEqual("16", records[1]["Votes"])
         self.assertEqual("80.0000%", records[1]["Popularity"])
         self.assertEqual(20, records[1]["Total voters"])
-        self.assertEqual("Tie broken by random choice", records[1]["Notes"])
+        self.assertEqual("Tie broken randomly by computer", records[1]["Notes"])
 
         self.assertEqual(3, records[2]["Rank"])
         self.assertEqual("Example 3", records[2]["Title"])
@@ -169,12 +169,12 @@ class TestFunctionsPostProcessing(TestCase):
         self.assertEqual("16", records[2]["Votes"])
         self.assertEqual("80.0000%", records[2]["Popularity"])
         self.assertEqual(20, records[2]["Total voters"])
-        self.assertEqual("Tie broken by random choice", records[2]["Notes"])
+        self.assertEqual("Tie broken randomly by computer", records[2]["Notes"])
 
         self.assertEqual("HM", records[3]["Rank"])
         self.assertEqual("Example 4", records[3]["Title"])
         self.assertEqual(
-            '=VLOOKUP("https://example.com/4", IMPORTRANGE("https://docs.google.com/spreadsheets/d/1rEofPkliKppvttd8pEX8H6DtSljlfmQLdFR-SlyyX7E/edit", "top10!D:I"), 6, FALSE)',
+            'https://example.com/4',
             records[3]["Link"],
         )
         self.assertEqual("12", records[3]["Votes"])
@@ -187,7 +187,7 @@ class TestFunctionsPostProcessing(TestCase):
         self.assertEqual("HM", records[4]["Rank"])
         self.assertEqual("Example 5", records[4]["Title"])
         self.assertEqual(
-            '=VLOOKUP("https://example.com/5", IMPORTRANGE("https://docs.google.com/spreadsheets/d/1rEofPkliKppvttd8pEX8H6DtSljlfmQLdFR-SlyyX7E/edit", "top10!D:I"), 6, FALSE)',
+            'https://example.com/5',
             records[4]["Link"],
         )
         self.assertEqual("10", records[4]["Votes"])
@@ -209,14 +209,14 @@ class TestFunctionsPostProcessing(TestCase):
                 "Percentage": "80.0000%",
                 "Total Votes": "16",
                 "URL": "https://example.com/2",
-                "Notes": "Tie broken by random choice",
+                "Notes": "Tie broken randomly by computer",
             },
             {
                 "Title": "Top 10 Video 3",
                 "Percentage": "80.0000%",
                 "Total Votes": "16",
                 "URL": "https://example.com/3",
-                "Notes": "Tie broken by random choice",
+                "Notes": "Tie broken randomly by computer",
             },
         ]
 
