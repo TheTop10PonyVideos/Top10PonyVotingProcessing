@@ -121,7 +121,7 @@ def generate_sharable_records(
         record = {
             "Rank": "HM",
             "Title": hm_record["Title"],
-            "Link": f'{hm_record["URL"]}',
+            "Link": hm_record["URL"],
             "Votes": hm_record["Total Votes"],
             "Popularity": hm_record["Percentage"],
             "Total voters": total_voters,
