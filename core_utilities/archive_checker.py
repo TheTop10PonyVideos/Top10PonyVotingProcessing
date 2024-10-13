@@ -91,20 +91,19 @@ class ArchiveStatusChecker(GUI):
         output_file_frame = tk.Frame(root, pady=10)
         output_file_label = tk.Label(output_file_frame, text="Output CSV file:")
 
+        self.default_output_file = "outputs/archive_check_results"
 
-        default_output_file = "outputs/archive_check_results"
-
-        if os.path.exists(f"{default_output_file}.csv"):
+        if os.path.exists(f"{self.default_output_file}.csv"):
             i = 2
 
-            while os.path.exists(f"{default_output_file}{i}.csv"):
+            while os.path.exists(f"{self.default_output_file}{i}.csv"):
                 i += 1
 
-            default_output_file = f"{default_output_file}{i}"
+            self.default_output_file = f"{self.default_output_file}{i}"
         
-        default_output_file += ".csv"
+        self.default_output_file += ".csv"
 
-        self.output_file_var = tk.StringVar(value=default_output_file)
+        self.output_file_var = tk.StringVar(value=self.default_output_file)
         output_file_entry = tk.Entry(output_file_frame, width=40, textvariable=self.output_file_var)
 
         browse_button = ttk.Button(
@@ -147,6 +146,10 @@ class ArchiveStatusChecker(GUI):
         # Still be kept optional in case something goes wrong in which case synchronous fetching can stil be used
         use_async = tk.Checkbutton(settings_frame, text="Async Requests (faster)", variable=self.use_async_var)
         use_async.grid(column=0, row=2, padx=(5, 0), sticky="w")
+
+        self.contrast_states_var = tk.BooleanVar(value=False)
+        contrast_states = tk.Checkbutton(settings_frame, text="Contrast States", variable=self.contrast_states_var)
+        contrast_states.grid(column=0, row=3, padx=(5, 0), sticky="w")
         
         run_frame = tk.Frame(root)
         run_frame.pack(pady=(10, 5))
@@ -169,8 +172,12 @@ class ArchiveStatusChecker(GUI):
     def browse_input_file(self):
         """Handler for the "Choose Output CSV" button. Opens a file dialog and sets the
         variable `output_file_var` to the selected file."""
-        file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
-        self.output_file_var.set(file_path)
+        file_path = filedialog.asksaveasfilename(filetypes=[("CSV Files", "*.csv")])
+        
+        if file_path and not file_path.endswith(".csv"):
+            file_path += ".csv"
+
+        self.output_file_var.set(file_path if file_path else self.default_output_file)
 
     # Function to check video status using yt-dlp
     def check_non_youtube_video_status(self, video_url) -> Tuple[str, List[States], List[str]]:  
@@ -193,14 +200,16 @@ class ArchiveStatusChecker(GUI):
                 geo_restricted = info_dict.get("geo_restricted")
                 content_rating = info_dict.get("content_rating")
                 status = info_dict.get("status")
+
+                # if status or content_rating:
+                #    print(status, content_rating)
+
                 blocked_countries = info_dict.get("blocked_countries", [])
                 
                 if age_limit and age_limit >= 18:
                     states.append(States.AGE_RESTRICTED)
                 
-                if geo_restricted or (availability and "blocked" in availability):
-                    states.append(States.BLOCKED)
-                elif len(blocked_countries) >= 5:
+                if geo_restricted or (availability and "blocked" in availability) or len(blocked_countries) >= 5:
                     states.append(States.BLOCKED)
 
                 if visibility != 'Public':
@@ -318,6 +327,7 @@ class ArchiveStatusChecker(GUI):
             'quiet': True,
             'retries': 3,
             'sleep_interval': 3,
+            "allowed_extractors": ["twitter", "Newgrounds", "lbry", "TikTok", "PeerTube", "vimeo", "BiliBili", "dailymotion", "generic"]
         }
 
         self.ydl = YoutubeDL(ydl_opts)        
@@ -350,19 +360,26 @@ class ArchiveStatusChecker(GUI):
         fetched_video_title, video_states, blocked_countries = await self.get_video_status(video_url, video_title)
         
         if not fetched_video_title:
-            # I can't actually remember why this was needed oops
             return await self.update_progress()
         
+        if len(blocked_countries) >= 5 or blocked_everywhere_indicator in blocked_countries:
+            video_states.append(States.BLOCKED)
+
         updated = False
 
         # This lock makes sure that line breaks and related items appended to updated_rows stay consistent
         async with lock:
-            if (
+            needs_updating = (
                 (self.check_titles and (video_title != fetched_video_title)) or
                 ((len(blocked_countries) >= 5 or blocked_everywhere_indicator in blocked_countries) and States.BLOCKED not in initial_states) or
                 (any(video_state not in initial_states for video_state in video_states)) or
                 (any(archive_state not in video_states for archive_state in initial_states))
-                ):
+            ) if self.contrast_states_var.get() else (
+                (self.check_titles and (video_title != fetched_video_title)) or
+                (bool(len(video_states)) != bool(len(initial_states)))
+            )
+
+            if needs_updating:
                 self.updated_rows.append(["Current", row_index, video_url, video_title, archive_row[ArchiveIndices.STATE], ''])
                 self.updated_rows.append(["Updated", row_index, video_url, fetched_video_title if self.check_titles else video_title, ' & '.join(map(lambda state: state.value[0], tuple(video_states))) if video_states else '', ', '.join(blocked_countries) if States.BLOCKED in video_states else ''])
                 updated = True

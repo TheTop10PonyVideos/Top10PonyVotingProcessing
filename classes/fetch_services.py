@@ -2,10 +2,9 @@
 different site), create a class that implements the `can_fetch`, `request`,
 and `parse` methods."""
 
-import re
+import re, pytz
 import hashlib
 from datetime import datetime
-from datetime import timezone
 from urllib.parse import urlparse, parse_qs
 from googleapiclient.discovery import build
 from yt_dlp import YoutubeDL
@@ -175,7 +174,7 @@ class YtDlpFetchService:
         # <https://github.com/yt-dlp/yt-dlp/blob/07f5b2f7570fd9ac85aed17f4c0118f6eac77beb/yt_dlp/YoutubeDL.py#L2631>
         date_format = "%Y%m%d"
         upload_date = datetime.strptime(video_data.get("upload_date"), date_format)
-        upload_date = upload_date.replace(tzinfo=timezone.utc)
+        upload_date = pytz.utc.localize(upload_date)
 
         return {
             "title": video_data.get("title"),
