@@ -4,7 +4,6 @@ import tkinter as tk
 import csv
 import threading
 import requests
-import math
 import io
 import asyncio
 import aiohttp
@@ -76,19 +75,24 @@ class ArchiveStatusChecker(GUI):
         root.title("YouTube Video Status Checker")
 
         root.geometry("800x600")
+        root.grid_columnconfigure(0, weight=1)
 
         # Create banner image
         self.banner_image = ImageTk.PhotoImage(Image.open("images/archive-checker.png"))
         banner_label = tk.Label(root, image=self.banner_image)
-        banner_label.pack()
+        banner_label.grid(column=0, row=0)
 
         youtube_api_key_label = tk.Label(root, text="Enter YouTube Data API Key:")
-        youtube_api_key_label.pack()
+        youtube_api_key_label.grid(column=0, row=1)
 
         self.youtube_api_key_entry = tk.Entry(root, show="*", width=30)
-        self.youtube_api_key_entry.pack()
+        self.youtube_api_key_entry.grid(column=0, row=2, pady=5)
 
-        output_file_frame = tk.Frame(root, pady=10)
+        self.input_file_var = tk.StringVar()
+        self.input_file_frame = tk.Frame(root)
+        self.input_file_frame.grid(column=0, row=3)
+
+        output_file_frame = tk.Frame(root, pady=5)
         output_file_label = tk.Label(output_file_frame, text="Output CSV file:")
 
         self.default_output_file = "outputs/archive_check_results"
@@ -107,16 +111,16 @@ class ArchiveStatusChecker(GUI):
         output_file_entry = tk.Entry(output_file_frame, width=40, textvariable=self.output_file_var)
 
         browse_button = ttk.Button(
-            output_file_frame, text="📁 Choose...", command=self.browse_input_file
+            output_file_frame, text="📁 Choose...", command=self.browse_output_file
         )
 
-        output_file_label.grid(column=0, row=0, padx=5, pady=5)
-        output_file_entry.grid(column=1, row=0, padx=5, pady=5)
-        browse_button.grid(column=2, row=0, padx=5, pady=5)
-        output_file_frame.pack()
+        output_file_label.grid(column=0, row=0, padx=5)
+        output_file_entry.grid(column=1, row=0, padx=5)
+        browse_button.grid(column=2, row=0, padx=5)
+        output_file_frame.grid(column=0, row=4)
 
         settings_frame = tk.LabelFrame(root, text="Settings")
-        settings_frame.pack(pady=5)
+        settings_frame.grid(column=0, row=5, pady=5)
 
         range_frame = tk.Frame(settings_frame)
         range_frame.grid(column=0, row=0, pady=4)
@@ -150,9 +154,13 @@ class ArchiveStatusChecker(GUI):
         self.contrast_states_var = tk.BooleanVar(value=False)
         contrast_states = tk.Checkbutton(settings_frame, text="Contrast States", variable=self.contrast_states_var)
         contrast_states.grid(column=0, row=3, padx=(5, 0), sticky="w")
-        
+
+        self.generic_list_var = tk.BooleanVar(value=False)
+        generic_list = tk.Checkbutton(settings_frame, text="Generic List", variable=self.generic_list_var, command=self.generic_list_checked)
+        generic_list.grid(column=0, row=4, padx=(5, 0), sticky="w")
+
         run_frame = tk.Frame(root)
-        run_frame.pack(pady=(10, 5))
+        run_frame.grid(column=0, row=6, pady=(10, 5))
 
         self.start_button = ttk.Button(run_frame, text="Run Status Checker", command=self.run_status_checker, state=tk.DISABLED if self.running else tk.NORMAL)
         self.start_button.grid(column=0, row=0, padx=5, pady=5)
@@ -161,15 +169,48 @@ class ArchiveStatusChecker(GUI):
         quit_button.grid(column=1, row=0, padx=5, pady=5)
 
         info_frame = tk.Frame(root)
-        info_frame.pack()
+        info_frame.grid(column=0, row=7)
 
         self.progress_label = tk.Label(info_frame, text=f"Progress: {self.processed_videos if self.running else 0}/{self.videos_to_fetch} videos checked")
         self.progress_label.grid(column=0, row=1, padx=3, pady=3)
 
         self.result_label = tk.Label(root, text=self.output_csv_path if len(self.checking_range) and (self.processed_videos == len(self.checking_range)) else "")
-        self.result_label.pack(pady=10)
+        self.result_label.grid(column=0, row=8, pady=10)
 
-    def browse_input_file(self):
+    def generic_list_checked(self):
+        checked = self.generic_list_var.get()
+
+        if not checked:
+            for child in self.input_file_frame.winfo_children():
+                child.destroy() # RIP childs again
+            
+            self.input_file_var.set("")
+            self.videos_to_fetch = len(self.archive_rows) - 1
+
+            self.checks_row_start_entry.config(state=tk.NORMAL)
+            self.checks_row_start_entry.delete(0, tk.END)
+            self.checks_row_start_entry.insert(0, 2)
+            self.checks_row_end_entry.config(state=tk.NORMAL)
+            self.checks_row_end_entry.delete(0, tk.END)
+            self.checks_row_end_entry.insert(0, len(self.archive_rows))
+            self.progress_label.config(text=f"Progress: 0/{self.videos_to_fetch} videos checked")
+            self.start_button.config(state=tk.NORMAL)
+
+            return self.input_file_frame.grid_remove()
+
+        tk.Label(self.input_file_frame, text="Input CSV File:").grid(column=0, row=0, padx=5)
+        tk.Entry(self.input_file_frame, width=40, textvariable=self.input_file_var, state="readonly").grid(column=1, row=0, padx=5)
+        ttk.Button(self.input_file_frame, text="📁 Choose...", command=self.browse_input_file).grid(column=2, row=0, padx=5)
+        self.input_file_frame.grid()
+
+        self.checks_row_start_entry.delete(0, tk.END)
+        self.checks_row_start_entry.config(state="readonly")
+        self.checks_row_end_entry.delete(0, tk.END)
+        self.checks_row_end_entry.config(state="readonly")
+        self.start_button.config(state=tk.DISABLED)
+        self.progress_label.config(text="Progress: -/- videos checked")
+
+    def browse_output_file(self):
         """Handler for the "Choose Output CSV" button. Opens a file dialog and sets the
         variable `output_file_var` to the selected file."""
         file_path = filedialog.asksaveasfilename(filetypes=[("CSV Files", "*.csv")])
@@ -178,6 +219,36 @@ class ArchiveStatusChecker(GUI):
             file_path += ".csv"
 
         self.output_file_var.set(file_path if file_path else self.default_output_file)
+
+    def browse_input_file(self):
+        """Handler for the "Choose Input CSV" button. Opens a file dialog and sets the
+        variable `input_file_var` to the selected file."""
+        file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
+
+        self.input_file_var.set(file_path)
+
+        if not file_path:
+            self.checks_row_start_entry.delete(0, tk.END)
+            self.checks_row_start_entry.config(state="readonly")
+            self.checks_row_end_entry.delete(0, tk.END)
+            self.checks_row_end_entry.config(state="readonly")
+            self.start_button.config(state=tk.DISABLED)
+            self.progress_label.config(text="Progress: -/- videos checked")
+            return
+        
+        with open(file_path, "r", encoding="utf-8") as input_csv_file:
+            csv_reader = csv.reader(input_csv_file)
+            self.checking_range = [row for row in csv_reader]
+            self.videos_to_fetch = len(self.checking_range)
+
+            self.checks_row_start_entry.config(state=tk.NORMAL)
+            self.checks_row_start_entry.delete(0, tk.END)
+            self.checks_row_start_entry.insert(0, 1)
+            self.checks_row_end_entry.config(state=tk.NORMAL)
+            self.checks_row_end_entry.delete(0, tk.END)
+            self.checks_row_end_entry.insert(0, len(self.checking_range))
+            self.progress_label.config(text=f"Progress: 0/{self.videos_to_fetch} videos checked")
+            self.start_button.config(state=tk.NORMAL)
 
     # Function to check video status using yt-dlp
     def check_non_youtube_video_status(self, video_url) -> Tuple[str, List[States], List[str]]:  
@@ -289,7 +360,10 @@ class ArchiveStatusChecker(GUI):
         header = ["", "Archive Row", "Video URL", "Video Title", "Video Status", "Blocked Countries"]
         with open(self.output_csv_path, 'w', encoding='utf-8') as output_csvfile:
             csv_writer = csv.writer(output_csvfile, lineterminator="\n")
-            csv_writer.writerow(header)
+            
+            if not self.generic_list_var.get():
+                csv_writer.writerow(header)
+            
             csv_writer.writerows(self.updated_rows)
 
         if self == GUI.active_gui and self.ready:
@@ -331,9 +405,14 @@ class ArchiveStatusChecker(GUI):
         }
 
         self.ydl = YoutubeDL(ydl_opts)        
+        generic = self.generic_list_var.get()
 
         self.starting_row_num = int(self.checks_row_start_entry.get())
-        self.checking_range = self.archive_rows[self.starting_row_num - 1 : int(self.checks_row_end_entry.get())]
+
+        if generic:
+            self.checking_range = self.checking_range[self.starting_row_num - 1 : int(self.checks_row_end_entry.get())]
+        else:
+            self.checking_range = self.archive_rows[self.starting_row_num - 1 : int(self.checks_row_end_entry.get())]
 
         self.updated_rows = []
         self.processed_videos = 0
@@ -345,10 +424,16 @@ class ArchiveStatusChecker(GUI):
         self.checks_row_start_entry.config(state=tk.DISABLED)
         self.checks_row_end_entry.config(state=tk.DISABLED)
 
-        if self.use_async_var.get():
-            threading.Thread(target=lambda: self.async_loop.run_until_complete(self.check_videos_async())).start()
+        if generic:
+            if self.use_async_var.get():
+                threading.Thread(target=lambda: self.async_loop.run_until_complete(self.check_generic_async())).start()
+            else:
+                threading.Thread(target=lambda: asyncio.run(self.check_generic_sync())).start()
         else:
-            threading.Thread(target=lambda: asyncio.run(self.check_videos_sync())).start()
+            if self.use_async_var.get():
+                threading.Thread(target=lambda: self.async_loop.run_until_complete(self.check_videos_async())).start()
+            else:
+                threading.Thread(target=lambda: asyncio.run(self.check_videos_sync())).start()
 
     async def check_video(self, row_index: int, archive_row: List[str]):
         initial_states = archive_row[ArchiveIndices.STATE].split('/') if len(archive_row[ArchiveIndices.STATE].split('/')) != 1 else archive_row[ArchiveIndices.STATE].split(' & ')
@@ -358,12 +443,6 @@ class ArchiveStatusChecker(GUI):
         video_url = archive_row[ArchiveIndices.LINK]
 
         fetched_video_title, video_states, blocked_countries = await self.get_video_status(video_url, video_title)
-        
-        if not fetched_video_title:
-            return await self.update_progress()
-        
-        if len(blocked_countries) >= 5 or blocked_everywhere_indicator in blocked_countries:
-            video_states.append(States.BLOCKED)
 
         updated = False
 
@@ -402,12 +481,26 @@ class ArchiveStatusChecker(GUI):
 
             await self.update_progress()
 
+    async def check_link(self, row_index, video_url):
+        fetched_video_title, video_states, blocked_countries = await self.get_video_status(video_url, "")
+                
+        if len(blocked_countries) >= 5 or blocked_everywhere_indicator in blocked_countries:
+            video_states.append(States.BLOCKED)
+
+        # This lock makes sure that line breaks and related items appended to updated_rows stay consistent
+        async with lock:
+            if len(video_states):
+                self.updated_rows.append(["Bad Status", row_index, video_url, fetched_video_title , ' & '.join(map(lambda state: state.value[0], tuple(video_states))), ', '.join(blocked_countries) if States.BLOCKED in video_states else ''])
+                self.updated_rows.append([""] * 6)
+
+            await self.update_progress()
+
     async def check_videos_async(self):
         self.session = aiohttp.ClientSession()
 
         tasks = []
 
-        for i, archive_row in enumerate(self.checking_range):
+        for i, archive_row in enumerate(self.checking_range, start=self.starting_row_num):
             tasks.append(asyncio.create_task(self.check_video(i, archive_row)))
 
         await asyncio.gather(*tasks)
@@ -415,11 +508,30 @@ class ArchiveStatusChecker(GUI):
     async def check_videos_sync(self):
         self.session = aiohttp.ClientSession()
 
-        for i, archive_row in enumerate(self.checking_range):
+        for i, archive_row in enumerate(self.checking_range, start=self.starting_row_num):
             await self.check_video(i, archive_row)
+    
+    async def check_generic_async(self):
+        self.session = aiohttp.ClientSession()
 
+        tasks = []
+
+        for i, row in enumerate(self.checking_range, start=self.starting_row_num):
+            tasks.append(asyncio.create_task(self.check_link(i, row[0])))
+
+        await asyncio.gather(*tasks)
+
+    async def check_generic_sync(self):
+        self.session = aiohttp.ClientSession()
+
+        for i, row in enumerate(self.checking_range, start=self.starting_row_num):
+            await self.check_link(i, row[0])
 
     def clamp_to_archive_range(self, e: Event):
+        if self.checks_row_start_entry.cget("state") != tk.NORMAL:
+            return
+        
+        generic = self.generic_list_var.get()
         start = self.checks_row_start_entry.get()
         end = self.checks_row_end_entry.get()
 
@@ -429,19 +541,16 @@ class ArchiveStatusChecker(GUI):
             try:
                 start = int(start)
             except:
-                self.checks_row_start_entry.delete(0, len(start))
-                self.checks_row_start_entry.insert(0, 2)
-                self.videos_to_fetch = end - 1
+                self.checks_row_start_entry.delete(0, tk.END)
+                self.checks_row_start_entry.insert(0, 1 if generic else 2)
+                self.videos_to_fetch = end - (1 if generic else 0)
                 self.progress_label.config(text=f"Progress: 0/{self.videos_to_fetch} videos checked")
                 return
 
-            clamped = max(2, min(start, end))
+            clamped = max(1 if generic else 2, min(start, end))
 
             if clamped != start:
-                self.checks_row_start_entry.delete(
-                    0,
-                    int(math.log10(abs(start))) + 1 + (abs(start) != start) if start != 0 else 2
-                )
+                self.checks_row_start_entry.delete(0, tk.END)
                 self.checks_row_start_entry.insert(0, clamped)
 
             self.videos_to_fetch = end - clamped + 1
@@ -452,19 +561,16 @@ class ArchiveStatusChecker(GUI):
             try:
                 end = int(end)
             except:
-                self.checks_row_end_entry.delete(0, len(end))
-                self.checks_row_end_entry.insert(0, len(self.archive_rows))
-                self.videos_to_fetch = len(self.archive_rows) - start + 1
+                self.checks_row_end_entry.delete(0, tk.END)
+                self.checks_row_end_entry.insert(0, len(self.checking_range if generic else self.archive_rows))
+                self.videos_to_fetch = len(self.checking_range if generic else self.archive_rows) - start + 1
                 self.progress_label.config(text=f"Progress: 0/{self.videos_to_fetch} videos checked")
                 return
             
             clamped = max(start, min(end, len(self.archive_rows)))
 
             if clamped != end:
-                self.checks_row_end_entry.delete(
-                    0,
-                    int(math.log10(abs(end))) + 1 + (abs(end) != end) if end != 0 else 2
-                )
+                self.checks_row_end_entry.delete(0, tk.END)
                 self.checks_row_end_entry.insert(0, clamped)
 
             self.videos_to_fetch = clamped - start + 1
