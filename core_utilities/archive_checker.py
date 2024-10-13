@@ -178,6 +178,8 @@ class ArchiveStatusChecker(GUI):
         self.result_label.grid(column=0, row=8, pady=10)
 
     def generic_list_checked(self):
+        """Called whenever the check box for a generic list is pressed.
+        Changes the ui to allow status checking a csv file instead of the archive"""
         checked = self.generic_list_var.get()
 
         if not checked:
@@ -250,8 +252,8 @@ class ArchiveStatusChecker(GUI):
             self.progress_label.config(text=f"Progress: 0/{self.videos_to_fetch} videos checked")
             self.start_button.config(state=tk.NORMAL)
 
-    # Function to check video status using yt-dlp
-    def check_non_youtube_video_status(self, video_url) -> Tuple[str, List[States], List[str]]:  
+    def check_non_youtube_video_status(self, video_url) -> Tuple[str, List[States], List[str]]:
+        """Get the current state of a video using the yt-dlp module""" 
         # Note: During debugging, no videos were found to have any bad status
         # Most of this was copilot generated since it'd be difficult or tedious
         # to check for each platforms edge cases. It's implementation could potentially
@@ -296,8 +298,8 @@ class ArchiveStatusChecker(GUI):
             
             return video_not_found, [States.UNAVAILABLE], []
 
-    # Function to check video status using YouTube Data API
     async def check_youtube_video_status(self, video_id, tries=0) -> Tuple[str, List[States], List[str]]:
+        """Get the current state of a video using the Youtube Data API"""
         try:
             async with self.session.get(
                 f"https://www.googleapis.com/youtube/v3/videos?key={self.youtube_api_key}&id={video_id}&part=snippet,contentDetails,status"
@@ -338,8 +340,8 @@ class ArchiveStatusChecker(GUI):
             print(f"\033[91m\n{e.reason}")
             quit(1)
 
-    # Function to delegate status checking to the function tailored to using the url's domain
     async def get_video_status(self, video_url, video_title):
+        """Get the current state of the video from the given any supported link"""
         if "youtube.com" in video_url or "youtu.be" in video_url:
             video_id = video_url.split("v=")[-1] if "youtube.com" in video_url else video_url.split("/")[-1]
             updated_video_title, video_states, blocked_countries = await self.check_youtube_video_status(video_id)
@@ -354,9 +356,8 @@ class ArchiveStatusChecker(GUI):
         
         return updated_video_title, video_states, blocked_countries
     
-    # Function to output all found archive discrepancies to the output csv
     def write_to_output_csv(self):
-        # Write to the output CSV with headers
+        """Writes the discrepancies from the list of notes into a csv file"""
         header = ["", "Archive Row", "Video URL", "Video Title", "Video Status", "Blocked Countries"]
         with open(self.output_csv_path, 'w', encoding='utf-8') as output_csvfile:
             csv_writer = csv.writer(output_csvfile, lineterminator="\n")
@@ -371,6 +372,8 @@ class ArchiveStatusChecker(GUI):
     
     # Increment the progress counter and signal when the checking process is done
     async def update_progress(self):
+        """Increment the displayed progress label, and close the aiohttp session
+        when all videos have been processed"""
         self.processed_videos += 1
         if self == GUI.active_gui and self.ready:
             self.progress_label.config(text=f"Progress: {self.processed_videos}/{self.videos_to_fetch} videos checked")
@@ -389,6 +392,8 @@ class ArchiveStatusChecker(GUI):
 
     # The starting point for the main part of this process
     def run_status_checker(self):
+        """Check the status of the archive or generic list and output a csv
+        file of discrepancies or bad links respectively"""
         self.youtube_api_key = self.youtube_api_key_entry.get().strip()
         if not self.youtube_api_key: return
         
@@ -436,6 +441,8 @@ class ArchiveStatusChecker(GUI):
                 threading.Thread(target=lambda: asyncio.run(self.check_videos_sync())).start()
 
     async def check_video(self, row_index: int, archive_row: List[str]):
+        """Compare the current state of a video with its corresponding archive entry, and note
+        differences in states. Also checks the alt link when appropriate"""
         initial_states = archive_row[ArchiveIndices.STATE].split('/') if len(archive_row[ArchiveIndices.STATE].split('/')) != 1 else archive_row[ArchiveIndices.STATE].split(' & ')
         initial_states = [States.get(state) for state in initial_states if States.get(state) != None]
 
@@ -482,6 +489,7 @@ class ArchiveStatusChecker(GUI):
             await self.update_progress()
 
     async def check_link(self, row_index, video_url):
+        """Check the video status of a video link, and create a note if it has a bad state"""
         fetched_video_title, video_states, blocked_countries = await self.get_video_status(video_url, "")
                 
         if len(blocked_countries) >= 5 or blocked_everywhere_indicator in blocked_countries:
@@ -528,6 +536,8 @@ class ArchiveStatusChecker(GUI):
             await self.check_link(i, row[0])
 
     def clamp_to_archive_range(self, e: Event):
+        """Clamp values in the start and end entries to the range of the
+        archive or generic list"""
         if self.checks_row_start_entry.cget("state") != tk.NORMAL:
             return
         
