@@ -189,7 +189,9 @@ class YtDlpFetchService:
     # then the respective case should be updated accordingly
     def preprocess(self, url: str) -> dict:
         url_components = urlparse(url)
-        site = url_components.netloc.split(".")[0]
+        site = url_components.netloc.split(".")
+        site = site[0] if len(site) == 2 else site[1]
+        
         changes = {}
 
         match site:

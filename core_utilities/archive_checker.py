@@ -82,15 +82,9 @@ class ArchiveStatusChecker(GUI):
         banner_label = tk.Label(root, image=self.banner_image)
         banner_label.grid(column=0, row=0)
 
-        youtube_api_key_label = tk.Label(root, text="Enter YouTube Data API Key:")
-        youtube_api_key_label.grid(column=0, row=1)
-
-        self.youtube_api_key_entry = tk.Entry(root, show="*", width=30)
-        self.youtube_api_key_entry.grid(column=0, row=2, pady=5)
-
         self.input_file_var = tk.StringVar()
         self.input_file_frame = tk.Frame(root)
-        self.input_file_frame.grid(column=0, row=3)
+        self.input_file_frame.grid(column=0, row=1)
 
         output_file_frame = tk.Frame(root, pady=5)
         output_file_label = tk.Label(output_file_frame, text="Output CSV file:")
@@ -117,10 +111,10 @@ class ArchiveStatusChecker(GUI):
         output_file_label.grid(column=0, row=0, padx=5)
         output_file_entry.grid(column=1, row=0, padx=5)
         browse_button.grid(column=2, row=0, padx=5)
-        output_file_frame.grid(column=0, row=4)
+        output_file_frame.grid(column=0, row=2)
 
         settings_frame = tk.LabelFrame(root, text="Settings")
-        settings_frame.grid(column=0, row=5, pady=5)
+        settings_frame.grid(column=0, row=3, pady=5)
 
         range_frame = tk.Frame(settings_frame)
         range_frame.grid(column=0, row=0, pady=4)
@@ -160,7 +154,7 @@ class ArchiveStatusChecker(GUI):
         generic_list.grid(column=0, row=4, padx=(5, 0), sticky="w")
 
         run_frame = tk.Frame(root)
-        run_frame.grid(column=0, row=6, pady=(10, 5))
+        run_frame.grid(column=0, row=4, pady=(10, 5))
 
         self.start_button = ttk.Button(run_frame, text="Run Status Checker", command=self.run_status_checker, state=tk.DISABLED if self.running else tk.NORMAL)
         self.start_button.grid(column=0, row=0, padx=5, pady=5)
@@ -169,13 +163,13 @@ class ArchiveStatusChecker(GUI):
         quit_button.grid(column=1, row=0, padx=5, pady=5)
 
         info_frame = tk.Frame(root)
-        info_frame.grid(column=0, row=7)
+        info_frame.grid(column=0, row=5)
 
         self.progress_label = tk.Label(info_frame, text=f"Progress: {self.processed_videos if self.running else 0}/{self.videos_to_fetch} videos checked")
         self.progress_label.grid(column=0, row=1, padx=3, pady=3)
 
         self.result_label = tk.Label(root, text=self.output_csv_path if len(self.checking_range) and (self.processed_videos == len(self.checking_range)) else "")
-        self.result_label.grid(column=0, row=8, pady=10)
+        self.result_label.grid(column=0, row=6, pady=10)
 
     def generic_list_checked(self):
         """Called whenever the check box for a generic list is pressed.
@@ -394,7 +388,7 @@ class ArchiveStatusChecker(GUI):
     def run_status_checker(self):
         """Check the status of the archive or generic list and output a csv
         file of discrepancies or bad links respectively"""
-        self.youtube_api_key = self.youtube_api_key_entry.get().strip()
+        self.youtube_api_key = GUI.yt_api_key_var.get().strip()
         if not self.youtube_api_key: return
         
         output_file_dir = self.output_file_var.get()

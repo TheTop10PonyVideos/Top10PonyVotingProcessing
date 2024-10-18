@@ -123,7 +123,7 @@ class PostProcessing(GUI):
             for url in group:
                 history_video_urls.append(url)
 
-        top_10_videos_data = fetch_videos_data(top_10_video_urls)
+        top_10_videos_data = fetch_videos_data(GUI.yt_api_key_var.get(), top_10_video_urls)
         hm_videos_data = fetch_videos_data(hm_video_urls)
         history_videos_data = fetch_videos_data(history_video_urls)
 
