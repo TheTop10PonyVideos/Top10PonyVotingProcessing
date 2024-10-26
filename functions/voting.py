@@ -125,7 +125,7 @@ def fetch_video_data_for_ballots(
             missing_fields = validate_video_data(data)
             if len(missing_fields) > 0:
                 raise SchemaValidationError(
-                    f'Error when validating video data for URL "{url}"; the following fields are missing: {", ".join(missing_fields)}'
+                    f'Error when validating video data for URL "{vote.url}"; the following fields are missing: {", ".join(missing_fields)}'
                 )
 
             videos[vote.url] = video

@@ -12,10 +12,10 @@ from classes.fetcher import Fetcher
 MASTER_ARCHIVE_URL = "https://docs.google.com/spreadsheets/d/1rEofPkliKppvttd8pEX8H6DtSljlfmQLdFR-SlyyX7E/edit"
 
 
-def fetch_videos_data(urls: list[str]) -> dict[str, dict]:
+def fetch_videos_data(yt_api_key: str, urls: list[str]) -> dict[str, dict]:
     """Given a list of video URLs, return a dictionary mapping each URL to its
     data."""
-    fetcher = get_fetcher()
+    fetcher = get_fetcher(yt_api_key)
 
     videos_data = {}
     for url in urls:

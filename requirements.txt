@@ -6,3 +6,4 @@ pytz
 python-Levenshtein
 pillow
 tkinter-tooltip
+aiohttp
