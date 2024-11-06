@@ -20,6 +20,7 @@ from functions.top_10_parser import parse_calculated_top_10_csv
 from functions.messages import suc, inf, err
 from classes.gui import GUI
 
+
 class PostProcessing(GUI):
     def gui(self, root):
         # Create application window
@@ -47,10 +48,14 @@ class PostProcessing(GUI):
         default_input_file = "outputs/calculated_top_10.csv"
         self.input_file_var = tk.StringVar()
         self.input_file_var.set(default_input_file)
-        input_file_entry = ttk.Entry(input_file_frame, width=40, textvariable=self.input_file_var)
+        input_file_entry = ttk.Entry(
+            input_file_frame, width=40, textvariable=self.input_file_var
+        )
 
         browse_button = ttk.Button(
-            input_file_frame, text="📁 Choose Input CSV...", command=self.browse_input_file
+            input_file_frame,
+            text="📁 Choose Input CSV...",
+            command=self.browse_input_file,
         )
 
         input_file_label.grid(column=0, row=0, padx=5, pady=5)
@@ -64,19 +69,24 @@ class PostProcessing(GUI):
         buttons_frame.pack()
 
         run_button = ttk.Button(
-            buttons_frame, text="🏁 Run Post-processing", command=self.handle_post_processing
+            buttons_frame,
+            text="🏁 Run Post-processing",
+            command=self.handle_post_processing,
         )
         run_button.grid(column=0, row=0, padx=5, pady=5)
 
-        quit_button = ttk.Button(buttons_frame, text="Back to Main Menu", command=lambda: GUI.run("MainMenu", root))
+        quit_button = ttk.Button(
+            buttons_frame,
+            text="Back to Main Menu",
+            command=lambda: GUI.run("MainMenu", root),
+        )
         quit_button.grid(column=1, row=0, padx=5, pady=5)
-    
+
     def browse_input_file(self):
         """Handler for the "Choose Input CSV" button. Opens a file dialog and sets the
         global variable `input_file_var` to the selected file."""
         file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
         self.input_file_var.set(file_path)
-
 
     def handle_post_processing(self):
         """Handler for the "Run post-processing" button."""
@@ -131,7 +141,9 @@ class PostProcessing(GUI):
         hm_videos_data = fetch_videos_data(yt_api_key, hm_video_urls)
         history_videos_data = fetch_videos_data(yt_api_key, history_video_urls)
 
-        top10_archive_records = generate_top10_archive_records(top_10_records, top_10_videos_data)
+        top10_archive_records = generate_top10_archive_records(
+            top_10_records, top_10_videos_data
+        )
         hm_archive_records = generate_hm_archive_records(hm_records, hm_videos_data)
         sharable_records = generate_sharable_records(top_10_records, hm_records)
         showcase_desc = generate_showcase_description(

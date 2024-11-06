@@ -179,13 +179,16 @@ def generate_sharable_records(
 
     return records
 
+
 def generate_top10_archive_csv(records: list[dict], filename: str):
     """Given a list of Top 10 archive records, write them to a CSV file in a
     tabular format."""
     csv_path = Path(filename)
 
     if len(records) != 10:
-        raise ValueError(f"Cannot generate top 10 archive CSV: {len(records)} videos were found, but there should be exactly 10")
+        raise ValueError(
+            f"Cannot generate top 10 archive CSV: {len(records)} videos were found, but there should be exactly 10"
+        )
 
     header = [
         "year",
