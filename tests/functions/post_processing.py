@@ -1,7 +1,8 @@
 from unittest import TestCase
 from datetime import datetime
 from functions.post_processing import (
-    generate_archive_records,
+    generate_top10_archive_records,
+    generate_hm_archive_records,
     generate_sharable_records,
     generate_showcase_description,
     create_videos_desc,
@@ -9,7 +10,7 @@ from functions.post_processing import (
 
 
 class TestFunctionsPostProcessing(TestCase):
-    def test_generate_archive_records(self):
+    def test_generate_top10_archive_records(self):
         top_10_records = [
             {
                 "Title": "Example 1",
@@ -52,7 +53,7 @@ class TestFunctionsPostProcessing(TestCase):
             },
         }
 
-        records = generate_archive_records(top_10_records, videos_data)
+        records = generate_top10_archive_records(top_10_records, videos_data)
 
         self.assertEqual(3, len(records))
 
@@ -91,6 +92,63 @@ class TestFunctionsPostProcessing(TestCase):
         self.assertEqual("https://example.com/1", records[2]["alternate link"])
         self.assertEqual("", records[2]["found"])
         self.assertEqual("", records[2]["notes"])
+
+    def test_generate_hm_archive_records(self):
+        hm_records = [
+            {
+                "Title": "HM 1",
+                "Percentage": "90.0000%",
+                "Total Votes": "18",
+                "URL": "https://example.com/1",
+                "Notes": "",
+            },
+            {
+                "Title": "HM 2",
+                "Percentage": "80.0000%",
+                "Total Votes": "16",
+                "URL": "https://example.com/2",
+                "Notes": "",
+            },
+        ]
+
+        videos_data = {
+            "https://example.com/1": {
+                "title": "HM 1",
+                "uploader": "Uploader 1",
+                "upload_date": datetime(2024, 4, 1),
+            },
+            "https://example.com/2": {
+                "title": "HM 2",
+                "uploader": "Uploader 2",
+                "upload_date": datetime(2024, 4, 2),
+            },
+        }
+
+        records = generate_hm_archive_records(hm_records, videos_data)
+
+        self.assertEqual(2, len(records))
+
+        self.assertEqual(2024, records[0]["Year"])
+        self.assertEqual(4, records[0]["Month"])
+        self.assertEqual("https://example.com/2", records[0]["Original Link"])
+        self.assertEqual("HM 2", records[0]["Title"])
+        self.assertEqual("Uploader 2", records[0]["Channel"])
+        self.assertEqual("2024-04-02", records[0]["Upload Date"])
+        self.assertEqual("", records[0]["State"])
+        self.assertEqual("https://example.com/2", records[0]["Alternate link"])
+        self.assertEqual("", records[0]["Found"])
+        self.assertEqual("", records[0]["Notes"])
+
+        self.assertEqual(2024, records[1]["Year"])
+        self.assertEqual(4, records[1]["Month"])
+        self.assertEqual("https://example.com/1", records[1]["Original Link"])
+        self.assertEqual("HM 1", records[1]["Title"])
+        self.assertEqual("Uploader 1", records[1]["Channel"])
+        self.assertEqual("2024-04-01", records[1]["Upload Date"])
+        self.assertEqual("", records[1]["State"])
+        self.assertEqual("https://example.com/1", records[1]["Alternate link"])
+        self.assertEqual("", records[1]["Found"])
+        self.assertEqual("", records[1]["Notes"])
 
     def test_generate_sharable_records(self):
         top_10_records = [

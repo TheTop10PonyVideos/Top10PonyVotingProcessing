@@ -13,6 +13,9 @@ from core_utilities import (
     archive_checker
 )
 
+# Initialize all of the core utility classes. This automatically populates
+# the static variable `GUI.instances` with an instance of each core utility,
+# making them globally available.
 post_processing.PostProcessing()
 vote_processing.VoteProcessing()
 top_10_calculator.Top10Calculator()
@@ -20,6 +23,8 @@ archive_checker.ArchiveStatusChecker()
 
 
 class MainMenu(GUI):
+    """GUI application for the main menu, from which each of the core utilities
+    can be launched."""
     def __init__(self, max_frame_rate, rate_deriv):
         super().__init__()
         self.gif_playing = False
@@ -67,6 +72,9 @@ class MainMenu(GUI):
         btn_archive_checker = ttk.Button(buttons_frame, text="Archive Status Checker", command=lambda: GUI.run("ArchiveStatusChecker", root))
         btn_archive_checker.grid(column=3, row=1, padx=5, pady=5)
     
+        btn_quit = ttk.Button(buttons_frame, text="Quit", command=root.destroy)
+        btn_quit.grid(column=0, row=2, columnspan=4, padx=5, pady=20)
+
 
     def start_gif(self, event):
         if not self.gif_playing:

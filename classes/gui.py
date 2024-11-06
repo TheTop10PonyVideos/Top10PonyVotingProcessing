@@ -19,9 +19,11 @@ class GUI():
 
     # Named gui to be more intuitive when overriding rather than in its use in this class
     def gui(self, root: tk.Tk):
-        """Code to build the gui should override this method\n
-        Note: Some variables may be garbage collected after the gui is built,
-        so if anything appears to be missing try saving its variable to self"""
+        """Code to build the gui should override this method.
+
+        NOTE: Some variables may be garbage collected after the gui is built,
+        so if anything appears to be missing, try saving its variable to self.
+        """
         pass
 
     @staticmethod

@@ -92,7 +92,7 @@ class Top10Calculator(GUI):
         run_button = ttk.Button(buttons_frame, text="🧮 Calculate Top 10", command=self.handle_calc)
         run_button.grid(column=0, row=0, padx=5, pady=5)
 
-        quit_button = ttk.Button(buttons_frame, text="Quit", command=lambda: GUI.run("MainMenu", root))
+        quit_button = ttk.Button(buttons_frame, text="Back to Main Menu", command=lambda: GUI.run("MainMenu", root))
         quit_button.grid(column=1, row=0, padx=5, pady=5)
 
     def browse_input_file(self):

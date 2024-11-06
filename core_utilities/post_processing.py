@@ -8,9 +8,11 @@ from tkinter.font import Font
 from PIL import ImageTk, Image
 from functions.post_processing import (
     fetch_videos_data,
-    generate_archive_records,
+    generate_top10_archive_records,
+    generate_hm_archive_records,
     generate_sharable_records,
-    generate_archive_csv,
+    generate_top10_archive_csv,
+    generate_hm_archive_csv,
     generate_sharable_csv,
     generate_showcase_description,
 )
@@ -66,7 +68,7 @@ class PostProcessing(GUI):
         )
         run_button.grid(column=0, row=0, padx=5, pady=5)
 
-        quit_button = ttk.Button(buttons_frame, text="Quit", command=lambda: GUI.run("MainMenu", root))
+        quit_button = ttk.Button(buttons_frame, text="Back to Main Menu", command=lambda: GUI.run("MainMenu", root))
         quit_button.grid(column=1, row=0, padx=5, pady=5)
     
     def browse_input_file(self):
@@ -123,11 +125,14 @@ class PostProcessing(GUI):
             for url in group:
                 history_video_urls.append(url)
 
-        top_10_videos_data = fetch_videos_data(GUI.yt_api_key_var.get(), top_10_video_urls)
-        hm_videos_data = fetch_videos_data(hm_video_urls)
-        history_videos_data = fetch_videos_data(history_video_urls)
+        yt_api_key = GUI.yt_api_key_var.get()
 
-        archive_records = generate_archive_records(top_10_records, top_10_videos_data)
+        top_10_videos_data = fetch_videos_data(yt_api_key, top_10_video_urls)
+        hm_videos_data = fetch_videos_data(yt_api_key, hm_video_urls)
+        history_videos_data = fetch_videos_data(yt_api_key, history_video_urls)
+
+        top10_archive_records = generate_top10_archive_records(top_10_records, top_10_videos_data)
+        hm_archive_records = generate_hm_archive_records(hm_records, hm_videos_data)
         sharable_records = generate_sharable_records(top_10_records, hm_records)
         showcase_desc = generate_showcase_description(
             top_10_records,
@@ -138,12 +143,15 @@ class PostProcessing(GUI):
             history_videos_data,
         )
 
-        archive_file = f"{output_dir}/{output_file_prefix}archive.csv"
+        top10_archive_file = f"{output_dir}/{output_file_prefix}top10-archive.csv"
+        hm_archive_file = f"{output_dir}/{output_file_prefix}hm-archive.csv"
         sharable_file = f"{output_dir}/{output_file_prefix}sharable.csv"
         desc_file = f"{output_dir}/{output_file_prefix}description.txt"
 
-        generate_archive_csv(archive_records, archive_file)
-        suc(f"Wrote archive data to {archive_file}.")
+        generate_top10_archive_csv(top10_archive_records, top10_archive_file)
+        suc(f"Wrote top 10 archive data to {top10_archive_file}.")
+        generate_hm_archive_csv(hm_archive_records, hm_archive_file)
+        suc(f"Wrote honorable mention archive data to {hm_archive_file}.")
         generate_sharable_csv(sharable_records, sharable_file)
         suc(f"Wrote sharable spreadsheet data to {sharable_file}.")
 
@@ -155,5 +163,5 @@ class PostProcessing(GUI):
 
         tk.messagebox.showinfo(
             "Success",
-            f"Post-processing complete. The following output files have been created:\n\n{archive_file}\n{sharable_file}\n{desc_file}",
+            f"Post-processing complete. The following output files have been created:\n\n{top10_archive_file}\n{hm_archive_file}\n{sharable_file}\n{desc_file}",
         )

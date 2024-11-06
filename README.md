@@ -1,9 +1,20 @@
-# Top10Pony Voting Processing
+# Top 10 Pony Voting Processing
+Python GUI application to process the monthly voting for the Top 10 Pony Videos showcase.
 
-Script with inbuild GUI to process the voting of the Video Series: "Top 10 Pony Videos"
+## Project structure
+* `classes`: Directory containing various custom classes used by the project.
+* `config`: Directory containing configuration files for the application.
+* `core_utilities`: Directory containing the individual Python utilities that can be accessed via the application.
+* `data`: Directory containing data used by the application to make decisions, eg. allowed domains, uploader whitelists.
+* `functions`: Directory containing various Python functions used in the project, organized by purpose.
+* `images`: Directory containing images used in the application's GUI.
+* `modules`: Directory containing modules used in previous iterations of the project. Now largely obsolete.
+* `outputs`: Directory to which the application typically writes out data after processing.
+* `tests`: Contains unit tests for the project.
+* `test.py`: Runs unit tests for the project. Use `python test.py` to run.
+* `main.py`: Entry point to the application. Use `python main.py` to run.
 
-## Guidelines:
-
+## Guidelines
 - Python and VSC on Windows are the main tools we will be using. Feel free to use any other IDEs that suit you better but be aware that you will not get support from us if you do so.  
 
 - Black is the most common Python code formatter and we will be using it throughout the project. If you are capable of producing PEP8 compliant code without using Black feel free to do so though we would appreciate if you did use it.  

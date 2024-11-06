@@ -30,7 +30,7 @@ def fetch_videos_data(yt_api_key: str, urls: list[str]) -> dict[str, dict]:
     return videos_data
 
 
-def generate_archive_records(
+def generate_top10_archive_records(
     top_10_records: list[dict], videos_data: dict
 ) -> list[dict]:
     """Given a list of top 10 records and a collection of accompanying video
@@ -72,6 +72,53 @@ def generate_archive_records(
             "alternate link": url,
             "found": "",
             "notes": "",
+        }
+
+        records.append(record)
+
+    return records
+
+
+def generate_hm_archive_records(
+    hm_records: list[dict], videos_data: dict
+) -> list[dict]:
+    """Given a list of honorable mention records and a collection of
+    accompanying video data indexed by video URL, generate a list of data
+    records in the format used by [Flynn's Top 10 Pony Videos List][1].
+
+    [1]: https://docs.google.com/spreadsheets/d/1rEofPkliKppvttd8pEX8H6DtSljlfmQLdFR-SlyyX7E
+    """
+
+    records = []
+    # Note: records created in reverse order as per the convention used in the
+    # master archive spreadsheet.
+    for i, hm_record in enumerate(reversed(hm_records)):
+        url = hm_record["URL"]
+        video_data = videos_data[url]
+
+        year = ""
+        month = ""
+        channel = ""
+        upload_date = ""
+
+        # TODO: Warn the user if video data is not available for some reason.
+        if video_data is not None:
+            year = video_data["upload_date"].year
+            month = video_data["upload_date"].month
+            channel = video_data["uploader"]
+            upload_date = video_data["upload_date"].strftime("%Y-%m-%d")
+
+        record = {
+            "Year": year,
+            "Month": month,
+            "Original Link": url,
+            "Title": hm_record["Title"],
+            "Channel": channel,
+            "Upload Date": upload_date,
+            "State": "",
+            "Alternate link": url,
+            "Found": "",
+            "Notes": "",
         }
 
         records.append(record)
@@ -132,11 +179,13 @@ def generate_sharable_records(
 
     return records
 
-
-def generate_archive_csv(records: list[dict], filename: str):
-    """Given a list of archive records, write them to a CSV file in a tabular
-    format."""
+def generate_top10_archive_csv(records: list[dict], filename: str):
+    """Given a list of Top 10 archive records, write them to a CSV file in a
+    tabular format."""
     csv_path = Path(filename)
+
+    if len(records) != 10:
+        raise ValueError(f"Cannot generate top 10 archive CSV: {len(records)} videos were found, but there should be exactly 10")
 
     header = [
         "year",
@@ -155,7 +204,37 @@ def generate_archive_csv(records: list[dict], filename: str):
     for record in records:
         if len(record) != len(header):
             raise Exception(
-                f"Cannot generate archive CSV; header has {len(header)} values but {len(record)} record values were given"
+                f"Cannot generate top 10 archive CSV; header has {len(header)} values but {len(record)} record values were given"
+            )
+
+    with csv_path.open("w", newline="", encoding="utf-8") as file:
+        csv_writer = csv.DictWriter(file, fieldnames=header)
+        csv_writer.writeheader()
+        csv_writer.writerows(records)
+
+
+def generate_hm_archive_csv(records: list[dict], filename: str):
+    """Given a list of honorable mention archive records, write them to a CSV
+    file in a tabular format."""
+    csv_path = Path(filename)
+
+    header = [
+        "Year",
+        "Month",
+        "Original Link",
+        "Title",
+        "Channel",
+        "Upload Date",
+        "State",
+        "Alternate link",
+        "Found",
+        "Notes",
+    ]
+
+    for record in records:
+        if len(record) != len(header):
+            raise Exception(
+                f"Cannot generate honorable mentions archive CSV; header has {len(header)} values but {len(record)} record values were given"
             )
 
     with csv_path.open("w", newline="", encoding="utf-8") as file:

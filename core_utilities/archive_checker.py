@@ -159,7 +159,7 @@ class ArchiveStatusChecker(GUI):
         self.start_button = ttk.Button(run_frame, text="Run Status Checker", command=self.run_status_checker, state=tk.DISABLED if self.running else tk.NORMAL)
         self.start_button.grid(column=0, row=0, padx=5, pady=5)
 
-        quit_button = ttk.Button(run_frame, text="Quit", command=lambda: GUI.run("MainMenu", root))
+        quit_button = ttk.Button(run_frame, text="Back to Main Menu", command=lambda: GUI.run("MainMenu", root))
         quit_button.grid(column=1, row=0, padx=5, pady=5)
 
         info_frame = tk.Frame(root)
