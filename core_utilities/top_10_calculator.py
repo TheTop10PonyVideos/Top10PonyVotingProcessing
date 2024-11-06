@@ -57,15 +57,19 @@ class Top10Calculator(GUI):
         default_input_file = "outputs/processed.csv"
         self.input_file_var = tk.StringVar()
         self.input_file_var.set(default_input_file)
-        input_file_entry = ttk.Entry(file_selectors_frame, width=40, textvariable=self.input_file_var)
+        input_file_entry = ttk.Entry(
+            file_selectors_frame, width=40, textvariable=self.input_file_var
+        )
 
         browse_button = ttk.Button(
-            file_selectors_frame, text="📁 Choose Input CSV...", command=self.browse_input_file
+            file_selectors_frame,
+            text="📁 Choose Input CSV...",
+            command=self.browse_input_file,
         )
 
         input_file_label.grid(column=0, row=0, padx=5, pady=5)
         input_file_entry.grid(column=1, row=0, padx=5, pady=5)
-        browse_button.grid(column=2, row=0, padx=5, pady=5, sticky='ew')
+        browse_button.grid(column=2, row=0, padx=5, pady=5, sticky="ew")
 
         # Create "Choose shifted cells..." control
         shifted_file_label = tk.Label(file_selectors_frame, text="Shifted cells file:")
@@ -73,26 +77,36 @@ class Top10Calculator(GUI):
         default_shifted_file = "outputs/shifted_cells.csv"
         self.shifted_file_var = tk.StringVar()
         self.shifted_file_var.set(default_shifted_file)
-        shifted_file_entry = ttk.Entry(file_selectors_frame, width=40, textvariable=self.shifted_file_var)
+        shifted_file_entry = ttk.Entry(
+            file_selectors_frame, width=40, textvariable=self.shifted_file_var
+        )
 
         browse_button = ttk.Button(
-            file_selectors_frame, text="📁 Choose Shifted Cells CSV...", command=self.browse_shifted_file
+            file_selectors_frame,
+            text="📁 Choose Shifted Cells CSV...",
+            command=self.browse_shifted_file,
         )
 
         shifted_file_label.grid(column=0, row=1, padx=5, pady=5)
         shifted_file_entry.grid(column=1, row=1, padx=5, pady=5)
-        browse_button.grid(column=2, row=1, padx=5, pady=5, sticky='ew')
-        
+        browse_button.grid(column=2, row=1, padx=5, pady=5, sticky="ew")
+
         file_selectors_frame.pack()
 
         # Create buttons bar
         buttons_frame = tk.Frame(main_frame)
         buttons_frame.pack()
 
-        run_button = ttk.Button(buttons_frame, text="🧮 Calculate Top 10", command=self.handle_calc)
+        run_button = ttk.Button(
+            buttons_frame, text="🧮 Calculate Top 10", command=self.handle_calc
+        )
         run_button.grid(column=0, row=0, padx=5, pady=5)
 
-        quit_button = ttk.Button(buttons_frame, text="Quit", command=lambda: GUI.run("MainMenu", root))
+        quit_button = ttk.Button(
+            buttons_frame,
+            text="Back to Main Menu",
+            command=lambda: GUI.run("MainMenu", root),
+        )
         quit_button.grid(column=1, row=0, padx=5, pady=5)
 
     def browse_input_file(self):
@@ -101,13 +115,11 @@ class Top10Calculator(GUI):
         file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
         self.input_file_var.set(file_path)
 
-
     def browse_shifted_file(self):
         """Handler for the "Choose Shifted Cells CSV" button. Opens a file dialog and sets the
         global variable `input_file_var` to the selected file."""
         file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
         self.shifted_file_var.set(file_path)
-
 
     def handle_calc(self):
         """Handler for the "Calculate Top 10" button."""
@@ -133,13 +145,18 @@ class Top10Calculator(GUI):
                 shifted_title_rows = [row for row in shifted_titles_reader]
                 shifted_url_rows = [row for row in shifted_urls_reader]
         except FileNotFoundError:
-            tk.messagebox.showinfo("Error", f'Could not find a shifted cells file at "{urls_csv_path}". Maybe you haven\'t run the vote processing script yet?')
+            tk.messagebox.showinfo(
+                "Error",
+                f'Could not find a shifted cells file at "{urls_csv_path}". Maybe you haven\'t run the vote processing script yet?',
+            )
             err("Aborted Top 10 calculation due to missing shifted cells file.")
             return
 
         # Guess the voting month and year from the dates in the timestamps column.
         timestamps = [row[0] for row in shifted_url_rows[1:]]
-        timestamp_dates = [parse_votes_csv_timestamp(timestamp) for timestamp in timestamps]
+        timestamp_dates = [
+            parse_votes_csv_timestamp(timestamp) for timestamp in timestamps
+        ]
         voting_month, voting_year, is_unanimous = get_most_common_month_year(
             timestamp_dates
         )
@@ -225,7 +242,9 @@ class Top10Calculator(GUI):
                 }
 
                 if alt_link != link:
-                    anni_record["Notes"] = f'Alt link: {archive_record["alternate link"]}'
+                    anni_record["Notes"] = (
+                        f'Alt link: {archive_record["alternate link"]}'
+                    )
 
                 anni_records[years_ago].append(anni_record)
 

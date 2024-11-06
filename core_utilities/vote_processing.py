@@ -43,6 +43,7 @@ from functions.ballot_rules import (
 from functions.messages import suc, inf, err
 from functions.services import get_fetcher
 from functions.similarity import detect_cross_platform_uploads
+
 # from classes.ui import CSVEditor
 from classes.gui import GUI
 
@@ -55,6 +56,7 @@ window_config = {
     "height": 600,
     "banner_image": "images/vote-processing-fs.png",
 }
+
 
 class VoteProcessing(GUI):
     def gui(self, root):
@@ -71,7 +73,9 @@ class VoteProcessing(GUI):
         main_frame.pack(expand=True, fill="both", padx=10, pady=10)
 
         # Create banner image
-        self.banner_image = ImageTk.PhotoImage(Image.open(window_config["banner_image"]))
+        self.banner_image = ImageTk.PhotoImage(
+            Image.open(window_config["banner_image"])
+        )
         banner_label = tk.Label(main_frame, image=self.banner_image)
 
         # Create title
@@ -156,7 +160,9 @@ class VoteProcessing(GUI):
         }
 
         # Create checkboxes for options
-        self.ballot_check_vars = {key: tk.BooleanVar(value=True) for key in ballot_check_layout}
+        self.ballot_check_vars = {
+            key: tk.BooleanVar(value=True) for key in ballot_check_layout
+        }
         ballot_check_checkboxes = {
             key: ttk.Checkbutton(
                 ballot_checks_frame,
@@ -172,7 +178,9 @@ class VoteProcessing(GUI):
         self.tools_vars = {key: tk.BooleanVar(value=False) for key in tools_layout}
         tools_checkboxes = {
             key: ttk.Checkbutton(
-                tools_frame, text=tools_layout[key]["label"], variable=self.tools_vars[key]
+                tools_frame,
+                text=tools_layout[key]["label"],
+                variable=self.tools_vars[key],
             )
             for key in tools_layout
         }
@@ -214,10 +222,16 @@ class VoteProcessing(GUI):
         buttons_frame = tk.Frame(main_frame)
         buttons_frame.pack()
 
-        run_button = ttk.Button(buttons_frame, text="📜 Run Checks", command=self.run_checks)
+        run_button = ttk.Button(
+            buttons_frame, text="📜 Run Checks", command=self.run_checks
+        )
         run_button.grid(column=0, row=0, padx=5, pady=5)
 
-        quit_button = ttk.Button(buttons_frame, text="Quit", command=lambda: GUI.run("MainMenu", root))
+        quit_button = ttk.Button(
+            buttons_frame,
+            text="Back to Main Menu",
+            command=lambda: GUI.run("MainMenu", root),
+        )
         quit_button.grid(column=1, row=0, padx=5, pady=5)
 
         # Editor main frame
@@ -225,15 +239,12 @@ class VoteProcessing(GUI):
         # csv_editor = CSVEditor(main_frame)
         # csv_editor.pack()
 
-
-
     def browse_file_csv(self):
         """Handler for the "Browse" button. Opens a file dialog and sets the global
         variable `entry_var` to the selected file.
         """
         file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
         self.csv_entry_var.set(file_path)
-
 
     def run_checks(self):
         """Handler for the "Run Checks" button. Reads in the selected CSV file, runs
@@ -247,7 +258,9 @@ class VoteProcessing(GUI):
             return
 
         selected_checks = [
-            name for name in self.ballot_check_vars if self.ballot_check_vars[name].get() == True
+            name
+            for name in self.ballot_check_vars
+            if self.ballot_check_vars[name].get() == True
         ]
 
         if len(selected_checks) == 0:
@@ -257,7 +270,9 @@ class VoteProcessing(GUI):
         inf(f'Preparing to run checks on "{selected_csv_file}"...')
 
         youtube_api_key = GUI.yt_api_key_var.get()
-        fetcher = get_fetcher(youtube_api_key, self.tools_vars["ensure_complete_data"].get())
+        fetcher = get_fetcher(
+            youtube_api_key, self.tools_vars["ensure_complete_data"].get()
+        )
 
         # Load all ballots from the CSV file.
         inf(f'Loading all votes from CSV file "{selected_csv_file}"...')
@@ -312,7 +327,9 @@ class VoteProcessing(GUI):
             for ballot in ballots
             if not is_date_between(
                 ballot.timestamp,
-                *get_month_year_bounds(current_month_date.month, current_month_date.year),
+                *get_month_year_bounds(
+                    current_month_date.month, current_month_date.year
+                ),
             )
         ]
 
@@ -345,7 +362,9 @@ class VoteProcessing(GUI):
                 videos_by_label[label] = []
             videos_by_label[label].append(video)
 
-        for label, labeled_videos in sorted(videos_by_label.items(), key=lambda i: i[0]):
+        for label, labeled_videos in sorted(
+            videos_by_label.items(), key=lambda i: i[0]
+        ):
             suc(f"* {label}: {len(labeled_videos)}")
 
         # Perform a check for cross-platform uploads.
@@ -481,7 +500,6 @@ class VoteProcessing(GUI):
         proc_complete_msg = "\n\n".join(proc_complete_msgs)
 
         tk.messagebox.showinfo("Processing Completed", proc_complete_msg)
-
 
     # TODO: Do we still need this?
     def delete_if_present(self, filepath):
