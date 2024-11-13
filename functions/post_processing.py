@@ -2,32 +2,12 @@ import csv
 from datetime import datetime
 from pathlib import Path
 from functions.general import get_freq_table
-from functions.services import get_fetcher
 from functions.date import get_most_common_month_year, rel_anni_date_to_abs
 from functions.messages import suc, inf, err
-from classes.fetcher import Fetcher
 
 # URL of Flynn's master archive of all Top 10 Pony Videos results, referenced by
 # some of the output spreadsheets.
 MASTER_ARCHIVE_URL = "https://docs.google.com/spreadsheets/d/1rEofPkliKppvttd8pEX8H6DtSljlfmQLdFR-SlyyX7E/edit"
-
-
-def fetch_videos_data(yt_api_key: str, urls: list[str]) -> dict[str, dict]:
-    """Given a list of video URLs, return a dictionary mapping each URL to its
-    data."""
-    fetcher = get_fetcher(yt_api_key)
-
-    videos_data = {}
-    for url in urls:
-        video_data = None
-        try:
-            video_data = fetcher.fetch(url)
-        except Exception as e:
-            err(f"WARNING: Could not fetch data for URL {url}")
-
-        videos_data[url] = video_data
-
-    return videos_data
 
 
 def generate_top10_archive_records(
@@ -322,7 +302,7 @@ Used under Creative Commons license.
 https://creativecommons.org/licenses/by-sa/3.0/"""
 
     mandatory_swearing = (
-        "[Mandatory swearing to help avoid being blacklisted as MFK: Fuck YouTube.]"
+        "Mandatory swearing to help avoid being wrongly blacklisted as MFK: Fuck YouTube. https://www.youtube.com/watch?v=h3l_c_ei6CQ"
     )
 
     # Build the description from the text strings.

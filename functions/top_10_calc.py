@@ -41,8 +41,23 @@ def get_titles_to_urls_mapping(
     return titles_to_urls
 
 
+def get_titles_to_uploaders(
+    titles_to_urls: dict[str, str], videos_data: dict[str, dict]
+) -> dict[str, str]:
+    """Given a dictionary mapping titles to urls, look up the
+    return a dictionary that maps each title to its corresponding URL."""
+
+    titles_to_uploaders = {}
+
+    for title, url in titles_to_urls.items():
+        video_data = videos_data[url]
+        titles_to_uploaders[title] = video_data["uploader"] if video_data is not None else None
+
+    return titles_to_uploaders
+
+
 def calc_ranked_records(
-    title_rows: list[list[str]], titles_to_urls: dict[str, str]
+    title_rows: list[list[str]], titles_to_urls: dict[str, str], titles_to_uploaders: dict[str, str]
 ) -> list[dict]:
     """Given a list of title rows, where each row represents the titles voted on
     in one ballot, calculate the frequency of occurrence of each title and
@@ -102,8 +117,10 @@ def calc_ranked_records(
 
     records = []
     for title in ranked_titles:
+        uploader = titles_to_uploaders[title]
         record = {
             "Title": title,
+            "Uploader": uploader if uploader is not None else "",
             "Percentage": f"{title_percentages[title]:.4f}%",
             "Total Votes": title_counts[title],
             "URL": titles_to_urls[title],

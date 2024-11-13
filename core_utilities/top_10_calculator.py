@@ -11,6 +11,7 @@ from PIL import ImageTk, Image
 from functions.top_10_calc import (
     process_shifted_voting_data,
     get_titles_to_urls_mapping,
+    get_titles_to_uploaders,
     calc_ranked_records,
     load_top_10_master_archive,
     get_history,
@@ -20,6 +21,7 @@ from functions.date import (
     get_preceding_month_date,
     get_most_common_month_year,
 )
+from functions.video_data import fetch_videos_data
 from functions.messages import suc, inf, err
 from classes.gui import GUI
 
@@ -188,9 +190,26 @@ class Top10Calculator(GUI):
         # CSV.
         titles_to_urls = get_titles_to_urls_mapping(title_rows, url_rows)
 
+        # Create a dictionary which maps video titles to uploaders for each
+        # title in the CSV. This is needed in order to provide the "Uploader"
+        # column in the calculated top 10 spreadsheet, which makes it easier to
+        # spot uploaders who have somehow managed to get multiple videos into
+        # the top 10.
+        #
+        # Since we only have titles and URLs, we will need to fetch the video
+        # data for the given title to determine its uploader.
+        youtube_api_key = GUI.yt_api_key_var.get()
+        videos_data = fetch_videos_data(youtube_api_key, titles_to_urls.values())
+        videos_missing_data = [url for url, data in videos_data.items() if data is None]
+        if len(videos_missing_data) > 0:
+            err(f"WARNING: Could not fetch video data for {len(videos_missing_data)} URLs:")
+            for url in videos_missing_data:
+                err(f"* {url}")
+        titles_to_uploaders = get_titles_to_uploaders(titles_to_urls, videos_data)
+
         # Calculate a ranked list of videos, highest ranked first, with tie-breaks
         # resolved automatically by random choice.
-        ranked_records = calc_ranked_records(title_rows, titles_to_urls)
+        ranked_records = calc_ranked_records(title_rows, titles_to_urls, titles_to_uploaders)
 
         # Separate the top 10 videos from the rest.
         top_10_records = ranked_records[:10]
@@ -238,6 +257,7 @@ class Top10Calculator(GUI):
                 alt_link = archive_record["alternate link"]
                 anni_record = {
                     "Title": archive_record["title"],
+                    "Uploader": archive_record["channel"],
                     "URL": link,
                 }
 
@@ -266,7 +286,7 @@ class Top10Calculator(GUI):
             output_records.append(blank_row)
 
         # Write the calculated top 10 to a CSV file.
-        header = ["Title", "Percentage", "Total Votes", "URL", "Notes"]
+        header = ["Title", "Uploader", "Percentage", "Total Votes", "URL", "Notes"]
         output_csv_path_str = "outputs/calculated_top_10.csv"
         output_csv_path = Path(output_csv_path_str)
 
