@@ -1,6 +1,7 @@
 from functions.services import get_fetcher
 from functions.messages import suc, inf, err
 
+
 def fetch_videos_data(yt_api_key: str, urls: list[str]) -> dict[str, dict]:
     """Given a list of video URLs, return a dictionary mapping each URL to its
     data."""

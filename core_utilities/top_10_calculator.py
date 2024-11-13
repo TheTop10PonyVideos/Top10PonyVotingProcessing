@@ -202,14 +202,18 @@ class Top10Calculator(GUI):
         videos_data = fetch_videos_data(youtube_api_key, titles_to_urls.values())
         videos_missing_data = [url for url, data in videos_data.items() if data is None]
         if len(videos_missing_data) > 0:
-            err(f"WARNING: Could not fetch video data for {len(videos_missing_data)} URLs:")
+            err(
+                f"WARNING: Could not fetch video data for {len(videos_missing_data)} URLs:"
+            )
             for url in videos_missing_data:
                 err(f"* {url}")
         titles_to_uploaders = get_titles_to_uploaders(titles_to_urls, videos_data)
 
         # Calculate a ranked list of videos, highest ranked first, with tie-breaks
         # resolved automatically by random choice.
-        ranked_records = calc_ranked_records(title_rows, titles_to_urls, titles_to_uploaders)
+        ranked_records = calc_ranked_records(
+            title_rows, titles_to_urls, titles_to_uploaders
+        )
 
         # Separate the top 10 videos from the rest.
         top_10_records = ranked_records[:10]

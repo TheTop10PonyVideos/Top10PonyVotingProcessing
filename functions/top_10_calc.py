@@ -51,13 +51,17 @@ def get_titles_to_uploaders(
 
     for title, url in titles_to_urls.items():
         video_data = videos_data[url]
-        titles_to_uploaders[title] = video_data["uploader"] if video_data is not None else None
+        titles_to_uploaders[title] = (
+            video_data["uploader"] if video_data is not None else None
+        )
 
     return titles_to_uploaders
 
 
 def calc_ranked_records(
-    title_rows: list[list[str]], titles_to_urls: dict[str, str], titles_to_uploaders: dict[str, str]
+    title_rows: list[list[str]],
+    titles_to_urls: dict[str, str],
+    titles_to_uploaders: dict[str, str],
 ) -> list[dict]:
     """Given a list of title rows, where each row represents the titles voted on
     in one ballot, calculate the frequency of occurrence of each title and

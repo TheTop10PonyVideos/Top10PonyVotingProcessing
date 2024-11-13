@@ -301,9 +301,7 @@ Get it here! https://mrarchie.bandcamp.com/track/back-again-original-mix
 Used under Creative Commons license.
 https://creativecommons.org/licenses/by-sa/3.0/"""
 
-    mandatory_swearing = (
-        "Mandatory swearing to help avoid being wrongly blacklisted as MFK: Fuck YouTube. https://www.youtube.com/watch?v=h3l_c_ei6CQ"
-    )
+    mandatory_swearing = "Mandatory swearing to help avoid being wrongly blacklisted as MFK: Fuck YouTube. https://www.youtube.com/watch?v=h3l_c_ei6CQ"
 
     # Build the description from the text strings.
     desc = f"{opening}\n\n\n"

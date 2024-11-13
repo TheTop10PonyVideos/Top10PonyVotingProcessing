@@ -102,7 +102,14 @@ class PostProcessing(GUI):
         calc_records = []
         with input_file_path.open("r", newline="", encoding="utf-8") as file:
             reader = csv.DictReader(file)
-            required_header = ["Title", "Uploader", "Percentage", "Total Votes", "URL", "Notes"]
+            required_header = [
+                "Title",
+                "Uploader",
+                "Percentage",
+                "Total Votes",
+                "URL",
+                "Notes",
+            ]
             if reader.fieldnames != required_header:
                 err(
                     f'Selected CSV file "{input_file_str}" has an invalid header: {",".join(reader.fieldnames)}'
