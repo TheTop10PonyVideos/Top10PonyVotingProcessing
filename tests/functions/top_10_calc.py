@@ -171,29 +171,80 @@ class TestFunctionsTop10Calc(TestCase):
             "Title 7": "https://example.com",
         }
 
-        records = calc_ranked_records(title_rows, titles_to_urls)
+        titles_to_uploaders = {
+            "Title A": "Uploader A",
+            "Title B": "Uploader B",
+            "Title C": "Uploader C",
+            "Title D": "Uploader D",
+            "Title E": "Uploader E",
+            "Title K": "Uploader K",
+            "Title M": "Uploader M",
+            "Title N": "Uploader N",
+            "Title O": "Uploader O",
+            "Title P": "Uploader P",
+            "Title Q": "Uploader Q",
+            "Title R": "Uploader R",
+            "Title S": "Uploader S",
+            "Title T": "Uploader T",
+            "Title U": "Uploader U",
+            "Title V": "Uploader V",
+            "Title W": "Uploader W",
+            "Title X": "Uploader X",
+            "Title Y": "Uploader Y",
+            "Title Z": "Uploader Z",
+            "Title 0": "Uploader 0",
+            "Title 1": "Uploader 1",
+            "Title 2": "Uploader 2",
+            "Title 3": "Uploader 3",
+            "Title 8": "Uploader 8",
+            "Title F": "Uploader F",
+            "Title 4": "Uploader 4",
+            "Title 5": "Uploader 5",
+            "Title 6": "Uploader 6",
+            "Title 7": "Uploader 7",
+        }
+
+        records = calc_ranked_records(title_rows, titles_to_urls, titles_to_uploaders)
         self.assertEqual(30, len(records))
+        self.assertEqual(6, len(records[0]))
+        self.assertIn("Title", records[0])
+        self.assertIn("Uploader", records[0])
+        self.assertIn("Percentage", records[0])
+        self.assertIn("Total Votes", records[0])
+        self.assertIn("URL", records[0])
+        self.assertIn("Notes", records[0])
+
         self.assertEqual("Title A", records[0]["Title"])
+        self.assertEqual("Uploader A", records[0]["Uploader"])
         self.assertEqual("90.0000%", records[0]["Percentage"])
         self.assertEqual(9, records[0]["Total Votes"])
         self.assertEqual("https://example.com/Title_A", records[0]["URL"])
+
         self.assertEqual("Title B", records[1]["Title"])
+        self.assertEqual("Uploader B", records[1]["Uploader"])
         self.assertEqual("70.0000%", records[1]["Percentage"])
         self.assertEqual(7, records[1]["Total Votes"])
         self.assertEqual("https://example.com/Title_B", records[1]["URL"])
+
         self.assertEqual("Title C", records[2]["Title"])
+        self.assertEqual("Uploader C", records[2]["Uploader"])
         self.assertEqual("40.0000%", records[2]["Percentage"])
         self.assertEqual(4, records[2]["Total Votes"])
         self.assertEqual("https://example.com/Title_C", records[2]["URL"])
+
         self.assertEqual("Title D", records[3]["Title"])
+        self.assertEqual("Uploader D", records[3]["Uploader"])
         self.assertEqual("30.0000%", records[3]["Percentage"])
         self.assertEqual(3, records[3]["Total Votes"])
         self.assertEqual("https://example.com/Title_D", records[3]["URL"])
+
         self.assertEqual("Title E", records[4]["Title"])
+        self.assertEqual("Uploader E", records[4]["Uploader"])
         self.assertEqual("20.0000%", records[4]["Percentage"])
         self.assertEqual(2, records[4]["Total Votes"])
         self.assertEqual("https://example.com/Title_E", records[4]["URL"])
 
+    def test_calc_ranked_records_tie_break(self):
         # Test tie-breaking. A should be first; B and C should tie for 2nd (and
         # thus be 2nd and 3rd after a tie-break); D, E, and F should tie and be
         # 4th, 5th, and 6th; G, H, I, J, K, L should tie and be 7th to 12th.
@@ -220,7 +271,22 @@ class TestFunctionsTop10Calc(TestCase):
             "L": "https://example.com/L",
         }
 
-        records = calc_ranked_records(title_rows, titles_to_urls)
+        titles_to_uploaders = {
+            "A": "Uploader A",
+            "B": "Uploader B",
+            "C": "Uploader C",
+            "D": "Uploader D",
+            "E": "Uploader E",
+            "F": "Uploader F",
+            "G": "Uploader G",
+            "H": "Uploader H",
+            "I": "Uploader I",
+            "J": "Uploader J",
+            "K": "Uploader K",
+            "L": "Uploader L",
+        }
+
+        records = calc_ranked_records(title_rows, titles_to_urls, titles_to_uploaders)
 
         self.assertEqual("A", records[0]["Title"])
         self.assertTrue(records[1]["Title"] in ("B", "C"))
