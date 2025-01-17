@@ -18,5 +18,6 @@ FebruarVotes.csv
 cache.json
 launch.json
 data/top_10_master_archive.csv
+data/cookies.txt
 outputs/*.csv
 outputs/*.txt

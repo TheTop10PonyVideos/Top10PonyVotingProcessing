@@ -2,8 +2,7 @@
 different site), create a class that implements the `can_fetch`, `request`,
 and `parse` methods."""
 
-import re, pytz
-import hashlib
+import re, pytz, hashlib, os
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 from googleapiclient.discovery import build
@@ -32,7 +31,6 @@ class YouTubeFetchService:
         video_id = None
 
         url_components = urlparse(url)
-        netloc = url_components.netloc
         path = url_components.path
         query_params = parse_qs(url_components.query)
 
@@ -63,7 +61,6 @@ class YouTubeFetchService:
                 f'Could not request URL "{url}" via the YouTube Data API; unable to determine video id from URL'
             )
 
-        # TODO: Can we use url here instead of id?
         request = self.yt_service.videos().list(
             part="status,snippet,contentDetails", id=video_id
         )
@@ -118,7 +115,13 @@ class YtDlpFetchService:
         self.accepted_domains = accepted_domains
         self.ydl_opts = {
             "quiet": True,
+            #                                               Odysee            pony.tube & pt.thishorsie.rocks                                              ytdlp may fall back to the generic extractor if another fails
+            "allowed_extractors": ["twitter", "Newgrounds", "lbry", "TikTok",           "PeerTube",         "vimeo", "BiliBili", "dailymotion", "Bluesky", "generic"]
         }
+
+        # Previously, some twitter votes returned no data due to content being restricted
+        if os.path.exists("data/cookies.txt"):
+            self.ydl_opts["cookiefile"] = "data/cookies.txt"
 
     def can_fetch(self, url: str) -> bool:
         """Return True if the URL contains an accepted domain (other than
@@ -129,12 +132,9 @@ class YtDlpFetchService:
     def request(self, url: str):
         """Query yt-dlp for the given URL."""
 
-        response = None
-
-        preprocess_changes = self.preprocess(url)
-
-        if preprocess_changes and preprocess_changes.get("url"):
-            url = preprocess_changes.pop("url")
+        url_components = urlparse(url)
+        site = url_components.netloc.split(".")
+        site = site[0] if len(site) == 2 else site[1]
 
         try:
             with YoutubeDL(self.ydl_opts) as ydl:
@@ -148,18 +148,47 @@ class YtDlpFetchService:
                 f'Could not fetch URL "{url}" via yt-dlp; error while extracting video info: {e}'
             ) from e
 
-        # preprocess_changes contains the response key that should be assigned a new value,
-        # and corrected, which can either be a different response key that has the value we
-        # originally wanted, None if the response key has an incorrect value with no substitutes,
-        # or a lambda function that modifies the value assigned to the respose key
-        if len(preprocess_changes):
-            for response_key, corrected in preprocess_changes.items():
-                if corrected is None:
-                    response[response_key] = None
-                elif isinstance(corrected, str):
-                    response[response_key] = response.get(corrected)
-                else:
-                    response[response_key] = corrected(response)
+        # Some urls might have specific issues that should
+        # be handled here before they can be properly processed
+        # If yt-dlp gets any updates that resolve any of these issues
+        # then the respective case should be updated accordingly
+        match site:
+            case "twitter" | "x":
+                response["channel"] = response.get("uploader_id")
+                response["title"] = (
+                    f"X post by {response.get('uploader_id')} ({self.hash_str(response.get('title'))})"
+                )
+
+                # This type of url means that the post has more than one video
+                # and ytdlp will only successfully retrieve the duration if
+                # the video is at index one
+                if (
+                    url[0 : url.rfind("/")].endswith("/video")
+                    and int(url[url.rfind("/") + 1 :]) != 1
+                ):
+                    err("This X post has several videos and the fetched duration is innacurate. So it has been ignored")
+                    response["duration"] = None
+
+            case "newgrounds":
+                response["channel"] = response.get("uploader")
+                err("Response from Newgrounds does not contain video duration")
+
+            case "tiktok":
+                response["channel"] = response.get("uploader")
+                response["title"] = (
+                    f"Tiktok video by {response.get('uploader')} ({self.hash_str(response.get('title'))})"
+                )
+
+            case "bilibili":
+                response["channel"] = response.get("uploader")
+            
+            case "bsky":
+                uploader = response.get("uploader_id")
+                response["channel"] = uploader[:uploader.index(".")] if uploader else None
+                response["title"] = (
+                    f"Bluesky post by {response['channel']} ({self.hash_str(response['title'])})"
+                )
+                err("Response from Bluesky does not contain video duration")
 
         return {
             "title": response.get("title"),
@@ -182,56 +211,6 @@ class YtDlpFetchService:
             "upload_date": upload_date,
             "duration": video_data.get("duration"),
         }
-
-    # Some urls might have specific issues that should
-    # be handled here before they can be properly processed
-    # If yt-dlp gets any updates that resolve any of these issues
-    # then the respective case should be updated accordingly
-    def preprocess(self, url: str) -> dict:
-        url_components = urlparse(url)
-        site = url_components.netloc.split(".")
-        site = site[0] if len(site) == 2 else site[1]
-
-        changes = {}
-
-        match site:
-            case "x":
-                url = "https://twitter.com" + url_components.path
-                changes = self.preprocess(url)
-                changes["url"] = url
-
-            case "twitter":
-                changes["channel"] = "uploader_id"
-                changes["title"] = (
-                    lambda vid_data: f"X post by {vid_data.get('uploader_id')} ({self.hash_str(vid_data.get('title'))})"
-                )
-
-                # This type of url means that the post has more than one video
-                # and ytdlp will only successfully retrieve the duration if
-                # the video is at index one
-                if (
-                    url[0 : url.rfind("/")].endswith("/video")
-                    and int(url[url.rfind("/") + 1 :]) != 1
-                ):
-                    err(
-                        "This X post has several videos and the fetched duration is innacurate. So it has been ignored"
-                    )
-                    changes["duration"] = None
-
-            case "newgrounds":
-                changes["channel"] = "uploader"
-                err("Response from Newgrounds does not contain video duration")
-
-            case "tiktok":
-                changes["channel"] = "uploader"
-                changes["title"] = (
-                    lambda vid_data: f"Tiktok video by {vid_data.get('uploader')} ({self.hash_str(vid_data.get('title'))})"
-                )
-
-            case "bilibili":
-                changes["channel"] = "uploader"
-
-        return changes
 
     # Some sites like X and Tiktok don't have a designated place to put a title for
     # posts so the 'titles' are hashed here to reduce the chance of similarity detection
