@@ -1,17 +1,10 @@
 """Functions for calculating video rankings based on number of votes."""
 
-import csv
-import requests
 from datetime import datetime
-from pathlib import Path
+from classes.archive import ArchiveRecord
 from functions.general import sample_item_without_replacement
-from functions.messages import suc, inf, err
-
-# Path to a local copy of the master Top 10 Pony Videos List (in CSV format).
-local_top_10_archive_csv_path = "data/top_10_master_archive.csv"
-
-# URL to the downloadable CSV export of the master Top 10 Pony Videos List.
-top_10_archive_csv_url = "https://docs.google.com/spreadsheets/d/1rEofPkliKppvttd8pEX8H6DtSljlfmQLdFR-SlyyX7E/export?format=csv"
+from functions.messages import err
+from classes.archive import local_top_10_archive_csv_path
 
 
 def process_shifted_voting_data(rows: list[list[str]]) -> list[list[str]]:
@@ -136,44 +129,8 @@ def calc_ranked_records(
     return records
 
 
-def load_top_10_master_archive() -> list[dict]:
-    """Load a local copy of the Top 10 Pony Videos List spreadsheet; or, if
-    there's no local copy on the filesystem, export one from Google Sheets and
-    save it first.
-
-    The archive is returned as a list of records, with the key names being the
-    field headers of the master archive file."""
-
-    header = None
-    archive_records = None
-    while True:
-        try:
-            # Try to load the local copy of the master archive spreadsheet
-            with Path(local_top_10_archive_csv_path).open(
-                "r", encoding="utf-8"
-            ) as file:
-                inf("Loading local copy of master Top 10 Pony Videos archive...")
-                reader = csv.DictReader(file)
-                archive_records = [record for record in reader]
-                header = reader.fieldnames
-                break
-        except FileNotFoundError:
-            inf(
-                "No local copy of the master Top 10 Pony Videos archive exists, downloading one..."
-            )
-            response = requests.get(top_10_archive_csv_url)
-            Path(local_top_10_archive_csv_path).write_text(
-                response.text, encoding="utf-8"
-            )
-            suc(
-                f"Local copy of master Top 10 Pony Videos archive saved to {local_top_10_archive_csv_path}."
-            )
-
-    return archive_records
-
-
 def get_history(
-    archive_records: list[dict], from_date: datetime, anniversaries: list[int]
+    archive_records: list[ArchiveRecord], from_date: datetime, anniversaries: list[int]
 ) -> dict[int, dict]:
     """Given a set of archive records (in the format specified by the header of
     the Top 10 Pony Videos master archive), return all records which occurred on

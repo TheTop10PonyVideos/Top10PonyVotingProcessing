@@ -13,7 +13,6 @@ from functions.top_10_calc import (
     get_titles_to_urls_mapping,
     get_titles_to_uploaders,
     calc_ranked_records,
-    load_top_10_master_archive,
     get_history,
 )
 from functions.date import (
@@ -21,6 +20,7 @@ from functions.date import (
     get_preceding_month_date,
     get_most_common_month_year,
 )
+from functions.general import load_top_10_master_archive
 from functions.video_data import fetch_videos_data
 from functions.messages import suc, inf, err
 from classes.gui import GUI
