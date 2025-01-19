@@ -85,7 +85,7 @@ class ArchiveStatusChecker(GUI):
         # Output File Frame
         output_file_label = tk.Label(output_file_frame, text="Output CSV file:")
 
-        self.default_output_file = "outputs/archive_check_results"
+        self.default_output_file = "outputs/status_checker_results"
 
         if os.path.exists(f"{self.default_output_file}.csv"):
             i = 2
@@ -354,15 +354,17 @@ class ArchiveStatusChecker(GUI):
                 # if status or content_rating:
                 #    print(status, content_rating)
 
-                blocked_countries = info_dict.get("blocked_countries", [])
-
                 if age_limit and age_limit >= 18:
                     states.append(States.AGE_RESTRICTED)
+
+                blocked_countries = info_dict.get("blocked_countries", [])
+                countries_where_a_significant_amount_of_bronies_probably_live_so_if_any_one_are_in_a_videos_banned_list_then_mark_it_as_blocked = ["US", "GB", "DE", "FR", "IT", "ES", "NL", "BE", "SE", "NO", "DK", "FI", "AT", "CH", "PL", "PT", "GR", "CZ", "HU", "IE", "RO", "BG", "SK", "HR"]
 
                 if (
                     geo_restricted
                     or (availability and "blocked" in availability)
                     or len(blocked_countries) >= 5
+                    or any(country in countries_where_a_significant_amount_of_bronies_probably_live_so_if_any_one_are_in_a_videos_banned_list_then_mark_it_as_blocked for country in blocked_countries)
                 ):
                     states.append(States.BLOCKED)
 
@@ -408,13 +410,15 @@ class ArchiveStatusChecker(GUI):
 
                     region_restriction = video_details.get("regionRestriction", {})
 
-                    blocked_countries = (
+                    countries_where_a_significant_amount_of_bronies_probably_live_so_if_any_one_are_in_a_videos_banned_list_then_mark_it_as_blocked = ["US", "GB", "DE", "FR", "IT", "ES", "NL", "BE", "SE", "NO", "DK", "FI", "AT", "CH", "PL", "PT", "GR", "CZ", "HU", "IE", "RO", "BG", "SK", "HR"]
+
+                    blocked_countries: list = (
                         [blocked_everywhere_indicator]
                         + region_restriction.get("allowed")
                         if "allowed" in region_restriction
                         else region_restriction.get("blocked", [])
                     )
-                    if len(blocked_countries) >= 5 or "allowed" in region_restriction:
+                    if len(blocked_countries) >= 5 or "allowed" in region_restriction or any(country in countries_where_a_significant_amount_of_bronies_probably_live_so_if_any_one_are_in_a_videos_banned_list_then_mark_it_as_blocked for country in blocked_countries):
                         states.append(States.BLOCKED)
 
                     return video_title, states, blocked_countries
