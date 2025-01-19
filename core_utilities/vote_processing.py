@@ -230,7 +230,7 @@ class VoteProcessing(GUI):
         quit_button = ttk.Button(
             buttons_frame,
             text="Back to Main Menu",
-            command=lambda: GUI.run("MainMenu", root),
+            command=lambda: GUI.run("MainMenu"),
         )
         quit_button.grid(column=1, row=0, padx=5, pady=5)
 
@@ -251,6 +251,8 @@ class VoteProcessing(GUI):
         a battery of checks on the voting data, and outputs an annotated version of
         the CSV with problematic votes labeled.
         """
+        youtube_api_key = GUI.get_api_key()
+        if not youtube_api_key: return
 
         selected_csv_file = self.csv_entry_var.get()
         if selected_csv_file.strip() == "":
@@ -269,7 +271,6 @@ class VoteProcessing(GUI):
 
         inf(f'Preparing to run checks on "{selected_csv_file}"...')
 
-        youtube_api_key = GUI.yt_api_key_var.get()
         fetcher = get_fetcher(
             youtube_api_key, self.tools_vars["ensure_complete_data"].get()
         )

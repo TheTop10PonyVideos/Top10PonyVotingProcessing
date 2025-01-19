@@ -12,8 +12,12 @@ from typing import List, Tuple
 from yt_dlp import YoutubeDL, DownloadError
 from enum import Enum
 from classes.archive import ArchiveRecord
-from functions.general import load_top_10_master_archive, load_honorable_mentions_archive
 from classes.gui import GUI
+from functions.general import (
+    get_ydl_opts,
+    load_top_10_master_archive,
+    load_honorable_mentions_archive
+)
 
 
 blocked_everywhere_indicator = "EVERYWHERE EXCEPT:"
@@ -209,7 +213,7 @@ class ArchiveStatusChecker(GUI):
         quit_button = ttk.Button(
             run_frame,
             text="Back to Main Menu",
-            command=lambda: GUI.run("MainMenu", root),
+            command=lambda: GUI.run("MainMenu"),
         )
         quit_button.grid(column=1, row=0, padx=5, pady=5)
 
@@ -497,9 +501,8 @@ class ArchiveStatusChecker(GUI):
     def run_status_checker(self):
         """Check the status of the archive or generic list and output a csv
         file of discrepancies or bad links respectively"""
-        self.youtube_api_key = GUI.yt_api_key_var.get().strip()
-        if not self.youtube_api_key:
-            return # TODO
+        self.youtube_api_key = GUI.get_api_key()
+        if not self.youtube_api_key: return
 
         output_file_dir = self.var_output_file.get()
         if not output_file_dir:
@@ -507,25 +510,7 @@ class ArchiveStatusChecker(GUI):
 
         self.output_csv_path = output_file_dir
 
-        ydl_opts = {
-            "quiet": True,
-            "retries": 3,
-            "sleep_interval": 3,
-            "allowed_extractors": [
-                "twitter",
-                "Newgrounds",
-                "lbry",
-                "TikTok",
-                "PeerTube",
-                "vimeo",
-                "BiliBili",
-                "dailymotion",
-                "Bluesky",
-                "generic",
-            ],
-        }
-
-        self.ydl = YoutubeDL(ydl_opts)
+        self.ydl = YoutubeDL(get_ydl_opts())
         checker_subject = self.var_checker_subject.get()
 
         self.starting_row_num = int(self.checks_row_start_entry.get())

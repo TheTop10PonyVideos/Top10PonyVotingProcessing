@@ -37,6 +37,7 @@ class MainMenu(GUI):
         self.t = self.frame_incr_time
 
     def gui(self, root):
+        self.root = root
         root.title("Top 10 Pony Videos: Main Menu")
         root.geometry(f"{800}x{400}")
 
@@ -66,28 +67,28 @@ class MainMenu(GUI):
         btn_vote_processing = ttk.Button(
             buttons_frame,
             text="Vote Processing",
-            command=lambda: GUI.run("VoteProcessing", root),
+            command=lambda: GUI.run("VoteProcessing"),
         )
         btn_vote_processing.grid(column=0, row=1, padx=5, pady=5)
 
         btn_top_10_calculator = ttk.Button(
             buttons_frame,
             text="Top 10 Calculator",
-            command=lambda: GUI.run("Top10Calculator", root),
+            command=lambda: GUI.run("Top10Calculator"),
         )
         btn_top_10_calculator.grid(column=1, row=1, padx=5, pady=5)
 
         btn_post_processing = ttk.Button(
             buttons_frame,
             text="Post Processing",
-            command=lambda: GUI.run("PostProcessing", root),
+            command=lambda: GUI.run("PostProcessing"),
         )
         btn_post_processing.grid(column=2, row=1, padx=5, pady=5)
 
         btn_archive_checker = ttk.Button(
             buttons_frame,
             text="Archive Status Checker",
-            command=lambda: GUI.run("ArchiveStatusChecker", root),
+            command=lambda: GUI.run("ArchiveStatusChecker"),
         )
         btn_archive_checker.grid(column=3, row=1, padx=5, pady=5)
 
@@ -99,7 +100,7 @@ class MainMenu(GUI):
             self.gif_playing = True
             self.rate_deriv = abs(self.rate_deriv)
             self.next_fps = self.get_next_fps()
-            root.after(int(1000 * self.frame_incr_time), self.play_gif)
+            self.root.after(int(1000 * self.frame_incr_time), self.play_gif)
         elif self.rate_deriv < 0:
             self.rate_deriv *= -1
 
@@ -125,7 +126,7 @@ class MainMenu(GUI):
 
         self.next_fps = min(self.get_next_fps(), self.max_frame_rate)
 
-        root.after(int(1000 * self.frame_incr_time), self.play_gif)
+        self.root.after(int(1000 * self.frame_incr_time), self.play_gif)
 
     def stop_gif(self, event):
         self.rate_deriv = -1 * abs(self.rate_deriv)
@@ -145,8 +146,5 @@ class MainMenu(GUI):
         return modif * math.sqrt(modif * val_to_root)
 
 
-root = tk.Tk()
-
-GUI.run(MainMenu(100, 100).__class__.__name__, root)
-
-root.mainloop()
+GUI.run(MainMenu(100, 100).__class__.__name__)
+GUI.root.mainloop()

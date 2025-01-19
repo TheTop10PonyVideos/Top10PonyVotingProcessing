@@ -1,6 +1,6 @@
 """General-use functions."""
 
-import csv, requests
+import csv, requests, os
 from functions.messages import suc, inf
 from random import randint
 from pathlib import Path
@@ -122,3 +122,31 @@ def load_honorable_mentions_archive() -> list[ArchiveRecord]:
             )
 
     return archive_records
+
+
+def get_ydl_opts():
+    ydl_opts = {
+        "quiet": True,
+        "retries": 3,
+        "sleep_interval": 2,
+        "allowed_extractors": [
+            "twitter",
+            "Newgrounds",
+            "lbry", # Odysee
+            "TikTok",
+            "PeerTube", # pony.tube & pt.thishorsie.rocks
+            "vimeo",
+            "BiliBili",
+            "dailymotion",
+            "Bluesky",
+            "generic", # ytdlp may fall back to the generic extractor if another fails
+        ],
+    }
+
+    # Previously, some twitter requests returned no data due to content being restricted
+    if os.path.exists("data/cookies.txt"):
+        ydl_opts["cookiefile"] = "data/cookies.txt"
+    else:
+        inf("Couldn't find data/cookies.txt file. Some requests may yield no data.")
+    
+    return ydl_opts

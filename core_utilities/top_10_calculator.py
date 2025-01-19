@@ -107,7 +107,7 @@ class Top10Calculator(GUI):
         quit_button = ttk.Button(
             buttons_frame,
             text="Back to Main Menu",
-            command=lambda: GUI.run("MainMenu", root),
+            command=lambda: GUI.run("MainMenu"),
         )
         quit_button.grid(column=1, row=0, padx=5, pady=5)
 
@@ -125,6 +125,9 @@ class Top10Calculator(GUI):
 
     def handle_calc(self):
         """Handler for the "Calculate Top 10" button."""
+        youtube_api_key = GUI.get_api_key()
+        if not youtube_api_key: return
+
         input_csv_path = self.input_file_var.get()
         urls_csv_path = self.shifted_file_var.get()
         if input_csv_path.strip() == "":
@@ -198,7 +201,7 @@ class Top10Calculator(GUI):
         #
         # Since we only have titles and URLs, we will need to fetch the video
         # data for the given title to determine its uploader.
-        youtube_api_key = GUI.yt_api_key_var.get()
+
         videos_data = fetch_videos_data(youtube_api_key, titles_to_urls.values())
         videos_missing_data = [url for url, data in videos_data.items() if data is None]
         if len(videos_missing_data) > 0:
@@ -258,7 +261,7 @@ class Top10Calculator(GUI):
             anni_records[years_ago] = []
             for archive_record in archive_records:
                 link = archive_record["link"]
-                alt_link = archive_record["alternate link"]
+                alt_link = archive_record["alternate_link"]
                 anni_record = {
                     "Title": archive_record["title"],
                     "Uploader": archive_record["channel"],
@@ -267,7 +270,7 @@ class Top10Calculator(GUI):
 
                 if alt_link != link:
                     anni_record["Notes"] = (
-                        f'Alt link: {archive_record["alternate link"]}'
+                        f'Alt link: {archive_record["alternate_link"]}'
                     )
 
                 anni_records[years_ago].append(anni_record)

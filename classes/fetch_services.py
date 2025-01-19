@@ -2,7 +2,7 @@
 different site), create a class that implements the `can_fetch`, `request`,
 and `parse` methods."""
 
-import re, pytz, hashlib, os
+import re, pytz, hashlib
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 from googleapiclient.discovery import build
@@ -10,15 +10,16 @@ from yt_dlp import YoutubeDL
 from functions.date import convert_iso8601_duration_to_seconds
 from functions.url import is_youtube_url
 from functions.messages import err
+from functions.general import get_ydl_opts
 from classes.exceptions import FetchRequestError, FetchParseError, VideoUnavailableError
 
 
 class YouTubeFetchService:
-    """Fetch service for YouTube video data. Requires a YouTube Data API key."""
+    """Fetch service for YouTube video data. Requires a YouTube Data API key when fetching video data."""
 
-    def __init__(self, api_key: str, do_build_service: bool = True):
+    def __init__(self, api_key: str = None):
         # Create the YouTube Data API service.
-        if do_build_service:
+        if api_key:
             self.yt_service = build("youtube", "v3", developerKey=api_key)
 
     def extract_video_id(self, url: str) -> str:
@@ -113,15 +114,6 @@ class YtDlpFetchService:
 
     def __init__(self, accepted_domains: list[str]):
         self.accepted_domains = accepted_domains
-        self.ydl_opts = {
-            "quiet": True,
-            #                                               Odysee            pony.tube & pt.thishorsie.rocks                                              ytdlp may fall back to the generic extractor if another fails
-            "allowed_extractors": ["twitter", "Newgrounds", "lbry", "TikTok",           "PeerTube",         "vimeo", "BiliBili", "dailymotion", "Bluesky", "generic"]
-        }
-
-        # Previously, some twitter votes returned no data due to content being restricted
-        if os.path.exists("data/cookies.txt"):
-            self.ydl_opts["cookiefile"] = "data/cookies.txt"
 
     def can_fetch(self, url: str) -> bool:
         """Return True if the URL contains an accepted domain (other than
@@ -137,7 +129,7 @@ class YtDlpFetchService:
         site = site[0] if len(site) == 2 else site[1]
 
         try:
-            with YoutubeDL(self.ydl_opts) as ydl:
+            with YoutubeDL(get_ydl_opts()) as ydl:
                 response = ydl.extract_info(url, download=False)
 
                 if "entries" in response:
