@@ -65,7 +65,7 @@ def create_top10_csv_data(
     scoring_func,
     upload_date: datetime,
     anniversaries: list[int],
-    master_archive: list[dict]
+    master_archive: list[dict],
 ) -> list[dict]:
     """Given a list of title rows, use a scoring function to calculate
     rankings for all titles, and generate the CSV data for a Top 10 CSV file.
@@ -83,7 +83,9 @@ def create_top10_csv_data(
     )
 
     if len(ranked_records) < 10:
-        raise Exception(f"Cannot create data for calculated Top 10 spreadsheet; there are only {len(ranked_records)} entries")
+        raise Exception(
+            f"Cannot create data for calculated Top 10 spreadsheet; there are only {len(ranked_records)} entries"
+        )
 
     # Separate the top 10 videos from the rest.
     top_10_records = ranked_records[:10]
@@ -133,9 +135,7 @@ def create_top10_csv_data(
             }
 
             if alt_link != link:
-                anni_record["Notes"] = (
-                    f'Alt link: {archive_record["alternate link"]}'
-                )
+                anni_record["Notes"] = f'Alt link: {archive_record["alternate link"]}'
 
             anni_records[years_ago].append(anni_record)
 
@@ -163,7 +163,7 @@ def calc_ranked_records(
     title_rows: list[list[str]],
     titles_to_urls: dict[str, str],
     titles_to_uploaders: dict[str, str],
-    scoring_func
+    scoring_func,
 ) -> list[dict]:
     """Given a list of title rows, where each row represents the titles voted on
     in one ballot, calculate the frequency of occurrence of each title and
@@ -237,7 +237,7 @@ def calc_ranked_records(
     return records
 
 
-def check_blank_titles(title_rows: list[list[str]], min_titles: int=5) -> int:
+def check_blank_titles(title_rows: list[list[str]], min_titles: int = 5) -> int:
     """Check a list of title rows and return a 2-tuple (n, b) for each row, where n is the number of non-blank titles and b is the number of blank titles."""
     result = []
     for row in title_rows:
@@ -286,7 +286,9 @@ def score_by_total_votes(title_rows: list[list[str]]) -> tuple[dict[str, int], f
     return title_counts, total_ballots
 
 
-def score_weight_by_ballot_size(title_rows: list[list[str]]) -> tuple[dict[str, int], float]:
+def score_weight_by_ballot_size(
+    title_rows: list[list[str]],
+) -> tuple[dict[str, int], float]:
     """Given a list of title rows, return a dictionary mapping each title to a
     score. The score is calculated as follows:
 
@@ -309,7 +311,7 @@ def score_weight_by_ballot_size(title_rows: list[list[str]]) -> tuple[dict[str, 
     full_ballot_size = max([len(row) for row in non_blank_ballots])
     total_ballots = len(non_blank_ballots)
 
-    ballot_weightings = [len(b)/full_ballot_size for b in non_blank_ballots]
+    ballot_weightings = [len(b) / full_ballot_size for b in non_blank_ballots]
     max_score = sum(ballot_weightings)
 
     scores = {}
@@ -320,7 +322,7 @@ def score_weight_by_ballot_size(title_rows: list[list[str]]) -> tuple[dict[str, 
             scores[title] += ballot_weightings[i]
 
     return scores, max_score
-    
+
 
 def load_top_10_master_archive() -> list[dict]:
     """Load a local copy of the Top 10 Pony Videos List spreadsheet; or, if

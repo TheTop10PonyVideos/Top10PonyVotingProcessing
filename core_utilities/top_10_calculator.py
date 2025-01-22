@@ -133,9 +133,7 @@ class Top10Calculator(GUI):
         # Create checkboxes for ranking methods
         for key, algo in self.rank_algorithms.items():
             algo["checkbox"] = ttk.Checkbutton(
-                rank_methods_frame,
-                text=algo["label"],
-                variable=algo["var"]
+                rank_methods_frame, text=algo["label"], variable=algo["var"]
             )
 
         for col, key in enumerate(self.rank_algorithms):
@@ -182,10 +180,14 @@ class Top10Calculator(GUI):
 
         # Get the scoring functions for all ranking methods selected by the
         # user.
-        rank_algorithms = [algo for algo in self.rank_algorithms.values() if algo["var"].get()]
+        rank_algorithms = [
+            algo for algo in self.rank_algorithms.values() if algo["var"].get()
+        ]
 
         if len(rank_algorithms) == 0:
-            tk.messagebox.showinfo("Error", "Please select at least one Ranking Algorithm.")
+            tk.messagebox.showinfo(
+                "Error", "Please select at least one Ranking Algorithm."
+            )
             return
 
         inf("Performing Top 10 calculation...")
@@ -281,7 +283,7 @@ class Top10Calculator(GUI):
                 algo["score_func"],
                 upload_date,
                 anniversaries,
-                master_archive
+                master_archive,
             )
 
             # Write the calculated top 10 to a CSV file.
@@ -307,4 +309,3 @@ class Top10Calculator(GUI):
                 "Success",
                 f"Top 10 calculation complete. {len(output_csv_paths)} files were created: \n\n{'\n'.join([str(p) for p in output_csv_paths])}",
             )
-

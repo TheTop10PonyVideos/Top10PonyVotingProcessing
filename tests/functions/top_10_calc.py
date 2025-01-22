@@ -182,7 +182,7 @@ class TestFunctionsTop10Calc(TestCase):
                 "title": "Title 2019-04",
                 "channel": "Uploader 2019-04",
                 "link": "https://example.com",
-                "alternate link": "https://example.com"
+                "alternate link": "https://example.com",
             },
         ]
 
@@ -196,7 +196,7 @@ class TestFunctionsTop10Calc(TestCase):
             master_archive,
         )
 
-        self.assertEqual(len(csv_data), 25) 
+        self.assertEqual(len(csv_data), 25)
         self.assertEqual(csv_data[0]["Title"], "Title A")
         self.assertEqual(csv_data[0]["Uploader"], "Uploader A")
         self.assertEqual(csv_data[10]["Title"], "")
@@ -210,7 +210,7 @@ class TestFunctionsTop10Calc(TestCase):
         self.assertEqual(csv_data[23]["Title"], "Title 2019-04")
         self.assertEqual(csv_data[23]["Uploader"], "Uploader 2019-04")
         self.assertEqual(csv_data[24]["Title"], "")
-        
+
     def test_calc_ranked_records(self):
         title_rows = [
             ["Title A", "Title B", "Title C", "Title D", "Title E"],
@@ -291,7 +291,9 @@ class TestFunctionsTop10Calc(TestCase):
             "Title 7": "Uploader 7",
         }
 
-        records = calc_ranked_records(title_rows, titles_to_urls, titles_to_uploaders, score_by_total_votes)
+        records = calc_ranked_records(
+            title_rows, titles_to_urls, titles_to_uploaders, score_by_total_votes
+        )
         self.assertEqual(30, len(records))
         self.assertEqual(6, len(records[0]))
         self.assertIn("Title", records[0])
@@ -373,7 +375,9 @@ class TestFunctionsTop10Calc(TestCase):
             "L": "Uploader L",
         }
 
-        records = calc_ranked_records(title_rows, titles_to_urls, titles_to_uploaders, score_by_total_votes)
+        records = calc_ranked_records(
+            title_rows, titles_to_urls, titles_to_uploaders, score_by_total_votes
+        )
 
         self.assertEqual("A", records[0]["Title"])
         self.assertTrue(records[1]["Title"] in ("B", "C"))
