@@ -78,7 +78,7 @@ class PostProcessing(GUI):
         quit_button = ttk.Button(
             buttons_frame,
             text="Back to Main Menu",
-            command=lambda: GUI.run("MainMenu", root),
+            command=lambda: GUI.run("MainMenu"),
         )
         quit_button.grid(column=1, row=0, padx=5, pady=5)
 
@@ -90,6 +90,9 @@ class PostProcessing(GUI):
 
     def handle_post_processing(self):
         """Handler for the "Run post-processing" button."""
+        yt_api_key = GUI.get_api_key()
+        if not yt_api_key: return
+
         input_file_str = self.input_file_var.get()
         if input_file_str.strip() == "":
             tk.messagebox.showinfo("Error", "Please select a CSV file to process.")
@@ -141,8 +144,6 @@ class PostProcessing(GUI):
         for anni_year, group in history_video_url_groups.items():
             for url in group:
                 history_video_urls.append(url)
-
-        yt_api_key = GUI.yt_api_key_var.get()
 
         top_10_videos_data = fetch_videos_data(yt_api_key, top_10_video_urls)
         hm_videos_data = fetch_videos_data(yt_api_key, hm_video_urls)

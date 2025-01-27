@@ -4,7 +4,7 @@ from classes.fetch_services import YouTubeFetchService
 
 class TestFetchServices(TestCase):
     def test_YouTubeFetchService(self):
-        service = YouTubeFetchService("API_KEY", False)
+        service = YouTubeFetchService()
 
         # Regular YouTube URL
         url = "https://www.youtube.com/watch?v=9RT4lfvVFhA"

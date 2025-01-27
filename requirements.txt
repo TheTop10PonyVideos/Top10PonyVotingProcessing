@@ -1,7 +1,7 @@
 python-dotenv
 fuzzywuzzy
 google-api-python-client
-yt-dlp
+yt-dlp==2025.01.12
 pytz
 python-Levenshtein
 pillow
