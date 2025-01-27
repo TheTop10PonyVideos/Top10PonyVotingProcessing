@@ -1,10 +1,10 @@
 """Functions for calculating video rankings based on number of votes."""
 
 from datetime import datetime
-from classes.archive import ArchiveRecord
+from classes.typing import ArchiveRecord
 from functions.general import sample_item_without_replacement
 from functions.messages import err
-from classes.archive import local_top_10_archive_csv_path
+from data.globals import local_top_10_archive_csv_path
 
 
 def process_shifted_voting_data(rows: list[list[str]]) -> list[list[str]]:

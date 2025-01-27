@@ -37,6 +37,7 @@ from functions.ballot_rules import (
     check_ballot_upload_dates,
     check_ballot_video_durations,
     check_fuzzy,
+    check_platform,
     check_ballot_uploader_occurrences,
     check_ballot_uploader_diversity,
 )
@@ -130,6 +131,10 @@ class VoteProcessing(GUI):
             "duration": {
                 "label": "Duration Check",
                 "tooltip": "Annotate ballots that contain votes for videos that appear to be too short.",
+            },
+            "platform": {
+                "label": "Platform Check",
+                "tooltip": "Annotate ballots that contain votes for non-youtube videos"
             },
             "fuzzy": {
                 "label": "Fuzzy Check",
@@ -443,6 +448,10 @@ class VoteProcessing(GUI):
         if do_check("duration"):
             inf("* Checking for votes for videos with invalid durations...")
             check_ballot_video_durations(ballots, videos)
+
+        if do_check("platform"):
+            inf("* Checking for votes for non-youtube videos")
+            check_platform(ballots, videos)
 
         if do_check("fuzzy"):
             inf("* Performing fuzzy matching checks...")

@@ -1,4 +1,5 @@
 from datetime import datetime
+from classes.typing import VideoData
 
 
 class Annotations:
@@ -52,7 +53,7 @@ class Vote:
 class Video:
     """Class representing a video and its metadata, with optional annotations."""
 
-    def __init__(self, data: dict = None):
+    def __init__(self, data: VideoData = None):
         super().__init__()
         self.data = data
         self.annotations = Annotations()

@@ -162,14 +162,23 @@ def check_ballot_uploader_diversity(ballots: list[Ballot], videos: dict[str, Vid
     ballot contains too few unique uploaders, annotate every vote in the ballot.
     """
     for ballot in ballots:
-        uploaders = []
-        for vote in ballot.votes:
-            video = videos[vote.url]
-            if video.data is not None:
-                uploaders.append(video["uploader"])
+        unique_uploaders = set(
+            [videos[vote.url]["uploader"] for vote in ballot.votes if videos[vote.url].data is not None]
+        )
+        broken_votes = [vote for vote in ballot.votes if videos[vote.url].data is None]
 
-        unique_uploaders = set(uploaders)
-
-        if len(unique_uploaders) < 5:
+        if len(unique_uploaders) + len(broken_votes) < 5:
             for vote in ballot.votes:
                 vote.annotations.add("5 CHANNEL RULE")
+
+
+def check_platform(ballots: list[Ballot], videos: dict[str, Video]):
+    """Given a list of ballots and a dictionary of videos indexed by URL,
+    annotate any votes for videos that are not hosted on the youtube platform.
+    """
+    for ballot in ballots:
+        for vote in ballot.votes:
+            data = videos[vote.url].data
+            platform = data["platform"] if data is not None else None
+            if platform is not None and platform != "YouTube":
+                vote.annotations.add(platform)

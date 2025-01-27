@@ -11,10 +11,10 @@ from PIL import ImageTk, Image
 from typing import List, Tuple
 from yt_dlp import YoutubeDL, DownloadError
 from enum import Enum
-from classes.archive import ArchiveRecord
+from classes.typing import ArchiveRecord
 from classes.gui import GUI
+from data.globals import ydl_opts
 from functions.general import (
-    get_ydl_opts,
     load_top_10_master_archive,
     load_honorable_mentions_archive
 )
@@ -358,13 +358,13 @@ class ArchiveStatusChecker(GUI):
                     states.append(States.AGE_RESTRICTED)
 
                 blocked_countries = info_dict.get("blocked_countries", [])
-                countries_where_a_significant_amount_of_bronies_probably_live_so_if_any_one_are_in_a_videos_banned_list_then_mark_it_as_blocked = ["US", "GB", "DE", "FR", "IT", "ES", "NL", "BE", "SE", "NO", "DK", "FI", "AT", "CH", "PL", "PT", "GR", "CZ", "HU", "IE", "RO", "BG", "SK", "HR"]
+                countries_where_a_significant_amount_of_bronies_probably_live_so_if_any_one_are_in_a_videos_banned_list_then_mark_it_as_blocked_oh_but_except_for_ones_that_are_known_for_blocking_a_lot_more_pony_videos = ["US", "GB", "DE", "FR", "IT", "ES", "NL", "BE", "SE", "NO", "DK", "FI", "AT", "CH", "PL", "PT", "GR", "CZ", "HU", "IE", "RO", "BG", "SK", "HR"]
 
                 if (
                     geo_restricted
                     or (availability and "blocked" in availability)
                     or len(blocked_countries) >= 5
-                    or any(country in countries_where_a_significant_amount_of_bronies_probably_live_so_if_any_one_are_in_a_videos_banned_list_then_mark_it_as_blocked for country in blocked_countries)
+                    or any(country in countries_where_a_significant_amount_of_bronies_probably_live_so_if_any_one_are_in_a_videos_banned_list_then_mark_it_as_blocked_oh_but_except_for_ones_that_are_known_for_blocking_a_lot_more_pony_videos for country in blocked_countries)
                 ):
                     states.append(States.BLOCKED)
 
@@ -410,7 +410,7 @@ class ArchiveStatusChecker(GUI):
 
                     region_restriction = video_details.get("regionRestriction", {})
 
-                    countries_where_a_significant_amount_of_bronies_probably_live_so_if_any_one_are_in_a_videos_banned_list_then_mark_it_as_blocked = ["US", "GB", "DE", "FR", "IT", "ES", "NL", "BE", "SE", "NO", "DK", "FI", "AT", "CH", "PL", "PT", "GR", "CZ", "HU", "IE", "RO", "BG", "SK", "HR"]
+                    countries_where_a_significant_amount_of_bronies_probably_live_so_if_any_one_are_in_a_videos_banned_list_then_mark_it_as_blocked_oh_but_except_for_ones_that_are_known_for_blocking_a_lot_more_pony_videos = ["US", "GB", "DE", "FR", "IT", "ES", "NL", "BE", "SE", "NO", "DK", "FI", "AT", "CH", "PL", "PT", "GR", "CZ", "HU", "IE", "RO", "BG", "SK", "HR"]
 
                     blocked_countries: list = (
                         [blocked_everywhere_indicator]
@@ -418,7 +418,7 @@ class ArchiveStatusChecker(GUI):
                         if "allowed" in region_restriction
                         else region_restriction.get("blocked", [])
                     )
-                    if len(blocked_countries) >= 5 or "allowed" in region_restriction or any(country in countries_where_a_significant_amount_of_bronies_probably_live_so_if_any_one_are_in_a_videos_banned_list_then_mark_it_as_blocked for country in blocked_countries):
+                    if len(blocked_countries) >= 5 or "allowed" in region_restriction or any(country in countries_where_a_significant_amount_of_bronies_probably_live_so_if_any_one_are_in_a_videos_banned_list_then_mark_it_as_blocked_oh_but_except_for_ones_that_are_known_for_blocking_a_lot_more_pony_videos for country in blocked_countries):
                         states.append(States.BLOCKED)
 
                     return video_title, states, blocked_countries
@@ -514,7 +514,7 @@ class ArchiveStatusChecker(GUI):
 
         self.output_csv_path = output_file_dir
 
-        self.ydl = YoutubeDL(get_ydl_opts())
+        self.ydl = YoutubeDL(ydl_opts)
         checker_subject = self.var_checker_subject.get()
 
         self.starting_row_num = int(self.checks_row_start_entry.get())

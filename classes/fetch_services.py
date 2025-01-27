@@ -10,8 +10,9 @@ from yt_dlp import YoutubeDL
 from functions.date import convert_iso8601_duration_to_seconds
 from functions.url import is_youtube_url
 from functions.messages import err
-from functions.general import get_ydl_opts
+from data.globals import ydl_opts
 from classes.exceptions import FetchRequestError, FetchParseError, VideoUnavailableError
+from classes.typing import VideoData
 
 
 class YouTubeFetchService:
@@ -54,7 +55,7 @@ class YouTubeFetchService:
     def can_fetch(self, url: str) -> bool:
         return "youtube.com" in url or "youtu.be" in url
 
-    def request(self, url: str):
+    def request(self, url: str) -> VideoData:
         """Query the YouTube Data API for the given URL."""
         video_id = self.extract_video_id(url)
         if video_id is None:
@@ -94,9 +95,10 @@ class YouTubeFetchService:
             "uploader": snippet["channelTitle"],
             "upload_date": snippet["publishedAt"],
             "duration": convert_iso8601_duration_to_seconds(iso8601_duration),
+            "platform": "YouTube",
         }
 
-    def parse(self, video_data) -> dict:
+    def parse(self, video_data) -> VideoData:
         """Parse video data from a YouTube Data API response."""
 
         upload_date = datetime.fromisoformat(video_data.get("upload_date"))
@@ -106,6 +108,7 @@ class YouTubeFetchService:
             "uploader": video_data.get("uploader"),
             "upload_date": upload_date,
             "duration": video_data.get("duration"),
+            "platform": "YouTube",
         }
 
 
@@ -121,7 +124,7 @@ class YtDlpFetchService:
 
         return any(domain in url for domain in self.accepted_domains)
 
-    def request(self, url: str):
+    def request(self, url: str) -> VideoData:
         """Query yt-dlp for the given URL."""
 
         url_components = urlparse(url)
@@ -129,7 +132,7 @@ class YtDlpFetchService:
         site = site[0] if len(site) == 2 else site[1]
 
         try:
-            with YoutubeDL(get_ydl_opts()) as ydl:
+            with YoutubeDL(ydl_opts) as ydl:
                 response = ydl.extract_info(url, download=False)
 
                 if "entries" in response:
@@ -146,6 +149,7 @@ class YtDlpFetchService:
         # then the respective case should be updated accordingly
         match site:
             case "twitter" | "x":
+                site = "twitter"
                 response["channel"] = response.get("uploader_id")
                 response["title"] = (
                     f"X post by {response.get('uploader_id')} ({self.hash_str(response.get('title'))})"
@@ -175,21 +179,27 @@ class YtDlpFetchService:
                 response["channel"] = response.get("uploader")
             
             case "bsky":
+                site = "bluesky"
                 uploader = response.get("uploader_id")
                 response["channel"] = uploader[:uploader.index(".")] if uploader else None
                 response["title"] = (
                     f"Bluesky post by {response['channel']} ({self.hash_str(response['title'])})"
                 )
                 err("Response from Bluesky does not contain video duration")
+            case "pony":
+                site = "PonyTube"
+            case "thishorsie":
+                site = "ThisHorsieRocks"
 
         return {
             "title": response.get("title"),
             "uploader": response.get("channel"),
             "upload_date": response.get("upload_date"),
             "duration": response.get("duration"),
+            "platform": site.capitalize(),
         }
 
-    def parse(self, video_data):
+    def parse(self, video_data) -> VideoData:
         # yt-dlp doesn't provide any timezone information with its timestamps,
         # but according to its source code, it looks like it uses UTC:
         # <https://github.com/yt-dlp/yt-dlp/blob/07f5b2f7570fd9ac85aed17f4c0118f6eac77beb/yt_dlp/YoutubeDL.py#L2631>
@@ -202,6 +212,7 @@ class YtDlpFetchService:
             "uploader": video_data.get("uploader"),
             "upload_date": upload_date,
             "duration": video_data.get("duration"),
+            "platform": video_data.get("platform"),
         }
 
     # Some sites like X and Tiktok don't have a designated place to put a title for
