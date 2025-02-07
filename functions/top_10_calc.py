@@ -51,40 +51,141 @@ def get_titles_to_uploaders(
     return titles_to_uploaders
 
 
+def create_top10_csv_data(
+    title_rows: list[list[str]],
+    titles_to_urls: dict[str, str],
+    titles_to_uploaders: dict[str, str],
+    scoring_func,
+    upload_date: datetime,
+    anniversaries: list[int],
+    master_archive: list[dict],
+) -> list[dict]:
+    """Given a list of title rows, use a scoring function to calculate
+    rankings for all titles, and generate the CSV data for a Top 10 CSV file.
+
+    Mappings for URLs and uploaders must be supplied to populate the URL and
+    Uploader columns.
+
+    For the History section, the upload date, desired year-anniversaries, and
+    master archive date must also be supplied."""
+
+    # Calculate a ranked list of videos, highest ranked first, with tie-breaks
+    # resolved automatically by random choice.
+    ranked_records = calc_ranked_records(
+        title_rows, titles_to_urls, titles_to_uploaders, scoring_func
+    )
+
+    if len(ranked_records) < 10:
+        raise Exception(
+            f"Cannot create data for calculated Top 10 spreadsheet; there are only {len(ranked_records)} entries"
+        )
+
+    # Separate the top 10 videos from the rest.
+    top_10_records = ranked_records[:10]
+    non_top_10_records = ranked_records[10:]
+
+    # For the non-top 10 videos, we don't care about tie breaks, so remove the
+    # Notes for those entries.
+    for record in non_top_10_records:
+        record["Notes"] = ""
+
+    # If any of the non-top 10 videos would have made it into the top 10 but
+    # were excluded due to a tie break, add a special note for them.
+    tenth_place_record = top_10_records[9]
+    for record in non_top_10_records:
+        if record["Total Votes"] == tenth_place_record["Total Votes"]:
+            record["Notes"] = "Missed out on top 10 due to tie break"
+        else:
+            break
+
+    # Create some heading rows and blank rows.
+    honorable_mentions_heading = {"Title": "HONORABLE MENTIONS"}
+    history_heading = {"Title": "HISTORY"}
+    blank_row = {"Title": ""}
+
+    # Read the Top 10 Pony Videos master archive and extract records for the 1
+    # year, 5 year, and 10 year anniversaries of the upload date.
+    history = get_history(master_archive, upload_date, anniversaries)
+
+    # Create history records for each of the anniversaries.
+    s = lambda n: "" if n == 1 else "s"
+    anni_headings = {y: {"Title": f"{y} year{s(y)} ago"} for y in anniversaries}
+    anni_records = {}
+    for years_ago in anniversaries:
+        archive_records = history.get(years_ago, [])
+
+        # Sort the archive records by rank, so that they match the ordering in the
+        # calculated top 10 spreadsheet.
+        archive_records = sorted(archive_records, key=lambda r: r["rank"])
+        anni_records[years_ago] = []
+        for archive_record in archive_records:
+            link = archive_record["link"]
+            alt_link = archive_record["alternate_link"]
+            anni_record = {
+                "Title": archive_record["title"],
+                "Uploader": archive_record["channel"],
+                "URL": link,
+            }
+
+            if alt_link != link:
+                anni_record["Notes"] = f'Alt link: {archive_record["alternate_link"]}'
+
+            anni_records[years_ago].append(anni_record)
+
+    # Assemble all the rows together.
+    output_records = []
+    output_records += top_10_records
+    output_records.append(blank_row)
+    output_records.append(honorable_mentions_heading)
+    output_records.append(blank_row)
+    output_records += non_top_10_records
+    output_records.append(blank_row)
+    output_records.append(history_heading)
+    output_records.append(blank_row)
+    for years_ago in anniversaries:
+        output_records.append(anni_headings[years_ago])
+        output_records.append(blank_row)
+        for anni_record in anni_records[years_ago]:
+            output_records.append(anni_record)
+        output_records.append(blank_row)
+
+    return output_records
+
+
 def calc_ranked_records(
     title_rows: list[list[str]],
     titles_to_urls: dict[str, str],
     titles_to_uploaders: dict[str, str],
+    scoring_func,
 ) -> list[dict]:
     """Given a list of title rows, where each row represents the titles voted on
     in one ballot, calculate the frequency of occurrence of each title and
-    generate a set of data records for the top 10 spreadsheet, ranked by
-    percentage."""
-    title_counts = {}
-    for title_row in title_rows:
-        for title in title_row:
-            if title not in title_counts:
-                title_counts[title] = 0
-            title_counts[title] += 1
+    generate a set of data records for the top 10 spreadsheet.
 
-    if "" in title_counts:
-        del title_counts[""]
+    A scoring function must be supplied which accepts the title rows as input,
+    and returns a score for each title, plus the total possible score. These
+    scores are used to determine the ranking of each record."""
 
-    counted_voters = 0
-    for i, title_row in enumerate(title_rows):
-        vote_count = len(list(filter(lambda title: title, title_row)))
-        if vote_count >= 5:
-            counted_voters += 1
+    # Ensure each (non-blank) title row has at least 5 titles.
+    min_votes = 5
+    title_row_checks = check_blank_titles(title_rows)
+    for i, checked_row in enumerate(title_row_checks):
+        num_non_blank, num_blank = checked_row
+        if num_non_blank == 0:
             continue
-
-        if vote_count != 0:
-            # +1 since most editors display 1 as the starting index and +1 to skip header
+        if num_non_blank < min_votes:
+            # The ballot line is reported as 2 indices after the row index, since
+            # most editors start row indices at 1, and there's a header row that
+            # needs to be skipped.
+            ballot_line = i + 2
             raise ValueError(
-                f"Only {vote_count} votes included in ballot line ~{i + 2} when at least 5 are required"
+                f"Error when calculating rankings; at least {min_votes} votes are required in each ballot, but ballot line {ballot_line} has only {num_non_blank}"
             )
 
+    scores, total_score = scoring_func(title_rows)
+
     title_percentages = {
-        title: (count / counted_voters) * 100 for title, count in title_counts.items()
+        title: (score / total_score) * 100 for title, score in scores.items()
     }
 
     # If any titles have the same percentage of votes, then they are tied, and
@@ -101,7 +202,6 @@ def calc_ranked_records(
 
     ranked_titles = []
     tie_broken = {}
-
     for percentage in sorted_percentages:
         percentage_group = percentage_groups[percentage]
         tie_break_needed = len(percentage_group) > 1
@@ -112,6 +212,7 @@ def calc_ranked_records(
             if tie_break_needed:
                 tie_broken[sampled_title] = True
 
+    # Create the list of records, ordered by ranking.
     records = []
     for title in ranked_titles:
         uploader = titles_to_uploaders[title]
@@ -119,7 +220,7 @@ def calc_ranked_records(
             "Title": title,
             "Uploader": uploader if uploader is not None else "",
             "Percentage": f"{title_percentages[title]:.4f}%",
-            "Total Votes": title_counts[title],
+            "Total Votes": scores[title],
             "URL": titles_to_urls[title],
             "Notes": "Tie broken randomly by computer" if tie_broken[title] else "",
         }
@@ -127,6 +228,129 @@ def calc_ranked_records(
         records.append(record)
 
     return records
+
+
+def check_blank_titles(title_rows: list[list[str]], min_titles: int = 5) -> int:
+    """Check a list of title rows and return a 2-tuple (n, b) for each row, where n is the number of non-blank titles and b is the number of blank titles."""
+    result = []
+    for row in title_rows:
+        non_blank_titles = [t for t in row if t.strip() != ""]
+        blank_titles = [t for t in row if t.strip() == ""]
+        result.append((len(non_blank_titles), len(blank_titles)))
+
+    return result
+
+
+def get_non_blank_titles(title_rows: list[list[str]]) -> list[list[str]]:
+    """Given a list of title rows, return a list or rows in which all blank
+    titles are removed. Rows with all blank titles are removed."""
+    non_blank_title_rows = []
+    for row in title_rows:
+        non_blank_titles = [t for t in row if t.strip() != ""]
+        if len(non_blank_titles) == 0:
+            continue
+        non_blank_title_rows.append(non_blank_titles)
+
+    return non_blank_title_rows
+
+
+def score_by_total_votes(title_rows: list[list[str]]) -> tuple[dict[str, int], float]:
+    """Given a list of title rows, return a dictionary mapping each title to the
+    number of times it occurs in all rows. Blank titles are ignored.
+
+    The total number of eligible ballots (ie. non-blank ballots) is also
+    returned, which allows scores to be expressed as a percentage of the total
+    number of ballots."""
+    title_counts = {}
+    total_ballots = 0
+    for title_row in title_rows:
+        non_blank_titles = [t for t in title_row if t.strip() != ""]
+        if len(non_blank_titles) == 0:
+            continue
+        for title in title_row:
+            if title not in title_counts:
+                title_counts[title] = 0
+            title_counts[title] += 1
+        total_ballots += 1
+
+    if "" in title_counts:
+        del title_counts[""]
+
+    return title_counts, total_ballots
+
+
+def score_weight_by_ballot_size(
+    title_rows: list[list[str]],
+) -> tuple[dict[str, int], float]:
+    """Given a list of title rows, return a dictionary mapping each title to a
+    score. The score is calculated as follows:
+
+    * The ballot with the most votes (usually 10) is defined to be a "full"
+      ballot.
+    * Each ballot is given a weighting between 0 and 1, which is calculated as:
+
+          number of votes / full ballot size
+
+      For example, if the full ballot size is 10, a ballot with 6 votes has a
+      weighting of 6 / 10 = 0.6.
+    * The votes for each title are counted up, but each vote is weighted
+      according to the ballot's weighting.
+
+    Blank titles are ignored.
+
+    The theoretical maximum score is also returned, to allow scores to be
+    expressed as a percentage."""
+    non_blank_ballots = get_non_blank_titles(title_rows)
+    full_ballot_size = max([len(row) for row in non_blank_ballots])
+    total_ballots = len(non_blank_ballots)
+
+    ballot_weightings = [len(b) / full_ballot_size for b in non_blank_ballots]
+    max_score = sum(ballot_weightings)
+
+    scores = {}
+    for i, ballot in enumerate(non_blank_ballots):
+        for title in ballot:
+            if title not in scores:
+                scores[title] = 0
+            scores[title] += ballot_weightings[i]
+
+    return scores, max_score
+
+
+def load_top_10_master_archive() -> list[dict]:
+    """Load a local copy of the Top 10 Pony Videos List spreadsheet; or, if
+    there's no local copy on the filesystem, export one from Google Sheets and
+    save it first.
+
+    The archive is returned as a list of records, with the key names being the
+    field headers of the master archive file."""
+
+    header = None
+    archive_records = None
+    while True:
+        try:
+            # Try to load the local copy of the master archive spreadsheet
+            with Path(local_top_10_archive_csv_path).open(
+                "r", encoding="utf-8"
+            ) as file:
+                inf("Loading local copy of master Top 10 Pony Videos archive...")
+                reader = csv.DictReader(file)
+                archive_records = [record for record in reader]
+                header = reader.fieldnames
+                break
+        except FileNotFoundError:
+            inf(
+                "No local copy of the master Top 10 Pony Videos archive exists, downloading one..."
+            )
+            response = requests.get(top_10_archive_csv_url)
+            Path(local_top_10_archive_csv_path).write_text(
+                response.text, encoding="utf-8"
+            )
+            suc(
+                f"Local copy of master Top 10 Pony Videos archive saved to {local_top_10_archive_csv_path}."
+            )
+
+    return archive_records
 
 
 def get_history(

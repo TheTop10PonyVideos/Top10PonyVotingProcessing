@@ -2,7 +2,11 @@ from unittest import TestCase
 from datetime import datetime
 from functions.top_10_calc import (
     process_shifted_voting_data,
+    create_top10_csv_data,
     calc_ranked_records,
+    check_blank_titles,
+    score_by_total_votes,
+    score_weight_by_ballot_size,
     get_history,
 )
 
@@ -124,6 +128,89 @@ class TestFunctionsTop10Calc(TestCase):
         self.assertEqual("Title M", data_rows[2][2])
         self.assertEqual("Title S", data_rows[2][8])
 
+    def test_create_top10_csv_data(self):
+        title_rows = [
+            ["Title A", "Title B", "Title C", "Title D", "Title E"],
+            ["Title A", "Title B", "Title C", "Title D", "Title F"],
+            ["Title A", "Title B", "Title C", "Title G", "Title H"],
+            ["Title A", "Title B", "Title I", "Title J", "Title K"],
+            ["Title A", "Title L", "Title M", "Title N", "Title O"],
+        ]
+
+        titles_to_urls = {
+            "Title A": "https://example.com/Title_A",
+            "Title B": "https://example.com/Title_B",
+            "Title C": "https://example.com/Title_C",
+            "Title D": "https://example.com/Title_D",
+            "Title E": "https://example.com/Title_E",
+            "Title F": "https://example.com/Title_F",
+            "Title G": "https://example.com/Title_G",
+            "Title H": "https://example.com/Title_H",
+            "Title I": "https://example.com/Title_I",
+            "Title J": "https://example.com/Title_J",
+            "Title K": "https://example.com/Title_K",
+            "Title L": "https://example.com/Title_L",
+            "Title M": "https://example.com/Title_M",
+            "Title N": "https://example.com/Title_N",
+            "Title O": "https://example.com/Title_O",
+        }
+
+        titles_to_uploaders = {
+            "Title A": "Uploader A",
+            "Title B": "Uploader B",
+            "Title C": "Uploader C",
+            "Title D": "Uploader D",
+            "Title E": "Uploader E",
+            "Title F": "Uploader F",
+            "Title G": "Uploader G",
+            "Title H": "Uploader H",
+            "Title I": "Uploader I",
+            "Title J": "Uploader J",
+            "Title K": "Uploader K",
+            "Title L": "Uploader L",
+            "Title M": "Uploader M",
+            "Title N": "Uploader N",
+            "Title O": "Uploader O",
+        }
+        upload_date = datetime(2024, 4, 1)
+        anniversaries = [5]
+        master_archive = [
+            {
+                "month": 4,
+                "year": 2019,
+                "rank": 1,
+                "title": "Title 2019-04",
+                "channel": "Uploader 2019-04",
+                "link": "https://example.com",
+                "alternate link": "https://example.com",
+            },
+        ]
+
+        csv_data = create_top10_csv_data(
+            title_rows,
+            titles_to_urls,
+            titles_to_uploaders,
+            score_by_total_votes,
+            upload_date,
+            anniversaries,
+            master_archive,
+        )
+
+        self.assertEqual(len(csv_data), 25)
+        self.assertEqual(csv_data[0]["Title"], "Title A")
+        self.assertEqual(csv_data[0]["Uploader"], "Uploader A")
+        self.assertEqual(csv_data[10]["Title"], "")
+        self.assertEqual(csv_data[11]["Title"], "HONORABLE MENTIONS")
+        self.assertEqual(csv_data[12]["Title"], "")
+        self.assertEqual(csv_data[18]["Title"], "")
+        self.assertEqual(csv_data[19]["Title"], "HISTORY")
+        self.assertEqual(csv_data[20]["Title"], "")
+        self.assertEqual(csv_data[21]["Title"], "5 years ago")
+        self.assertEqual(csv_data[22]["Title"], "")
+        self.assertEqual(csv_data[23]["Title"], "Title 2019-04")
+        self.assertEqual(csv_data[23]["Uploader"], "Uploader 2019-04")
+        self.assertEqual(csv_data[24]["Title"], "")
+
     def test_calc_ranked_records(self):
         title_rows = [
             ["Title A", "Title B", "Title C", "Title D", "Title E"],
@@ -204,7 +291,9 @@ class TestFunctionsTop10Calc(TestCase):
             "Title 7": "Uploader 7",
         }
 
-        records = calc_ranked_records(title_rows, titles_to_urls, titles_to_uploaders)
+        records = calc_ranked_records(
+            title_rows, titles_to_urls, titles_to_uploaders, score_by_total_votes
+        )
         self.assertEqual(30, len(records))
         self.assertEqual(6, len(records[0]))
         self.assertIn("Title", records[0])
@@ -286,7 +375,9 @@ class TestFunctionsTop10Calc(TestCase):
             "L": "Uploader L",
         }
 
-        records = calc_ranked_records(title_rows, titles_to_urls, titles_to_uploaders)
+        records = calc_ranked_records(
+            title_rows, titles_to_urls, titles_to_uploaders, score_by_total_votes
+        )
 
         self.assertEqual("A", records[0]["Title"])
         self.assertTrue(records[1]["Title"] in ("B", "C"))
@@ -313,6 +404,85 @@ class TestFunctionsTop10Calc(TestCase):
         self.assertEqual("Tie broken randomly by computer", records[9]["Notes"])
         self.assertEqual("Tie broken randomly by computer", records[10]["Notes"])
         self.assertEqual("Tie broken randomly by computer", records[11]["Notes"])
+
+    def test_check_blank_titles(self):
+        title_rows = [
+            ["Title 1", "Title 2", "Title 3"],
+            ["Title 1", "Title 2", "Title 3"],
+            ["Title 1", "Title 2", "Title 3"],
+        ]
+        checked_title_rows = check_blank_titles(title_rows)
+        self.assertEqual(len(checked_title_rows), 3)
+        self.assertEqual(checked_title_rows[0], (3, 0))
+        self.assertEqual(checked_title_rows[1], (3, 0))
+        self.assertEqual(checked_title_rows[2], (3, 0))
+
+        title_rows = [
+            ["Title 1", "Title 2", "Title 3"],
+            ["", "", "", ""],
+            ["Title 1", "Title 2", ""],
+        ]
+        checked_title_rows = check_blank_titles(title_rows)
+        self.assertEqual(len(checked_title_rows), 3)
+        self.assertEqual(checked_title_rows[0], (3, 0))
+        self.assertEqual(checked_title_rows[1], (0, 4))
+        self.assertEqual(checked_title_rows[2], (2, 1))
+
+        title_rows = [
+            ["Title 1", "Title 2", "Title 3"],
+            ["Title 1", ""],
+        ]
+        checked_title_rows = check_blank_titles(title_rows)
+        self.assertEqual(len(checked_title_rows), 2)
+        self.assertEqual(checked_title_rows[0], (3, 0))
+        self.assertEqual(checked_title_rows[1], (1, 1))
+
+    def test_score_by_total_votes(self):
+        title_rows = [
+            ["Title 1", "Title 2", "Title 3", "Title 4", "Title 5"],
+            ["Title 1", "Title 2", "Title 3", "Title 4", ""],
+            ["Title 1", "Title 2", "Title 3", "", ""],
+            ["Title 1", "Title 2", "", "", ""],
+            ["Title 1", "", "", "", ""],
+            ["", "", "", "", ""],
+        ]
+        scores, total_non_blank_ballots = score_by_total_votes(title_rows)
+        self.assertEqual(len(scores), 5)
+        self.assertEqual(scores["Title 1"], 5)
+        self.assertEqual(scores["Title 2"], 4)
+        self.assertEqual(scores["Title 3"], 3)
+        self.assertEqual(scores["Title 4"], 2)
+        self.assertEqual(scores["Title 5"], 1)
+        self.assertEqual(total_non_blank_ballots, 5)
+
+    def test_score_weight_by_ballot_size(self):
+        # In this test, there are 5 (non-blank) ballots, each with varying
+        # numbers of titles. Ballot 0 has full voting power as it has a full
+        # complement of votes. Ballot 1 has 80^ voting power as it has only 4/5
+        # votes. Ballots 2, 3, 4 have 60%, 40%, and 20% voting power
+        # respectively. Ballot 5 is ignored as it's completely blank.
+        #
+        # Under this system, the maximum score a title can attain is yhe sum of
+        # all the ballot weightings:
+        #
+        #     1 + 0.8 + 0.6 + 0.4 + 0.2 = 3.0
+        title_rows = [
+            ["Title 1", "Title 2", "Title 3", "Title 4", "Title 5"],
+            ["Title 1", "Title 2", "Title 3", "Title 4", ""],
+            ["Title 1", "Title 2", "Title 3", "", ""],
+            ["Title 1", "Title 2", "", "", ""],
+            ["Title 1", "", "", "", ""],
+            ["", "", "", "", ""],
+        ]
+
+        scores, max_score = score_weight_by_ballot_size(title_rows)
+        self.assertEqual(len(scores), 5)
+        self.assertEqual(scores["Title 1"], 3)
+        self.assertEqual(scores["Title 2"], 2.8)
+        self.assertEqual(scores["Title 3"], 2.4)
+        self.assertEqual(scores["Title 4"], 1.8)
+        self.assertEqual(scores["Title 5"], 1)
+        self.assertEqual(max_score, 3.0)
 
     def test_get_history(self):
         from_date = datetime(2024, 4, 1)

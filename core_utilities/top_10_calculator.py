@@ -12,8 +12,10 @@ from functions.top_10_calc import (
     process_shifted_voting_data,
     get_titles_to_urls_mapping,
     get_titles_to_uploaders,
+    create_top10_csv_data,
     calc_ranked_records,
-    get_history,
+    score_by_total_votes,
+    score_weight_by_ballot_size,
 )
 from functions.date import (
     parse_votes_csv_timestamp,
@@ -32,23 +34,47 @@ anniversaries = [1, 5, 10]
 
 
 class Top10Calculator(GUI):
+    def __init__(self):
+        super().__init__()
+        self.rank_algorithms = {
+            "total_votes": {
+                "label": "Total Votes",
+                "tooltip": "Videos are ranked by the total number of votes they received.",
+                "var": None,
+                "score_func": score_by_total_votes,
+                "file_suffix": "",
+            },
+            "weight_by_ballot_size": {
+                "label": "Weight by ballot size",
+                "tooltip": "Votes are weighted in proportion to the size of their ballot. This gives more voting power to from people who voted on more videos.",
+                "var": None,
+                "score_func": score_weight_by_ballot_size,
+                "file_suffix": "-weighted-by-ballot-size",
+            },
+        }
+
     def gui(self, root):
         root.title("Top 10 Pony Videos: Top 10 Calculator")
-        root.geometry(f"800x400")
+        root.geometry(f"860x640")
 
         # Create main frame
         main_frame = tk.Frame(root)
         main_frame.pack(expand=True, fill="both", padx=10, pady=10)
 
+        # We're using a single-column grid layout for the main frame. Use
+        # columnconfigure to make it stretchable, so that the interface
+        # automatically centers when the application is resized.
+        main_frame.columnconfigure(0, weight=1)
+
         # Create banner image
         self.banner_image = ImageTk.PhotoImage(Image.open("images/top-10-calc-ts.png"))
         banner_label = tk.Label(main_frame, image=self.banner_image)
-        banner_label.pack()
+        banner_label.grid(row=0, column=0)
 
         # Create title
         title_font = Font(size=16)
         title_label = tk.Label(main_frame, font=title_font, text="Top 10 Calculator")
-        title_label.pack(pady=8)
+        title_label.grid(row=1, column=0, pady=8)
 
         # Create a grid to hold the file selectors
         file_selectors_frame = tk.Frame(main_frame)
@@ -93,11 +119,31 @@ class Top10Calculator(GUI):
         shifted_file_entry.grid(column=1, row=1, padx=5, pady=5)
         browse_button.grid(column=2, row=1, padx=5, pady=5, sticky="ew")
 
-        file_selectors_frame.pack()
+        file_selectors_frame.grid(row=2, column=0)
+
+        # Create Ranking Algorithms frame
+        rank_methods_frame = tk.LabelFrame(main_frame, text="Ranking Algorithms")
+
+        # Create variables and checkboxes for ranking methods
+        # Auto-select the "Total Votes" ranking algorithm
+        for key, algo in self.rank_algorithms.items():
+            algo["var"] = tk.BooleanVar(value=True if key == "total_votes" else False)
+
+        # Create checkboxes for ranking methods
+        for key, algo in self.rank_algorithms.items():
+            algo["checkbox"] = ttk.Checkbutton(
+                rank_methods_frame, text=algo["label"], variable=algo["var"]
+            )
+
+        for col, key in enumerate(self.rank_algorithms):
+            checkbox = self.rank_algorithms[key]["checkbox"]
+            checkbox.grid(row=0, column=col, sticky="N", padx=10, pady=10)
+
+        rank_methods_frame.grid(row=3, column=0, pady=20)
 
         # Create buttons bar
         buttons_frame = tk.Frame(main_frame)
-        buttons_frame.pack()
+        buttons_frame.grid(row=4, column=0)
 
         run_button = ttk.Button(
             buttons_frame, text="🧮 Calculate Top 10", command=self.handle_calc
@@ -132,6 +178,18 @@ class Top10Calculator(GUI):
         urls_csv_path = self.shifted_file_var.get()
         if input_csv_path.strip() == "":
             tk.messagebox.showinfo("Error", "Please select a CSV file.")
+            return
+
+        # Get the scoring functions for all ranking methods selected by the
+        # user.
+        rank_algorithms = [
+            algo for algo in self.rank_algorithms.values() if algo["var"].get()
+        ]
+
+        if len(rank_algorithms) == 0:
+            tk.messagebox.showinfo(
+                "Error", "Please select at least one Ranking Algorithm."
+            )
             return
 
         inf("Performing Top 10 calculation...")
@@ -212,99 +270,45 @@ class Top10Calculator(GUI):
                 err(f"* {url}")
         titles_to_uploaders = get_titles_to_uploaders(titles_to_urls, videos_data)
 
-        # Calculate a ranked list of videos, highest ranked first, with tie-breaks
-        # resolved automatically by random choice.
-        ranked_records = calc_ranked_records(
-            title_rows, titles_to_urls, titles_to_uploaders
-        )
-
-        # Separate the top 10 videos from the rest.
-        top_10_records = ranked_records[:10]
-        non_top_10_records = ranked_records[10:]
-
-        # For the non-top 10 videos, we don't care about tie breaks, so remove the
-        # Notes for those entries.
-        for record in non_top_10_records:
-            record["Notes"] = ""
-
-        # If any of the non-top 10 videos would have made it into the top 10 but
-        # were excluded due to a tie break, add a special note for them.
-
-        tenth_place_record = top_10_records[9]
-        for record in non_top_10_records:
-            if record["Total Votes"] == tenth_place_record["Total Votes"]:
-                record["Notes"] = "Missed out on top 10 due to tie break"
-            else:
-                break
-
-        # Create some heading rows and blank rows.
-        honorable_mentions_heading = {"Title": "HONORABLE MENTIONS"}
-        history_heading = {"Title": "HISTORY"}
-        blank_row = {"Title": ""}
-
-        # Load the Top 10 Pony Videos master archive (fetching it if needed) and
-        # extract records for the 1 year, 5 year, and 10 year anniversaries of the
-        # upload date.
-        master_archive = load_top_10_master_archive()
-        history = get_history(master_archive, upload_date, anniversaries)
-
-        # Create history records for each of the anniversaries.
-        s = lambda n: "" if n == 1 else "s"
-        anni_headings = {y: {"Title": f"{y} year{s(y)} ago"} for y in anniversaries}
-        anni_records = {}
-        for years_ago in anniversaries:
-            archive_records = history[years_ago]
-
-            # Sort the archive records by rank, so that they match the ordering in the
-            # calculated top 10 spreadsheet.
-            archive_records = sorted(archive_records, key=lambda r: r["rank"])
-            anni_records[years_ago] = []
-            for archive_record in archive_records:
-                link = archive_record["link"]
-                alt_link = archive_record["alternate_link"]
-                anni_record = {
-                    "Title": archive_record["title"],
-                    "Uploader": archive_record["channel"],
-                    "URL": link,
-                }
-
-                if alt_link != link:
-                    anni_record["Notes"] = (
-                        f'Alt link: {archive_record["alternate_link"]}'
-                    )
-
-                anni_records[years_ago].append(anni_record)
-
-        # Assemble all the rows together.
-        output_records = []
-        output_records += top_10_records
-        output_records.append(blank_row)
-        output_records.append(honorable_mentions_heading)
-        output_records.append(blank_row)
-        output_records += non_top_10_records
-        output_records.append(blank_row)
-        output_records.append(history_heading)
-        output_records.append(blank_row)
-        for years_ago in anniversaries:
-            output_records.append(anni_headings[years_ago])
-            output_records.append(blank_row)
-            for anni_record in anni_records[years_ago]:
-                output_records.append(anni_record)
-            output_records.append(blank_row)
-
-        # Write the calculated top 10 to a CSV file.
         header = ["Title", "Uploader", "Percentage", "Total Votes", "URL", "Notes"]
-        output_csv_path_str = "outputs/calculated_top_10.csv"
-        output_csv_path = Path(output_csv_path_str)
 
-        with output_csv_path.open("w", newline="", encoding="utf-8") as output_file:
-            output_csv_writer = csv.DictWriter(output_file, fieldnames=header)
-            output_csv_writer.writeheader()
-            output_csv_writer.writerows(output_records)
-        suc(f"Wrote calculated rankings to {output_csv_path}.")
+        # For each ranking method, output a CSV file containing a top 10
+        # calculated using it.
+        output_csv_paths = []
+        master_archive = load_top_10_master_archive()
+        for algo in rank_algorithms:
+            suc(f'Calculating rankings using "{algo["label"]}" algorithm...')
+
+            output_records = create_top10_csv_data(
+                title_rows,
+                titles_to_urls,
+                titles_to_uploaders,
+                algo["score_func"],
+                upload_date,
+                anniversaries,
+                master_archive,
+            )
+
+            # Write the calculated top 10 to a CSV file.
+            output_csv_path_str = f"outputs/calculated_top_10{algo['file_suffix']}.csv"
+            output_csv_path = Path(output_csv_path_str)
+            output_csv_paths.append(output_csv_path)
+
+            with output_csv_path.open("w", newline="", encoding="utf-8") as output_file:
+                output_csv_writer = csv.DictWriter(output_file, fieldnames=header)
+                output_csv_writer.writeheader()
+                output_csv_writer.writerows(output_records)
+                suc(f"* Wrote calculated rankings to {output_csv_path}.")
+
         suc("Finished.")
 
-        tk.messagebox.showinfo(
-            "Success",
-            f"Top 10 calculation complete. A file containing the video rankings has been created at:\n\n{output_csv_path}",
-        )
+        if len(output_csv_paths) == 1:
+            tk.messagebox.showinfo(
+                "Success",
+                f"Top 10 calculation complete. A file containing the video rankings has been created at:\n\n{output_csv_paths[0]}",
+            )
+        else:
+            tk.messagebox.showinfo(
+                "Success",
+                f"Top 10 calculation complete. {len(output_csv_paths)} files were created: \n\n{'\n'.join([str(p) for p in output_csv_paths])}",
+            )
