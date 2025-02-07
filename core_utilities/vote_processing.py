@@ -37,6 +37,7 @@ from functions.ballot_rules import (
     check_ballot_upload_dates,
     check_ballot_video_durations,
     check_fuzzy,
+    check_platform,
     check_ballot_uploader_occurrences,
     check_ballot_uploader_diversity,
 )
@@ -130,6 +131,10 @@ class VoteProcessing(GUI):
             "duration": {
                 "label": "Duration Check",
                 "tooltip": "Annotate ballots that contain votes for videos that appear to be too short.",
+            },
+            "platform": {
+                "label": "Platform Check",
+                "tooltip": "Annotate ballots that contain votes for non-youtube videos"
             },
             "fuzzy": {
                 "label": "Fuzzy Check",
@@ -230,7 +235,7 @@ class VoteProcessing(GUI):
         quit_button = ttk.Button(
             buttons_frame,
             text="Back to Main Menu",
-            command=lambda: GUI.run("MainMenu", root),
+            command=lambda: GUI.run("MainMenu"),
         )
         quit_button.grid(column=1, row=0, padx=5, pady=5)
 
@@ -251,6 +256,8 @@ class VoteProcessing(GUI):
         a battery of checks on the voting data, and outputs an annotated version of
         the CSV with problematic votes labeled.
         """
+        youtube_api_key = GUI.get_api_key()
+        if not youtube_api_key: return
 
         selected_csv_file = self.csv_entry_var.get()
         if selected_csv_file.strip() == "":
@@ -269,7 +276,6 @@ class VoteProcessing(GUI):
 
         inf(f'Preparing to run checks on "{selected_csv_file}"...')
 
-        youtube_api_key = GUI.yt_api_key_var.get()
         fetcher = get_fetcher(
             youtube_api_key, self.tools_vars["ensure_complete_data"].get()
         )
@@ -442,6 +448,10 @@ class VoteProcessing(GUI):
         if do_check("duration"):
             inf("* Checking for votes for videos with invalid durations...")
             check_ballot_video_durations(ballots, videos)
+
+        if do_check("platform"):
+            inf("* Checking for votes for non-youtube videos")
+            check_platform(ballots, videos)
 
         if do_check("fuzzy"):
             inf("* Performing fuzzy matching checks...")

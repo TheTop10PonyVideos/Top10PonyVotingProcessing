@@ -8,3 +8,4 @@ twitter.com
 x.com
 odysee.com
 newgrounds.com
+bsky.app

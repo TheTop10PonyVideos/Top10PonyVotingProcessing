@@ -6,7 +6,6 @@ from classes.fetcher import Fetcher
 from classes.fetch_services import YouTubeFetchService, YtDlpFetchService
 from classes.caching import FileCache
 from classes.printers import ConsolePrinter
-from dotenv import load_dotenv
 
 
 def get_fetcher(
@@ -20,9 +19,7 @@ def get_fetcher(
     Parameters
     ----------
     youtube_api_key : str, optional
-        The YouTube API key used by the YouTube fetch service. If not provided,
-        the function will attempt to fall back on the .env file for its apikey
-        parameter.
+        The YouTube API key to be used by the YouTube fetch service
     ensure_complete_data : bool, optional
         Determines the behavior when the response data is missing any necessary
         data.
@@ -47,12 +44,6 @@ def get_fetcher(
     # Configure fetch services. Currently the YouTube Data API and yt-dlp are
     # supported.
     inf("  * Adding fetch services...")
-
-    # Fallback to the API key specified in the .env file if no YouTube API key
-    # was supplied.
-    if not youtube_api_key:
-        load_dotenv()
-        youtube_api_key = os.getenv("apikey")
 
     accepted_domains = load_text_data(config["paths"]["accepted_domains"])
 

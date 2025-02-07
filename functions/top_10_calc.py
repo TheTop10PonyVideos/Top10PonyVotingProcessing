@@ -1,17 +1,10 @@
 """Functions for calculating video rankings based on number of votes."""
 
-import csv
-import requests
 from datetime import datetime
-from pathlib import Path
+from classes.typing import ArchiveRecord
 from functions.general import sample_item_without_replacement
-from functions.messages import suc, inf, err
-
-# Path to a local copy of the master Top 10 Pony Videos List (in CSV format).
-local_top_10_archive_csv_path = "data/top_10_master_archive.csv"
-
-# URL to the downloadable CSV export of the master Top 10 Pony Videos List.
-top_10_archive_csv_url = "https://docs.google.com/spreadsheets/d/1rEofPkliKppvttd8pEX8H6DtSljlfmQLdFR-SlyyX7E/export?format=csv"
+from functions.messages import err
+from data.globals import local_top_10_archive_csv_path
 
 
 def process_shifted_voting_data(rows: list[list[str]]) -> list[list[str]]:
@@ -127,7 +120,7 @@ def create_top10_csv_data(
         anni_records[years_ago] = []
         for archive_record in archive_records:
             link = archive_record["link"]
-            alt_link = archive_record["alternate link"]
+            alt_link = archive_record["alternate_link"]
             anni_record = {
                 "Title": archive_record["title"],
                 "Uploader": archive_record["channel"],
@@ -135,7 +128,7 @@ def create_top10_csv_data(
             }
 
             if alt_link != link:
-                anni_record["Notes"] = f'Alt link: {archive_record["alternate link"]}'
+                anni_record["Notes"] = f'Alt link: {archive_record["alternate_link"]}'
 
             anni_records[years_ago].append(anni_record)
 
@@ -361,7 +354,7 @@ def load_top_10_master_archive() -> list[dict]:
 
 
 def get_history(
-    archive_records: list[dict], from_date: datetime, anniversaries: list[int]
+    archive_records: list[ArchiveRecord], from_date: datetime, anniversaries: list[int]
 ) -> dict[int, dict]:
     """Given a set of archive records (in the format specified by the header of
     the Top 10 Pony Videos master archive), return all records which occurred on
