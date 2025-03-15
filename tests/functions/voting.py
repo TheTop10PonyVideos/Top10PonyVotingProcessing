@@ -183,6 +183,7 @@ class TestFunctionsVoting(TestCase):
             "uploader": "Example Uploader",
             "upload_date": datetime(2024, 4, 1, 9, 0, 0),
             "duration": 300,
+            "platform": "PonyTube"
         }
         missing_fields = validate_video_data(data)
         self.assertEqual(0, len(missing_fields))
@@ -191,6 +192,7 @@ class TestFunctionsVoting(TestCase):
             "uploader": "Example Uploader",
             "upload_date": datetime(2024, 4, 1, 9, 0, 0),
             "duration": 300,
+            "platform": "PonyTube"
         }
         missing_fields = validate_video_data(data)
         self.assertEqual(1, len(missing_fields))
@@ -198,11 +200,12 @@ class TestFunctionsVoting(TestCase):
 
         data = {}
         missing_fields = validate_video_data(data)
-        self.assertEqual(4, len(missing_fields))
+        self.assertEqual(5, len(missing_fields))
         self.assertEqual("title", missing_fields[0])
         self.assertEqual("uploader", missing_fields[1])
         self.assertEqual("upload_date", missing_fields[2])
         self.assertEqual("duration", missing_fields[3])
+        self.assertEqual("platform", missing_fields[4])
 
     def test_generate_annotated_csv_data(self):
         ballots = [
