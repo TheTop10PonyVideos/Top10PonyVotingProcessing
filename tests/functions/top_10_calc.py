@@ -182,7 +182,7 @@ class TestFunctionsTop10Calc(TestCase):
                 "title": "Title 2019-04",
                 "channel": "Uploader 2019-04",
                 "link": "https://example.com",
-                "alternate link": "https://example.com",
+                "alternate_link": "https://example.com",
             },
         ]
 

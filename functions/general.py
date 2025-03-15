@@ -53,9 +53,9 @@ def sample_item_without_replacement(items: list):
     return sampled_item
 
 
-def load_top_10_master_archive() -> list[ArchiveRecord]:
-    """Load a local copy of the Top 10 Pony Videos List spreadsheet; or, if
-    there's no local copy on the filesystem, export one from Google Sheets and
+def load_top_10_master_archive(local_first = True) -> list[ArchiveRecord]:
+    """Load a copy of the Top 10 Pony Videos List spreadsheet. Load a local copy if local_first is True,
+    or if there's no such copy on the filesystem, export one from Google Sheets and
     save it first.
 
     The archive is returned as a list of records, with the key names being the
@@ -64,6 +64,10 @@ def load_top_10_master_archive() -> list[ArchiveRecord]:
     archive_records = None
     while True:
         try:
+            if not local_first:
+                local_first = True
+                raise Exception
+
             # Try to load the local copy of the master archive spreadsheet
             with Path(local_top_10_archive_csv_path).open(
                 "r", encoding="utf-8"
@@ -73,9 +77,9 @@ def load_top_10_master_archive() -> list[ArchiveRecord]:
                 reader.fieldnames = [field_name.lower().replace(" ", "_") for field_name in reader.fieldnames]
                 archive_records = [record for record in reader]
                 break
-        except FileNotFoundError:
+        except Exception:
             inf(
-                "No local copy of the master Top 10 Pony Videos archive exists, downloading one..."
+                "Downloading a copy of the master Top 10 Pony Videos archive..."
             )
             response = requests.get(top_10_archive_csv_url)
             Path(local_top_10_archive_csv_path).write_text(
@@ -88,9 +92,9 @@ def load_top_10_master_archive() -> list[ArchiveRecord]:
     return archive_records
 
 
-def load_honorable_mentions_archive() -> list[ArchiveRecord]:
-    """Load a local copy of the honorable mentions spreadsheet; or, if
-    there's no local copy on the filesystem, export one from Google Sheets and
+def load_honorable_mentions_archive(local_first = True) -> list[ArchiveRecord]:
+    """Load a copy of the honorable mentions spreadsheet. Load a local copy if local_first is True,
+    or if there's no local copy on the filesystem, export one from Google Sheets and
     save it first.
 
     The archive is returned as a list of records, with the key names being the
@@ -99,6 +103,10 @@ def load_honorable_mentions_archive() -> list[ArchiveRecord]:
     archive_records = None
     while True:
         try:
+            if not local_first:
+                local_first = True
+                raise Exception
+
             # Try to load the local copy of the honorable mentions archive spreadsheet
             with Path(local_honorable_mentions_csv_path).open(
                 "r", encoding="utf-8"
@@ -109,9 +117,9 @@ def load_honorable_mentions_archive() -> list[ArchiveRecord]:
                 reader.fieldnames = [field_name.lower().replace(" ", "_") for field_name in reader.fieldnames]
                 archive_records = [record for record in reader]
                 break
-        except FileNotFoundError:
+        except Exception:
             inf(
-                "No local copy of the honorable mentions archive exists, downloading one..."
+                "Downloading a copy of the honorable mentions archive one..."
             )
             response = requests.get(honorable_mentions_csv_url)
             Path(local_honorable_mentions_csv_path).write_text(

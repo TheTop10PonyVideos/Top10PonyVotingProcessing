@@ -48,13 +48,14 @@ class ArchiveStatusChecker(GUI):
         self.starting_row_num = 2
         self.async_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.async_loop)
+        self.var_use_local_archive = tk.BooleanVar(value=False)
 
     def gui(self, root):
 
-        # Only get archive or check for updates when it's not being checked so full progress
-        # label and output path is displayed upon revisiting
+        # Only load archive when it's not being checked so progress
+        # label and output path is displayed properly upon revisiting
         if not self.running:
-            self.archive_records = load_top_10_master_archive()
+            self.archive_records = load_top_10_master_archive(self.var_use_local_archive.get())
             self.videos_to_fetch = len(self.archive_records)
 
         root.title("YouTube Video Status Checker")
@@ -132,13 +133,18 @@ class ArchiveStatusChecker(GUI):
             settings_frame, text="Contrast States", variable=self.var_contrast_states
         )
 
+        use_local_archive = tk.Checkbutton(
+            settings_frame, text="Use Local Archive", variable=self.var_use_local_archive
+        )
+
         checker_subject_frame = tk.Frame(settings_frame)
 
         csv_range_frame.grid(column=0, row=0, pady=4)
         check_titles.grid(column=0, row=1, padx=(35, 0), sticky="w")
         use_async.grid(column=0, row=2, padx=(35, 0), sticky="w")
         contrast_states.grid(column=0, row=3, padx=(35, 0), sticky="w")
-        checker_subject_frame.grid(column=0, row=4)
+        use_local_archive.grid(column=0, row=4, padx=(35, 0), sticky="w")
+        checker_subject_frame.grid(column=0, row=5)
 
         # Settings Frame -> Range Frame
         range_label = tk.Label(csv_range_frame, text="Range")
@@ -268,9 +274,9 @@ class ArchiveStatusChecker(GUI):
         self.input_file_frame.grid_remove()
 
         if subject == "hm":
-            self.archive_records = load_honorable_mentions_archive()
+            self.archive_records = load_honorable_mentions_archive(self.var_use_local_archive.get())
         else:
-            self.archive_records = load_top_10_master_archive()
+            self.archive_records = load_top_10_master_archive(self.var_use_local_archive.get())
 
         self.videos_to_fetch = len(self.archive_records)
 
@@ -574,7 +580,7 @@ class ArchiveStatusChecker(GUI):
         ]
 
         video_title = archive_record["title"]
-        video_url = archive_record["link"]
+        video_url = archive_record.get("link", archive_record["alternate_link"])
 
         fetched_video_title, video_states, blocked_countries = (
             await self.get_video_status(video_url, video_title)
