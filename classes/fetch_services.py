@@ -13,6 +13,7 @@ from functions.messages import err
 from data.globals import ydl_opts
 from classes.exceptions import FetchRequestError, FetchParseError, VideoUnavailableError
 from classes.typing import VideoData
+from functions.messages import inf
 
 
 class YouTubeFetchService:
@@ -117,6 +118,8 @@ class YtDlpFetchService:
 
     def __init__(self, accepted_domains: list[str]):
         self.accepted_domains = accepted_domains
+        if "cookiefile" not in ydl_opts:
+            inf("Note: Couldn't find data/cookies.txt file. Some requests may yield no data.")
 
     def can_fetch(self, url: str) -> bool:
         """Return True if the URL contains an accepted domain (other than

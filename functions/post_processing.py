@@ -148,7 +148,7 @@ def generate_sharable_records(
         record = {
             "Rank": "HM",
             "Title": hm_record["Title"],
-            "Link": hm_record["URL"],
+            "Link": f'=VLOOKUP("{hm_record["URL"]}", IMPORTRANGE("{MASTER_ARCHIVE_URL}", "Honorable Mentions!C:I"), 6, FALSE)',
             "Votes": hm_record["Total Votes"],
             "Popularity": hm_record["Percentage"],
             "Total voters": total_voters,
