@@ -1,6 +1,5 @@
 """Module that contains global variables that may be needed in several project files"""
 
-from functions.messages import inf
 import os
 
 # URL to the downloadable CSV export of the master Top 10 Pony Videos List.
@@ -37,5 +36,3 @@ ydl_opts = {
 # Previously, some twitter requests returned no data due to content being restricted
 if os.path.exists("data/cookies.txt"):
     ydl_opts["cookiefile"] = "data/cookies.txt"
-else:
-    inf("Couldn't find data/cookies.txt file. Some requests may yield no data.")

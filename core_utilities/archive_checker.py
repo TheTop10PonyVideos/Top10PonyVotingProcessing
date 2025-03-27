@@ -18,6 +18,7 @@ from functions.general import (
     load_top_10_master_archive,
     load_honorable_mentions_archive
 )
+from functions.messages import inf
 
 
 blocked_everywhere_indicator = "EVERYWHERE EXCEPT:"
@@ -520,6 +521,8 @@ class ArchiveStatusChecker(GUI):
 
         self.output_csv_path = output_file_dir
 
+        if "cookiefile" not in ydl_opts:
+            inf("Note: Couldn't find data/cookies.txt file. Some requests may yield no data.")
         self.ydl = YoutubeDL(ydl_opts)
         checker_subject = self.var_checker_subject.get()
 
