@@ -181,4 +181,4 @@ def check_platform(ballots: list[Ballot], videos: dict[str, Video]):
             data = videos[vote.url].data
             platform = data["platform"] if data is not None else None
             if platform is not None and platform != "YouTube":
-                vote.annotations.add(platform)
+                vote.annotations.add(f"NONYT {platform.upper()}")
