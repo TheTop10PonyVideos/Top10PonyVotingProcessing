@@ -258,16 +258,13 @@ def score_by_total_votes(title_rows: list[list[str]]) -> tuple[dict[str, int], f
     """Given a list of title rows, return a dictionary mapping each title to the
     number of times it occurs in all rows. Blank titles are ignored.
 
-    The total number of eligible ballots (ie. non-blank ballots) is also
-    returned, which allows scores to be expressed as a percentage of the total
-    number of ballots."""
+    The total number of ballots is also returned, which allows
+    scores to be expressed as a percentage of them."""
     title_counts = {}
     total_ballots = 0
     for title_row in title_rows:
         non_blank_titles = [t for t in title_row if t.strip() != ""]
-        if len(non_blank_titles) == 0:
-            continue
-        for title in title_row:
+        for title in non_blank_titles:
             if title not in title_counts:
                 title_counts[title] = 0
             title_counts[title] += 1
@@ -302,7 +299,6 @@ def score_weight_by_ballot_size(
     expressed as a percentage."""
     non_blank_ballots = get_non_blank_titles(title_rows)
     full_ballot_size = max([len(row) for row in non_blank_ballots])
-    total_ballots = len(non_blank_ballots)
 
     ballot_weightings = [len(b) / full_ballot_size for b in non_blank_ballots]
     max_score = sum(ballot_weightings)

@@ -446,14 +446,14 @@ class TestFunctionsTop10Calc(TestCase):
             ["Title 1", "", "", "", ""],
             ["", "", "", "", ""],
         ]
-        scores, total_non_blank_ballots = score_by_total_votes(title_rows)
+        scores, max_score = score_by_total_votes(title_rows)
         self.assertEqual(len(scores), 5)
         self.assertEqual(scores["Title 1"], 5)
         self.assertEqual(scores["Title 2"], 4)
         self.assertEqual(scores["Title 3"], 3)
         self.assertEqual(scores["Title 4"], 2)
         self.assertEqual(scores["Title 5"], 1)
-        self.assertEqual(total_non_blank_ballots, 5)
+        self.assertEqual(max_score, 6)
 
     def test_score_weight_by_ballot_size(self):
         # In this test, there are 5 (non-blank) ballots, each with varying
