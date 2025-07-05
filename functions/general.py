@@ -82,6 +82,7 @@ def load_top_10_master_archive(local_first = True) -> list[ArchiveRecord]:
                 "Downloading a copy of the master Top 10 Pony Videos archive..."
             )
             response = requests.get(top_10_archive_csv_url)
+            response.encoding = "utf-8"
             Path(local_top_10_archive_csv_path).write_text(
                 response.text, encoding="utf-8"
             )
@@ -122,6 +123,7 @@ def load_honorable_mentions_archive(local_first = True) -> list[ArchiveRecord]:
                 "Downloading a copy of the honorable mentions archive one..."
             )
             response = requests.get(honorable_mentions_csv_url)
+            response.encoding = "utf-8"
             Path(local_honorable_mentions_csv_path).write_text(
                 response.text, encoding="utf-8"
             )

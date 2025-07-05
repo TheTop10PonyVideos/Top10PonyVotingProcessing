@@ -8,7 +8,7 @@ from tkinter import ttk, filedialog
 from tkinter.font import Font
 from PIL import ImageTk, Image
 from tktooltip import ToolTip
-from functions.general import load_text_data
+from functions.general import load_text_data, load_top_10_master_archive
 from functions.config import load_config_json
 from functions.voting import (
     load_votes_csv,
@@ -411,7 +411,7 @@ class VoteProcessing(GUI):
         check_uploader_blacklist(videos_with_data.values(), uploader_blacklist)
 
         inf("* Checking for videos from whitelisted uploaders...")
-        uploader_whitelist = load_text_data(config["paths"]["uploader_whitelist"])
+        uploader_whitelist = set(row["channel"].removeprefix("[BLACKLIST] ") for row in load_top_10_master_archive(False))
         check_uploader_whitelist(videos_with_data.values(), uploader_whitelist)
 
         inf(f"* Checking video upload dates...")
