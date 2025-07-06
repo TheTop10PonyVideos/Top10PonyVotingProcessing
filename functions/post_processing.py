@@ -289,8 +289,8 @@ def generate_showcase_description(
     }
 
     sharable_links = {
-        "YouTube playlist": "[ADD PLAYLIST LINK HERE]",
         "Spreadsheet": "[ADD SHARABLE SPREADSHEET LINK HERE]",
+        "YouTube playlist": "[ADD PLAYLIST LINK HERE]",
     }
 
     disclosures = "Full disclosures: Any placement of tied videos was determined randomly by computer."
