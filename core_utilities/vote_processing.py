@@ -406,14 +406,6 @@ class VoteProcessing(GUI):
             url: video for url, video in videos.items() if video.data is not None
         }
 
-        inf("* Checking for videos from blacklisted uploaders...")
-        uploader_blacklist = load_text_data(config["paths"]["uploader_blacklist"])
-        check_uploader_blacklist(videos_with_data.values(), uploader_blacklist)
-
-        inf("* Checking for videos from whitelisted uploaders...")
-        uploader_whitelist = set(row["channel"].removeprefix("[BLACKLIST] ") for row in load_top_10_master_archive(False))
-        check_uploader_whitelist(videos_with_data.values(), uploader_whitelist)
-
         inf(f"* Checking video upload dates...")
         check_upload_date(
             videos_with_data.values(), upload_month_date.month, upload_month_date.year
@@ -422,9 +414,19 @@ class VoteProcessing(GUI):
         inf(f"* Checking video durations...")
         check_duration(videos_with_data.values())
 
+        inf("* Checking for videos from blacklisted uploaders...")
+        uploader_blacklist = load_text_data(config["paths"]["uploader_blacklist"])
+        check_uploader_blacklist(videos_with_data.values(), uploader_blacklist)
+
+        inf("* Checking for videos from whitelisted uploaders...")
+        uploader_whitelist = set(row["channel"].removeprefix("[BLACKLIST] ") for row in load_top_10_master_archive(False))
+        check_uploader_whitelist(videos_with_data.values(), uploader_whitelist)
+
         suc(f"Video checks complete.")
 
-        # Run checks on the ballots to annotate problematic votes.
+        # Run checks on the ballots to annotate problematic votes. These checks
+        # should be ordered most important first, to make the more important
+        # annotations appear first in the CSV.
         inf("Performing ballot checks...")
 
         do_check = lambda k: self.ballot_check_vars[k].get() == True
@@ -433,14 +435,6 @@ class VoteProcessing(GUI):
             inf("* Checking for duplicate votes...")
             check_duplicates(ballots)
 
-        if do_check("blacklist"):
-            inf("* Checking for votes for blacklisted videos...")
-            check_blacklisted_ballots(ballots, videos)
-
-        if do_check("whitelist"):
-            inf("* Checking for votes for non-whitelisted videos...")
-            check_non_whitelisted_ballots(ballots, videos)
-
         if do_check("upload_date"):
             inf("* Checking for votes for videos with invalid upload dates...")
             check_ballot_upload_dates(ballots, videos)
@@ -448,6 +442,14 @@ class VoteProcessing(GUI):
         if do_check("duration"):
             inf("* Checking for votes for videos with invalid durations...")
             check_ballot_video_durations(ballots, videos)
+
+        if do_check("blacklist"):
+            inf("* Checking for votes for blacklisted videos...")
+            check_blacklisted_ballots(ballots, videos)
+
+        if do_check("whitelist"):
+            inf("* Checking for votes for non-whitelisted videos...")
+            check_non_whitelisted_ballots(ballots, videos)
 
         if do_check("platform"):
             inf("* Checking for votes for non-youtube videos")
