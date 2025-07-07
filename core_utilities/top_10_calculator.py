@@ -16,6 +16,7 @@ from functions.top_10_calc import (
     calc_ranked_records,
     score_by_total_votes,
     score_weight_by_ballot_size,
+    score_half_weight_by_ballot_size,
 )
 from functions.date import (
     parse_votes_csv_timestamp,
@@ -50,6 +51,13 @@ class Top10Calculator(GUI):
                 "var": None,
                 "score_func": score_weight_by_ballot_size,
                 "file_suffix": "-weighted-by-ballot-size",
+            },
+            "half_weight_by_ballot_size": {
+                "label": "Half-weight by ballot size",
+                "tooltip": "Ballots with 5 or more votes have a weighting of 1, otherwise the weighting is s/5 where s is the ballot size.",
+                "var": None,
+                "score_func": score_half_weight_by_ballot_size,
+                "file_suffix": "-half-weighted-by-ballot-size",
             },
         }
 
