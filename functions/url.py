@@ -25,9 +25,7 @@ def normalize_youtube_url(url: str):
 
     # Use urllib to break the URL into its relevant components.
     url_components = urlparse(url)
-    netloc = url_components.netloc
     path = url_components.path
-    query_params = parse_qs(url_components.query)
 
     # Raise an exception if this isn't a YouTube URL.
     if not is_youtube_url(url):
@@ -45,20 +43,24 @@ def normalize_youtube_url(url: str):
     # Shortened URL:            https://youtu.be/{VIDEO ID}
 
     video_id = None
+    
+    if normal_match := re.match(r"^/watch/?\?(?:.*&)?v=([a-zA-Z0-9_-]+)", f"{path}?{url_components.query}"):
+        # Regular YouTube URL: eg. https://www.youtube.com/watch?v=9RT4lfvVFhA
+        video_id = normal_match.group(1)
+    elif shorts_match := re.match("/shorts/([a-zA-Z0-9_-]+)", path):
+        # Shorts URL: eg. https://www.youtube.com/shorts/5uFeg2BOPNo
+        video_id = shorts_match.group(1)
+    elif livestream_match := re.match("^/live/([a-zA-Z0-9_-]+)", path):
+        # Livestream URL: eg. https://www.youtube.com/live/Q8k4UTf8jiI
+        video_id = livestream_match.group(1)
+    elif shortened_match := re.match("^/([a-zA-Z0-9_-]+)", path):
+        # Shortened YouTube URL: eg. https://youtu.be/9RT4lfvVFhA
+        video_id = shortened_match.group(1)
 
-    # Regular YouTube URL: eg. https://www.youtube.com/watch?v=9RT4lfvVFhA
-    if path == "/watch":
-        video_id = query_params["v"][0]
-    else:
-        livestream_match = re.match("^/live/([a-zA-Z0-9_-]+)", path)
-        shortened_match = re.match("^/([a-zA-Z0-9_-]+)", path)
-
-        if livestream_match:
-            # Livestream URL: eg. https://www.youtube.com/live/Q8k4UTf8jiI
-            video_id = livestream_match.group(1)
-        elif shortened_match:
-            # Shortened YouTube URL: eg. https://youtu.be/9RT4lfvVFhA
-            video_id = shortened_match.group(1)
+    if video_id is None:
+        raise ValueError(f"Cannot normalize URL {url}; malformed link")
+    if len(video_id) != 11:
+        raise ValueError(f"Cannot normalize URL {url}; video id is not 11 characters")
 
     # Using the video id, construct a normalized version of the YouTube URL.
     normalized_url = f"https://www.youtube.com/watch?v={video_id}"

@@ -2,8 +2,6 @@
 
 import csv
 from pathlib import Path
-from datetime import datetime
-from pytz import timezone
 from functions.date import parse_votes_csv_timestamp, format_votes_csv_timestamp
 from functions.url import is_youtube_url, normalize_youtube_url
 from classes.voting import Ballot, Vote, Video
@@ -36,20 +34,20 @@ def normalize_voting_data(rows: list[list[str]]) -> list[list[str]]:
 
     The data is assumed to be from the "unshifted" version of the voting data
     (ie. the voting CSV as obtained from Google Forms)."""
-    normalized_rows = [[cell for cell in row] for row in rows]
+    normalized_rows = [[cell.strip() for cell in row] for row in rows]
 
-    for row_idx, row in enumerate(normalized_rows):
-        # Skip header row
-        if row_idx == 0:
-            continue
-
-        for cell_idx, cell in enumerate(row):
-            # Skip "Timestamp" column
-            if cell_idx == 0:
+    # Skipping header row
+    for row_idx, row in enumerate(normalized_rows[1:], 1):
+        # Skipping "Timestamp" column
+        for cell_idx, cell in enumerate(row[1:], 1):
+            if not cell:
                 continue
-
+            if "://" not in cell:
+                cell = f"https://{cell}"
             if is_youtube_url(cell):
-                normalized_rows[row_idx][cell_idx] = normalize_youtube_url(cell)
+                cell = normalize_youtube_url(cell)
+
+            normalized_rows[row_idx][cell_idx] = cell
 
     return normalized_rows
 

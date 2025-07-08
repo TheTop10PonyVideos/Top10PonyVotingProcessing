@@ -1,6 +1,6 @@
 """Top 10 Pony Video Squeezer 3000 (vote processing) application."""
 
-import csv, os, sys
+import csv, os, sys, traceback
 from datetime import datetime
 from pathlib import Path
 import tkinter as tk
@@ -286,7 +286,12 @@ class VoteProcessing(GUI):
         inf(f" * Loaded {len(voting_data)} data rows.")
 
         inf(" * Performing URL normalization...")
-        normalized_voting_data = normalize_voting_data(voting_data)
+        try:
+            normalized_voting_data = normalize_voting_data(voting_data)
+        except Exception as e:
+            traceback.print_exc()
+            tk.messagebox.showinfo("Error", f"{e}\nMore details in console")
+            return
 
         inf(" * Creating ballots...")
         ballots = process_voting_data(normalized_voting_data)
@@ -354,7 +359,12 @@ class VoteProcessing(GUI):
         # have no data if their fetch failed; however, they're still included in the
         # results as the votes still reference them.
         inf("Fetching data for all videos...")
-        videos = fetch_video_data_for_ballots(ballots, fetcher)
+        try:
+            videos = fetch_video_data_for_ballots(ballots, fetcher)
+        except Exception as e:
+            traceback.print_exc()
+            tk.messagebox.showinfo("Error", f"{e}\nMore details in console")
+            return
 
         # Print out a summary of the fetch results (number of successes, failures,
         # etc.)

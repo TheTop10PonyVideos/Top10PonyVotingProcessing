@@ -46,7 +46,7 @@ class Vote:
 
     def __init__(self, url: str):
         super().__init__()
-        self.url = url if url.find("://") != -1 else f"https://{url}"
+        self.url = url
         self.annotations = Annotations()
 
 
