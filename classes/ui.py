@@ -1,4 +1,6 @@
-"""User interface classes."""
+"""User interface classes.
+
+TODO: The CSVEditor is deprecated and this file is no longer in use. Can be removed."""
 
 import csv
 import tkinter as tk

@@ -112,17 +112,17 @@ class VoteProcessing(GUI):
 
         # Create labels and tooltips for options frames
         ballot_check_layout = {
-            "duplicate": {
-                "label": "Duplicate Check",
-                "tooltip": "Annotate ballots that contain multiple votes for the same video.",
+            "uploader_diversity": {
+                "label": "Uploader Diversity Check",
+                "tooltip": "Annotate ballots that do not contain videos from enough different uploaders.",
             },
             "blacklist": {
                 "label": "Blacklist Check",
                 "tooltip": "Annotate ballots that contain votes for videos from blacklisted uploaders.",
             },
-            "whitelist": {
-                "label": "Whitelist Check",
-                "tooltip": "Annotate ballots that contain votes for videos from non-whitelisted uploaders.",
+            "duplicate": {
+                "label": "Duplicate Check",
+                "tooltip": "Annotate ballots that contain multiple votes for the same video.",
             },
             "upload_date": {
                 "label": "Upload Date Check",
@@ -132,21 +132,21 @@ class VoteProcessing(GUI):
                 "label": "Duration Check",
                 "tooltip": "Annotate ballots that contain votes for videos that appear to be too short.",
             },
-            "platform": {
-                "label": "Platform Check",
-                "tooltip": "Annotate ballots that contain votes for non-youtube videos"
+            "uploader_occurrence": {
+                "label": "Uploader Occurrence Check",
+                "tooltip": "Annotate ballots that contain too many videos from the same uploader.",
             },
             "fuzzy": {
                 "label": "Fuzzy Check",
                 "tooltip": "Annotate ballots that contain votes with similar titles, uploaders, or durations.",
             },
-            "uploader_occurrence": {
-                "label": "Uploader Occurrence Check",
-                "tooltip": "Annotate ballots that contain too many videos from the same uploader.",
+            "whitelist": {
+                "label": "Whitelist Check",
+                "tooltip": "Annotate ballots that contain votes for videos from non-whitelisted uploaders.",
             },
-            "uploader_diversity": {
-                "label": "Uploader Diversity Check",
-                "tooltip": "Annotate ballots that do not contain videos from enough different uploaders.",
+            "platform": {
+                "label": "Platform Check",
+                "tooltip": "Annotate ballots that contain votes for non-youtube videos"
             },
         }
 
@@ -416,14 +416,6 @@ class VoteProcessing(GUI):
             url: video for url, video in videos.items() if video.data is not None
         }
 
-        inf("* Checking for videos from blacklisted uploaders...")
-        uploader_blacklist = load_text_data(config["paths"]["uploader_blacklist"])
-        check_uploader_blacklist(videos_with_data.values(), uploader_blacklist)
-
-        inf("* Checking for videos from whitelisted uploaders...")
-        uploader_whitelist = set(row["channel"].removeprefix("[BLACKLIST] ") for row in load_top_10_master_archive(False))
-        check_uploader_whitelist(videos_with_data.values(), uploader_whitelist)
-
         inf(f"* Checking video upload dates...")
         check_upload_date(
             videos_with_data.values(), upload_month_date.month, upload_month_date.year
@@ -432,24 +424,34 @@ class VoteProcessing(GUI):
         inf(f"* Checking video durations...")
         check_duration(videos_with_data.values())
 
+        inf("* Checking for videos from blacklisted uploaders...")
+        uploader_blacklist = load_text_data(config["paths"]["uploader_blacklist"])
+        check_uploader_blacklist(videos_with_data.values(), uploader_blacklist)
+
+        inf("* Checking for videos from whitelisted uploaders...")
+        uploader_whitelist = set(row["channel"].removeprefix("[BLACKLIST] ") for row in load_top_10_master_archive(False))
+        check_uploader_whitelist(videos_with_data.values(), uploader_whitelist)
+
         suc(f"Video checks complete.")
 
-        # Run checks on the ballots to annotate problematic votes.
+        # Run checks on the ballots to annotate problematic votes. These checks
+        # should be ordered most important first, to make the more important
+        # annotations appear first in the CSV.
         inf("Performing ballot checks...")
 
         do_check = lambda k: self.ballot_check_vars[k].get() == True
 
-        if do_check("duplicate"):
-            inf("* Checking for duplicate votes...")
-            check_duplicates(ballots)
+        if do_check("uploader_diversity"):
+            inf("* Checking for ballot uploader diversity...")
+            check_ballot_uploader_diversity(ballots, videos)
 
         if do_check("blacklist"):
             inf("* Checking for votes for blacklisted videos...")
             check_blacklisted_ballots(ballots, videos)
 
-        if do_check("whitelist"):
-            inf("* Checking for votes for non-whitelisted videos...")
-            check_non_whitelisted_ballots(ballots, videos)
+        if do_check("duplicate"):
+            inf("* Checking for duplicate votes...")
+            check_duplicates(ballots)
 
         if do_check("upload_date"):
             inf("* Checking for votes for videos with invalid upload dates...")
@@ -459,22 +461,22 @@ class VoteProcessing(GUI):
             inf("* Checking for votes for videos with invalid durations...")
             check_ballot_video_durations(ballots, videos)
 
-        if do_check("platform"):
-            inf("* Checking for votes for non-youtube videos")
-            check_platform(ballots, videos)
+        if do_check("uploader_occurrence"):
+            inf("* Checking for ballot uploader occurrences...")
+            check_ballot_uploader_occurrences(ballots, videos)
 
         if do_check("fuzzy"):
             inf("* Performing fuzzy matching checks...")
             fuzzy_similarity_threshold = 80
             check_fuzzy(ballots, videos, fuzzy_similarity_threshold)
 
-        if do_check("uploader_occurrence"):
-            inf("* Checking for ballot uploader occurrences...")
-            check_ballot_uploader_occurrences(ballots, videos)
+        if do_check("whitelist"):
+            inf("* Checking for votes for non-whitelisted videos...")
+            check_non_whitelisted_ballots(ballots, videos)
 
-        if do_check("uploader_diversity"):
-            inf("* Checking for ballot uploader diversity...")
-            check_ballot_uploader_diversity(ballots, videos)
+        if do_check("platform"):
+            inf("* Checking for votes for non-YouTube videos")
+            check_platform(ballots, videos)
 
         suc(f"Ballot checks complete.")
 
