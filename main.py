@@ -1,3 +1,7 @@
+from functions.update import check_install_dependencies
+
+check_install_dependencies()
+
 import tkinter as tk
 
 from PIL import Image, ImageTk, ImageSequence
