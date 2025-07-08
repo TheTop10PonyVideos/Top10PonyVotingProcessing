@@ -260,7 +260,7 @@ class TestFunctionsVideoRules(TestCase):
         self.assertTrue(videos[0].annotations.has("VIDEO TOO SHORT"))
         self.assertTrue(videos[1].annotations.has("VIDEO TOO SHORT"))
         self.assertTrue(videos[2].annotations.has("VIDEO TOO SHORT"))
-        self.assertTrue(videos[3].annotations.has("VIDEO TOO SHORT"))
+        self.assertTrue(videos[3].annotations.has("VIDEO MAYBE TOO SHORT"))
         self.assertTrue(videos[4].annotations.has("VIDEO MAYBE TOO SHORT"))
         self.assertTrue(videos[5].annotations.has("VIDEO MAYBE TOO SHORT"))
         self.assertTrue(videos[6].annotations.has("VIDEO MAYBE TOO SHORT"))
