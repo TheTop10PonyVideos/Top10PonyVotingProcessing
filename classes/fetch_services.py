@@ -2,7 +2,7 @@
 different site), create a class that implements the `can_fetch`, `request`,
 and `parse` methods."""
 
-import re, pytz, hashlib
+import re, pytz, hashlib, requests
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 from googleapiclient.discovery import build
@@ -110,6 +110,64 @@ class YouTubeFetchService:
             "upload_date": upload_date,
             "duration": video_data.get("duration"),
             "platform": "YouTube",
+        }
+
+
+class DerpibooruFetchService:
+    """Fetch service for Derpibooru video data."""
+
+    def can_fetch(self, url: str) -> bool:
+        return "derpibooru.org" in url
+
+    def request(self, url: str) -> VideoData:
+        """Query the Derpibooru API for the given URL."""
+        id_match = re.search("derpibooru.org/images/([0-9]+)", url)
+
+        if not id_match:
+            raise ValueError(
+                f'Could not request URL "{url}" via the Derpibooru Data API; unable to determine video id from URL'
+            )
+        
+        post_id = id_match.group(1)
+        response = None
+
+        try:
+            response = requests.get(f"https://derpibooru.org/api/v1/json/images/{post_id}")
+        except requests.exceptions.ContentDecodingError as e:
+            raise FetchRequestError(
+                f'Could not request URL "{url}" via the Derpibooru API; invalid post id'
+            ) from e
+        except Exception as e:
+            raise FetchRequestError(
+                f'Could not request URL "{url}" via the Derpibooru API'
+            ) from e
+        
+        if response.status_code != 200:
+            raise FetchRequestError(
+                f'Could not request URL "{url}" via the Derpibooru API; received status code {response.status_code}'
+            )
+
+        response = response.json()["image"]
+
+        return {
+            "title": f"Derpibooru post #{post_id}",
+            "uploader": response.get("uploader"),
+            "upload_date": response.get("created_at"),
+            "duration": response.get("duration"),
+            "platform": "Derpibooru",
+        }
+
+    def parse(self, video_data) -> VideoData:
+        """Parse video data from a Derpibooru API response."""
+
+        upload_date = datetime.fromisoformat(video_data.get("upload_date"))
+
+        return {
+            "title": video_data.get("title"),
+            "uploader": video_data.get("uploader"),
+            "upload_date": upload_date,
+            "duration": video_data.get("duration"),
+            "platform": "Derpibooru",
         }
 
 
