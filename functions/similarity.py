@@ -105,7 +105,7 @@ def detect_cross_platform_uploads(videos: dict[str, Video]) -> dict[str, list[st
     # purpose of cross-platform comparisons, it's easier if we eliminate all
     # these variants and just have a single canonical URL for a given site.
     videos_with_data = {
-        normalize_youtube_url(url) if is_youtube_url(url) else url: video
+        normalize_youtube_url(url)[0] if is_youtube_url(url) else url: video
         for url, video in videos_with_data.items()
     }
 
