@@ -4,11 +4,11 @@ and `parse` methods."""
 
 import re, pytz, hashlib
 from datetime import datetime
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse
 from googleapiclient.discovery import build
 from yt_dlp import YoutubeDL
 from functions.date import convert_iso8601_duration_to_seconds
-from functions.url import is_youtube_url
+from functions.url import normalize_youtube_url
 from functions.messages import err
 from data.globals import ydl_opts
 from classes.exceptions import FetchRequestError, FetchParseError, VideoUnavailableError
@@ -28,28 +28,10 @@ class YouTubeFetchService:
         """Given a YouTube video URL, extract the video id from it, or None if
         no video id can be extracted."""
 
-        if not is_youtube_url(url):
+        try:
+            _, video_id = normalize_youtube_url(url)
+        except:
             return None
-
-        video_id = None
-
-        url_components = urlparse(url)
-        path = url_components.path
-        query_params = parse_qs(url_components.query)
-
-        # Regular YouTube URL: eg. https://www.youtube.com/watch?v=9RT4lfvVFhA
-        if path == "/watch":
-            video_id = query_params["v"][0]
-        else:
-            livestream_match = re.match("^/live/([a-zA-Z0-9_-]+)", path)
-            shortened_match = re.match("^/([a-zA-Z0-9_-]+)", path)
-
-            if livestream_match:
-                # Livestream URL: eg. https://www.youtube.com/live/Q8k4UTf8jiI
-                video_id = livestream_match.group(1)
-            elif shortened_match:
-                # Shortened YouTube URL: eg. https://youtu.be/9RT4lfvVFhA
-                video_id = shortened_match.group(1)
 
         return video_id
 

@@ -18,24 +18,29 @@ class TestFunctionsUrl(TestCase):
 
         self.assertEqual(
             normalized_url,
-            normalize_youtube_url("https://www.youtube.com/watch?v=Q8k4UTf8jiI"),
+            normalize_youtube_url("https://www.youtube.com/watch?v=Q8k4UTf8jiI")[0],
         )
         self.assertEqual(
             normalized_url,
-            normalize_youtube_url("https://www.youtube.com/live/Q8k4UTf8jiI"),
+            normalize_youtube_url("https://www.youtube.com/live/Q8k4UTf8jiI")[0],
         )
         self.assertEqual(
-            normalized_url, normalize_youtube_url("https://youtu.be/Q8k4UTf8jiI")
+            normalized_url, normalize_youtube_url("https://youtu.be/Q8k4UTf8jiI")[0]
         )
         self.assertEqual(
             normalized_url,
             normalize_youtube_url(
                 "https://www.youtube.com/watch/?app=desktop&v=Q8k4UTf8jiI"
-            ),
+            )[0],
         )
         self.assertEqual(
             normalized_url,
-            normalize_youtube_url("https://www.youtube.com/shorts/Q8k4UTf8jiI/")
+            normalize_youtube_url("https://www.youtube.com/shorts/Q8k4UTf8jiI/")[0]
+        )
+
+        self.assertEqual(
+            "https://www.youtube.com/watch?v=watch000000",
+            normalize_youtube_url("https://youtu.be/watch000000?v=Q8k4UTf8jiI")[0]
         )
 
         # Malformed links should raise errors
