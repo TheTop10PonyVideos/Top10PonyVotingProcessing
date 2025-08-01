@@ -194,7 +194,8 @@ class Top10Calculator(GUI):
     def handle_calc(self):
         """Handler for the "Calculate Top 10" button."""
         youtube_api_key = GUI.get_api_key()
-        if not youtube_api_key: return
+        if not youtube_api_key:
+            return
 
         input_csv_path = self.input_file_var.get()
         urls_csv_path = self.shifted_file_var.get()
