@@ -7,6 +7,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, filedialog
 from tkinter.font import Font
+from tktooltip import ToolTip
 from PIL import ImageTk, Image
 from functions.top_10_calc import (
     process_shifted_voting_data,
@@ -16,6 +17,7 @@ from functions.top_10_calc import (
     calc_ranked_records,
     score_by_total_votes,
     score_weight_by_ballot_size,
+    score_half_weight_by_ballot_size,
 )
 from functions.date import (
     parse_votes_csv_timestamp,
@@ -46,10 +48,17 @@ class Top10Calculator(GUI):
             },
             "weight_by_ballot_size": {
                 "label": "Weight by ballot size",
-                "tooltip": "Votes are weighted in proportion to the size of their ballot. This gives more voting power to from people who voted on more videos.",
+                "tooltip": "Votes are weighted in proportion to the size of their ballot. This gives more voting power to people who voted for more videos.",
                 "var": None,
                 "score_func": score_weight_by_ballot_size,
                 "file_suffix": "-weighted-by-ballot-size",
+            },
+            "half_weight_by_ballot_size": {
+                "label": "Half-weight by ballot size",
+                "tooltip": "Ballots with 5 or more votes have a weighting of 1, otherwise the weighting is s/5 where s is the ballot size. This gives less voting power to people who voted for fewer than 5 videos.",
+                "var": None,
+                "score_func": score_half_weight_by_ballot_size,
+                "file_suffix": "-half-weighted-by-ballot-size",
             },
         }
 
@@ -141,6 +150,19 @@ class Top10Calculator(GUI):
 
         rank_methods_frame.grid(row=3, column=0, pady=20)
 
+        # Add explanatory tooltips for ranking methods
+        ttip_delay = 0.5
+        ttip_follow = False
+
+        for key, algo in self.rank_algorithms.items():
+            if "tooltip" in algo:
+                ToolTip(
+                    algo["checkbox"],
+                    msg=algo["tooltip"],
+                    delay=ttip_delay,
+                    follow=ttip_follow,
+                )
+
         # Create buttons bar
         buttons_frame = tk.Frame(main_frame)
         buttons_frame.grid(row=4, column=0)
@@ -172,7 +194,8 @@ class Top10Calculator(GUI):
     def handle_calc(self):
         """Handler for the "Calculate Top 10" button."""
         youtube_api_key = GUI.get_api_key()
-        if not youtube_api_key: return
+        if not youtube_api_key:
+            return
 
         input_csv_path = self.input_file_var.get()
         urls_csv_path = self.shifted_file_var.get()

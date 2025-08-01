@@ -7,6 +7,7 @@ from functions.top_10_calc import (
     check_blank_titles,
     score_by_total_votes,
     score_weight_by_ballot_size,
+    score_half_weight_by_ballot_size,
     get_history,
 )
 
@@ -458,11 +459,11 @@ class TestFunctionsTop10Calc(TestCase):
     def test_score_weight_by_ballot_size(self):
         # In this test, there are 5 (non-blank) ballots, each with varying
         # numbers of titles. Ballot 0 has full voting power as it has a full
-        # complement of votes. Ballot 1 has 80^ voting power as it has only 4/5
+        # complement of votes. Ballot 1 has 80% voting power as it has only 4/5
         # votes. Ballots 2, 3, 4 have 60%, 40%, and 20% voting power
         # respectively. Ballot 5 is ignored as it's completely blank.
         #
-        # Under this system, the maximum score a title can attain is yhe sum of
+        # Under this system, the maximum score a title can attain is the sum of
         # all the ballot weightings:
         #
         #     1 + 0.8 + 0.6 + 0.4 + 0.2 = 3.0
@@ -482,6 +483,37 @@ class TestFunctionsTop10Calc(TestCase):
         self.assertEqual(scores["Title 3"], 2.4)
         self.assertEqual(scores["Title 4"], 1.8)
         self.assertEqual(scores["Title 5"], 1)
+        self.assertEqual(max_score, 3.0)
+
+    def test_score_half_weight_by_ballot_size(self):
+        # In this test, there are 5 (non-blank) ballots, each with varying
+        # numbers of titles. Ballots 0 and 1 have full voting power as they have
+        # 5 or more votes. Ballots 2 and 3 have 20% and 80% voting power as they
+        #  only have 1 and 4 votes respectively (and half-weighting applies to 
+        # ballots with fewer than 5 votes). Ballot 5 is ignored as it's
+        # completely blank.
+        #
+        # The maximum attainable score is the sum of all the ballot weightings:
+        #
+        #     1 + 1 + 0.8 + 0.2 = 3.0
+        title_rows = [
+            ["T1", "T2", "T3", "T4", "T5"],
+            ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"],
+            ["T1", "", "", "", ""],
+            ["T1", "T2", "T3", "T6", ""],
+            ["", "", "", "", ""],
+        ]
+
+        scores, max_score = score_half_weight_by_ballot_size(title_rows)
+        self.assertEqual(len(scores), 8)
+        self.assertEqual(scores["T1"], 3)
+        self.assertEqual(scores["T2"], 2.8)
+        self.assertEqual(scores["T3"], 2.8)
+        self.assertEqual(scores["T4"], 2)
+        self.assertEqual(scores["T5"], 2)
+        self.assertEqual(scores["T6"], 1.8)
+        self.assertEqual(scores["T7"], 1)
+        self.assertEqual(scores["T8"], 1)
         self.assertEqual(max_score, 3.0)
 
     def test_get_history(self):

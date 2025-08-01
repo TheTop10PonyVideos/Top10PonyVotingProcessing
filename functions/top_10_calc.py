@@ -258,6 +258,9 @@ def score_by_total_votes(title_rows: list[list[str]]) -> tuple[dict[str, int], f
     """Given a list of title rows, return a dictionary mapping each title to the
     number of times it occurs in all rows. Blank titles are ignored.
 
+    For example, if the title "Example" appears in 6 of the given rows, then
+    "Example" will receive a score of 6.
+
     The total number of eligible ballots (ie. non-blank ballots) is also
     returned, which allows scores to be expressed as a percentage of the total
     number of ballots."""
@@ -302,9 +305,40 @@ def score_weight_by_ballot_size(
     expressed as a percentage."""
     non_blank_ballots = get_non_blank_titles(title_rows)
     full_ballot_size = max([len(row) for row in non_blank_ballots])
-    total_ballots = len(non_blank_ballots)
 
     ballot_weightings = [len(b) / full_ballot_size for b in non_blank_ballots]
+    max_score = sum(ballot_weightings)
+
+    scores = {}
+    for i, ballot in enumerate(non_blank_ballots):
+        for title in ballot:
+            if title not in scores:
+                scores[title] = 0
+            scores[title] += ballot_weightings[i]
+
+    return scores, max_score
+
+
+def score_half_weight_by_ballot_size(
+    title_rows: list[list[str]],
+) -> tuple[dict[str, int], float]:
+    """Given a list of title rows, return a dictionary mapping each title to a
+    score. The score is calculated as follows:
+
+    * Each ballot is given a weighting between 0 and 1. If the ballot contains
+      5 or more titles, the weighting is 1. Otherwise, it is n/5, where n is
+      the number of titles in the ballot.
+
+      For example, if the ballot contains 7 titles, it has a weighting of 1.
+      If the ballot contains 3 titles, it has a weighting of 3 / 5 = 0.6.
+    * The votes for each title are counted up, and each vote is weighted
+      according to the ballot's weighting.
+
+    The theoretical maximum score is also returned, to allow scores to be
+    expressed as a percentage."""
+    non_blank_ballots = get_non_blank_titles(title_rows)
+
+    ballot_weightings = [1 if len(b) >= 5 else len(b) / 5 for b in non_blank_ballots]
     max_score = sum(ballot_weightings)
 
     scores = {}
