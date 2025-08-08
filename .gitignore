@@ -22,3 +22,12 @@ data/honorable_mentions_archive.csv
 data/cookies.txt
 outputs/*.csv
 outputs/*.txt
+build
+dist
+
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/

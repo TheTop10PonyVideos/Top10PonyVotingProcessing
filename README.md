@@ -1,6 +1,26 @@
 # Top 10 Pony Voting Processing
 Python GUI application to process the monthly voting for the Top 10 Pony Videos showcase.
 
+### Prerequisites
+- Python 3.13 or higher
+- [Poetry](https://python-poetry.org/docs/#installation) for dependency management
+
+### Development Setup
+1. Clone the repository
+2. Run the setup script: `python setup_dev.py`
+3. Or manually install dependencies: `poetry install`
+
+### Running the Application
+- Main application: `poetry run python main.py`
+- Run tests: `poetry run python test.py`
+- Activate virtual environment: `poetry shell`
+
+### Development Commands
+- Add a dependency: `poetry add <package>`
+- Add a dev dependency: `poetry add --group dev <package>`
+- Update dependencies: `poetry update`
+- Format code: `poetry run black .`
+
 ## Project structure
 * `classes`: Directory containing various custom classes used by the project.
 * `config`: Directory containing configuration files for the application.
@@ -11,8 +31,13 @@ Python GUI application to process the monthly voting for the Top 10 Pony Videos 
 * `modules`: Directory containing modules used in previous iterations of the project. Now largely obsolete.
 * `outputs`: Directory to which the application typically writes out data after processing.
 * `tests`: Contains unit tests for the project.
-* `test.py`: Runs unit tests for the project. Use `python test.py` to run.
-* `main.py`: Entry point to the application. Use `python main.py` to run.
+* `test.py`: Runs unit tests for the project. Use `poetry run python test.py` to run.
+* `main.py`: Entry point to the application. Use `poetry run python main.py` to run.
+* `setup_dev.py`: Development environment setup script.
+* `build_exe.py`: Automated installer script that handles complete setup.
+* `install_and_run.bat`: Windows batch file for one-click installation.
+* `install_and_run.ps1`: PowerShell script for installation.
+* `create_installer_exe.py`: Script to build standalone executable installer.
 
 ## Guidelines
 - Python and VSC on Windows are the main tools we will be using. Feel free to use any other IDEs that suit you better but be aware that you will not get support from us if you do so.  
