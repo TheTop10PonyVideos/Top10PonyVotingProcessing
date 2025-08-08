@@ -19,9 +19,9 @@ echo.
 pause
 
 REM Try to run with python3 first, then python
-python3 build_exe.py 2>nul
+python3 build_tools\build_exe.py 2>nul
 if %errorlevel% neq 0 (
-    python build_exe.py 2>nul
+    python build_tools\build_exe.py 2>nul
     if %errorlevel% neq 0 (
         echo.
         echo ERROR: Python is not installed or not in PATH
