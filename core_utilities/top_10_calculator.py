@@ -266,8 +266,6 @@ class Top10Calculator(GUI):
         title_rows = process_shifted_voting_data(shifted_title_rows)
         url_rows = process_shifted_voting_data(shifted_url_rows)
 
-        title_rows = pad_csv_rows(title_rows, len(url_rows))
-
         # During the voting process, Littleshy will delete rows from the
         # title_rows CSV if those ballots are found to be invalid. This is
         # usually fine as empty rows are represented as lists of empty strings
@@ -279,7 +277,7 @@ class Top10Calculator(GUI):
         # To fix this, pad the title_rows CSV with empty rows if it's shorter
         # than the url_rows CSV.
 
-        pad_csv_rows(title_rows, len(url_rows))
+        title_rows = pad_csv_rows(title_rows, len(url_rows))
         # Create a dictionary which maps video titles to URLs for each title in the
         # CSV.
         titles_to_urls = get_titles_to_urls_mapping(title_rows, url_rows)
