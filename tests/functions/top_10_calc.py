@@ -163,6 +163,47 @@ class TestFunctionsTop10Calc(TestCase):
         self.assertEqual(titles_to_urls["Title D"], "https://example.com/Title_D")
         self.assertEqual(titles_to_urls["Title E"], "https://example.com/Title_E")
          
+        # Check that when some title rows are blank but there are still URLs
+        # that map to those titles, the correct title-to-url mapping is still
+        # found. In this example, the second row is empty, but there are 3
+        # URLs that the blank entries map to.
+        title_rows = [
+            ["Title A", "Title B", "Title C"],
+            ["", "", ""],
+            ["Title C", "Title D", "Title E"],
+        ]
+
+        url_rows = [
+            [
+                "https://example.com/Title_A",
+                "https://example.com/Title_B",
+                "https://example.com/Title_C",
+            ],
+            [
+                "https://example.com/Title_B",
+                "https://example.com/Title_C",
+                "https://example.com/Title_D",
+            ],
+            [
+                "https://example.com/Title_C",
+                "https://example.com/Title_D",
+                "https://example.com/Title_E",
+            ],
+        ]
+
+        titles_to_urls = get_titles_to_urls_mapping(title_rows, url_rows)
+
+        self.assertEqual(titles_to_urls["Title A"], "https://example.com/Title_A")
+        self.assertEqual(titles_to_urls["Title B"], "https://example.com/Title_B")
+        self.assertEqual(titles_to_urls["Title C"], "https://example.com/Title_C")
+        self.assertEqual(titles_to_urls["Title D"], "https://example.com/Title_D")
+        self.assertEqual(titles_to_urls["Title E"], "https://example.com/Title_E")
+
+        # Since there's a row containing three "empty" titles, there are
+        # multiple possible mappings for that title. We expect that it will use
+        # the last one encountered.
+        self.assertEqual(titles_to_urls[""], "https://example.com/Title_D")
+         
     def test_create_top10_csv_data(self):
         title_rows = [
             ["Title A", "Title B", "Title C", "Title D", "Title E"],
