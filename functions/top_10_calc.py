@@ -114,8 +114,8 @@ def create_top10_csv_data(
     for years_ago in anniversaries:
         archive_records = history.get(years_ago, [])
 
-        # Sort the archive records by rank, so that they match the ordering in the
-        # calculated top 10 spreadsheet.
+        # Sort the archive records by rank, so that they match the ordering in
+        # the calculated top 10 spreadsheet.
         archive_records = sorted(archive_records, key=lambda r: r["rank"])
         anni_records[years_ago] = []
         for archive_record in archive_records:

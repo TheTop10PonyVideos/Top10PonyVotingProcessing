@@ -68,6 +68,7 @@ class TestFunctionsPostProcessing(TestCase):
         self.assertEqual("https://example.com/3", records[0]["alternate link"])
         self.assertEqual("", records[0]["found"])
         self.assertEqual("", records[0]["notes"])
+        self.assertEqual("80.0000%", records[0]["vote percentage"])
 
         self.assertEqual(2024, records[1]["year"])
         self.assertEqual(4, records[1]["month"])
@@ -80,6 +81,7 @@ class TestFunctionsPostProcessing(TestCase):
         self.assertEqual("https://example.com/2", records[1]["alternate link"])
         self.assertEqual("", records[1]["found"])
         self.assertEqual("", records[1]["notes"])
+        self.assertEqual("80.0000%", records[1]["vote percentage"])
 
         self.assertEqual(2024, records[2]["year"])
         self.assertEqual(4, records[2]["month"])
@@ -92,6 +94,7 @@ class TestFunctionsPostProcessing(TestCase):
         self.assertEqual("https://example.com/1", records[2]["alternate link"])
         self.assertEqual("", records[2]["found"])
         self.assertEqual("", records[2]["notes"])
+        self.assertEqual("90.0000%", records[2]["vote percentage"])
 
     def test_generate_hm_archive_records(self):
         hm_records = [

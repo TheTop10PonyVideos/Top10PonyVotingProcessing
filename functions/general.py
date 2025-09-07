@@ -53,6 +53,43 @@ def sample_item_without_replacement(items: list):
     return sampled_item
 
 
+def pad_csv_rows(rows: list[list], num_rows: int) -> list[list]:
+    """Given a list of lists representing the rows of a CSV, return the same
+    structure but padded with empty rows to the given amount. For example,
+    padding a 5-row CSV to 10 rows will append 5 empty rows. An empty row is a
+    list of zero-length strings.
+
+    It is expected that every row will have the same length, as this is usually
+    the case with CSVs produced by a spreadsheet program. If this is not the
+    case, an error is thrown.
+
+    If the given list of rows is already greater than the desired pad length, it
+    is returned unchanged."""
+    num_rows_diff = len(rows) - num_rows
+
+    # No padding required
+    if len(rows) >= num_rows:
+        return rows
+
+    # Raise error if all rows not same length
+    row_length = len(rows[0])
+    for i, row in enumerate(rows):
+        if len(row) != row_length:
+            raise Exception(f"Cannot pad rows - all rows must be the same length. The first row has length {row_length}, but row {i} has length {len(rows[0])}")
+
+    # Pad with empty rows 
+    padded_rows = []
+    for i in range(num_rows):
+        if i < len(rows):
+            padded_rows.append(rows[i])
+            continue
+
+        empty_row = ["" for j in range(row_length)]
+        padded_rows.append(empty_row)
+
+    return padded_rows
+ 
+
 def load_top_10_master_archive(local_first = True) -> list[ArchiveRecord]:
     """Load a copy of the Top 10 Pony Videos List spreadsheet. Load a local copy if local_first is True,
     or if there's no such copy on the filesystem, export one from Google Sheets and
