@@ -24,7 +24,7 @@ from functions.date import (
     get_preceding_month_date,
     get_most_common_month_year,
 )
-from functions.general import load_top_10_master_archive
+from functions.general import pad_csv_rows, load_top_10_master_archive
 from functions.video_data import fetch_videos_data
 from functions.messages import suc, inf, err
 from classes.gui import GUI
@@ -187,7 +187,7 @@ class Top10Calculator(GUI):
 
     def browse_shifted_file(self):
         """Handler for the "Choose Shifted Cells CSV" button. Opens a file dialog and sets the
-        global variable `input_file_var` to the selected file."""
+        global variable `shifted_file_var` to the selected file."""
         file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
         self.shifted_file_var.set(file_path)
 
@@ -248,11 +248,12 @@ class Top10Calculator(GUI):
         )
         voting_date = datetime(voting_year, voting_month, 1)
 
-        # Get the upload date, which is the month prior to the voting date. Remember
-        # that votes are always cast for the preceding month's videos - for example,
-        # if the voting date is May 2024, then the videos should all be from April
-        # 2024. This matters for the history section, as we want the video
-        # anniversaries to be relative to when the videos were uploaded.
+        # Get the upload date, which is the month prior to the voting date.
+        # Remember that votes are always cast for the preceding month's videos -
+        # for example, if the voting date is May 2024, then the videos should
+        # all be from April 2024. This matters for the history section, as we
+        # want the video anniversaries to be relative to when the videos were
+        # uploaded.
         upload_date = get_preceding_month_date(voting_date)
 
         upload_month_year_str = upload_date.strftime("%B %Y")
@@ -265,11 +266,18 @@ class Top10Calculator(GUI):
         title_rows = process_shifted_voting_data(shifted_title_rows)
         url_rows = process_shifted_voting_data(shifted_url_rows)
 
-        if len(title_rows) != len(url_rows):
-            raise Exception(
-                f"Error while processing voting data; number of title and URL rows do not match"
-            )
+        # During the voting process, Littleshy will delete rows from the
+        # title_rows CSV if those ballots are found to be invalid. This is
+        # usually fine as empty rows are represented as lists of empty strings
+        # in a CSV (["", "", ..., ""]), except for the case when the last row is
+        # deleted, as an empty final row isn't included in the CSV at all. This
+        # causes the title_rows CSV to have fewer rows than the url_rows CSV,
+        # which then causes problems when we try to map from one to the other.
+        #
+        # To fix this, pad the title_rows CSV with empty rows if it's shorter
+        # than the url_rows CSV.
 
+        title_rows = pad_csv_rows(title_rows, len(url_rows))
         # Create a dictionary which maps video titles to URLs for each title in the
         # CSV.
         titles_to_urls = get_titles_to_urls_mapping(title_rows, url_rows)

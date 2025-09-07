@@ -24,7 +24,10 @@ def get_titles_to_urls_mapping(
     title_rows: list[list[str]], url_rows: list[list[str]]
 ) -> dict[str, str]:
     """Given a set of (unshifted) title rows and a matching set of URL rows,
-    return a dictionary that maps each title to its corresponding URL."""
+    return a dictionary that maps each title to its corresponding URL.
+
+    If the same title maps to multiple URLs, the last-encountered title-to-URL
+    mapping will be used."""
     titles_to_urls = {}
 
     for title_row, url_row in zip(title_rows, url_rows, strict=True):
@@ -114,8 +117,8 @@ def create_top10_csv_data(
     for years_ago in anniversaries:
         archive_records = history.get(years_ago, [])
 
-        # Sort the archive records by rank, so that they match the ordering in the
-        # calculated top 10 spreadsheet.
+        # Sort the archive records by rank, so that they match the ordering in
+        # the calculated top 10 spreadsheet.
         archive_records = sorted(archive_records, key=lambda r: r["rank"])
         anni_records[years_ago] = []
         for archive_record in archive_records:

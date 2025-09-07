@@ -52,6 +52,7 @@ def generate_top10_archive_records(
             "alternate link": url,
             "found": "",
             "notes": "",
+            "vote percentage": top_10_record["Percentage"],
         }
 
         records.append(record)
@@ -120,6 +121,10 @@ def generate_sharable_records(
     # Probably shouldn't do this, but since one of the fields requested by the
     # sharable spreadsheet is the total number of voters, we can
     # reverse-engineer that figure from votes and percentage:
+    # TODO: This won't give the correct result for Total voters when we switch
+    # to weighted votes, as we'll no longer have exactly one vote per voter
+    # (instead, some votes will be weighted less than 1 depending on their
+    # ballot).
     percentage = float(top_10_records[0]["Percentage"].strip("%"))
     votes = int(top_10_records[0]["Total Votes"])
     total_voters = round((100 * votes) / percentage)
@@ -182,6 +187,7 @@ def generate_top10_archive_csv(records: list[dict], filename: str):
         "alternate link",
         "found",
         "notes",
+        "vote percentage",
     ]
 
     for record in records:
@@ -201,6 +207,8 @@ def generate_hm_archive_csv(records: list[dict], filename: str):
     file in a tabular format."""
     csv_path = Path(filename)
 
+    # Note: the header for the Honorable Mentions subsheet is similar to, but
+    # not the same as, the header for the main archive page.
     header = [
         "Year",
         "Month",
