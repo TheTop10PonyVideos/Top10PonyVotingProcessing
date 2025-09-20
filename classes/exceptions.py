@@ -1,8 +1,3 @@
-# TODO: Deprecate `GetVideoMetadataError` class when modules are removed
-class GetVideoMetadataError(Exception):
-    pass
-
-
 class UnsupportedHostError(Exception):
     """Raised when an attempt is made to fetch a URL that is not supported by
     the application.
