@@ -265,3 +265,39 @@ class YtDlpFetchService:
         h = hashlib.sha256()
         h.update(string.encode())
         return h.hexdigest()[:5]
+
+
+class B23FetchService:
+    """Fetch service for b23.tv links."""
+
+    def __init__(self, ytdlp_fetch_service: YtDlpFetchService):
+        self.ytdlp_fetch_service = ytdlp_fetch_service
+
+    def can_fetch(self, url: str) -> bool:
+        return "b23.tv" in url
+
+    def request(self, url: str) -> VideoData:
+        """Perform an intermediary step of getting the true video url
+        from the b23.tv redirect before requesting using yt-dlp."""
+
+        id_match = re.search("b23.tv/([0-9a-zA-Z]+)", url)
+
+        if not id_match:
+            raise ValueError(
+                f'Could not request URL "{url}"; unable to determine video id from URL'
+            )
+
+        share_id = id_match.group(1)
+
+        response = requests.get(f"https://b23.tv/{share_id}", allow_redirects=False)
+
+        if response.status_code != 302:
+            raise VideoUnavailableError(f"No video link was returned by {url}")
+
+        video_url = re.sub(r"\?.+", "", response.next.url) # remove unnecessary tracking params
+
+        return self.ytdlp_fetch_service.request(video_url)
+
+    def parse(self, video_data) -> VideoData:
+        """Parse video data using the yt-dlp fetch service."""
+        return self.ytdlp_fetch_service.parse(video_data)

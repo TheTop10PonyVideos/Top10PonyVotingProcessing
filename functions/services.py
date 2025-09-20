@@ -2,7 +2,7 @@ from functions.general import load_text_data
 from functions.config import load_config_json
 from functions.messages import suc, inf, err
 from classes.fetcher import Fetcher
-from classes.fetch_services import YouTubeFetchService, YtDlpFetchService, DerpibooruFetchService
+from classes.fetch_services import YouTubeFetchService, YtDlpFetchService, DerpibooruFetchService, B23FetchService
 from classes.caching import FileCache
 from classes.printers import ConsolePrinter
 
@@ -46,10 +46,13 @@ def get_fetcher(
 
     accepted_domains = load_text_data(config["paths"]["accepted_domains"])
 
+    ytdlp_fetch_service = YtDlpFetchService(accepted_domains)
+
     fetch_services = {
         "YouTube": YouTubeFetchService(youtube_api_key),
+        "B23": B23FetchService(ytdlp_fetch_service),
         "Derpibooru": DerpibooruFetchService(),
-        "yt-dlp": YtDlpFetchService(accepted_domains),
+        "yt-dlp": ytdlp_fetch_service,
     }
 
     for name, service in fetch_services.items():
