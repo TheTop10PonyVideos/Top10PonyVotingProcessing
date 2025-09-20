@@ -6,7 +6,7 @@ from tkinter import ttk
 from classes.gui import GUI
 import math
 
-from core_utilities import (
+from processes import (
     post_processing,
     vote_processing,
     top_10_calculator,

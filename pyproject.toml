@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Python GUI application to process the monthly voting for the Top 10 Pony Videos showcase"
 authors = ["TheTop10PonyVideos <your-email@example.com>"]
 readme = "README.md"
-packages = [{include = "classes"}, {include = "core_utilities"}, {include = "data"}, {include = "functions"}, {include = "modules"}]
+packages = [{include = "classes"}, {include = "processes"}, {include = "data"}, {include = "functions"}]
 
 [tool.poetry.dependencies]
 python = "^3.13"
