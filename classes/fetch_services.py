@@ -233,6 +233,11 @@ class YtDlpFetchService:
                 site = "PonyTube"
             case "thishorsie":
                 site = "ThisHorsieRocks"
+            case "instagram":
+                # Default response["title"] is too normalized so use thumbnail for hash
+                response["title"] = (
+                    f"Instagram video by {response['channel']} ({self.hash_str(response['thumbnail'])})"
+                )
 
         return {
             "title": response.get("title"),

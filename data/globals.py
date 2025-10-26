@@ -20,15 +20,16 @@ ydl_opts = {
     "retries": 3,
     "sleep_interval": 2,
     "allowed_extractors": [
-        "twitter",
-        "Newgrounds",
-        "lbry", # Odysee
-        "TikTok",
-        "PeerTube", # pony.tube & pt.thishorsie.rocks
-        "vimeo",
         "BiliBili",
-        "dailymotion",
         "Bluesky",
+        "dailymotion",
+        "Instagram",
+        "lbry", # Odysee
+        "Newgrounds",
+        "twitter",
+        "PeerTube", # pony.tube & pt.thishorsie.rocks
+        "TikTok",
+        "vimeo",
         "generic", # ytdlp may fall back to the generic extractor if another fails
     ],
 }

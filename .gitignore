@@ -22,6 +22,7 @@ data/honorable_mentions_archive.csv
 data/cookies.txt
 outputs/*.csv
 outputs/*.txt
+outputs/*.log
 build
 dist
 
