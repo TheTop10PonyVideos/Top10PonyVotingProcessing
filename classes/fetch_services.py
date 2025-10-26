@@ -272,34 +272,34 @@ class YtDlpFetchService:
         return h.hexdigest()[:5]
 
 
-class B23FetchService:
-    """Fetch service for b23.tv links."""
+class BilibiliFetchService:
+    """Fetch service for bilibili and variant links."""
 
     def __init__(self, ytdlp_fetch_service: YtDlpFetchService):
         self.ytdlp_fetch_service = ytdlp_fetch_service
 
     def can_fetch(self, url: str) -> bool:
-        return "b23.tv" in url
+        return "b23.tv" in url or "bilibili.com" in url
 
     def request(self, url: str) -> VideoData:
-        """Perform an intermediary step of getting the true video url
-        from the b23.tv redirect before requesting using yt-dlp."""
+        """Perform an intermediary step of getting the true video url from the
+        b23.tv redirects or from playlist links before requesting using yt-dlp."""
 
-        id_match = re.search("b23.tv/([0-9a-zA-Z]+)", url)
+        if id_match := re.search(r"b23\.tv/([0-9a-zA-Z]+)", url):
+            share_id = id_match.group(1)
 
-        if not id_match:
+            response = requests.get(f"https://b23.tv/{share_id}", allow_redirects=False)
+
+            if response.status_code != 302:
+                raise VideoUnavailableError(f"No video link was returned by {url}")
+            
+            video_url = re.sub(r"\?.+", "", response.next.url) # remove unnecessary tracking params
+        elif id_match := re.search(r"bilibili\.com/video/([a-zA-Z0-9]+)", url) or re.search(r"bvid=([A-Za-z0-9]+)", url):
+            video_url = f"https://www.bilibili.com/video/{id_match.group(1)}"
+        else:
             raise ValueError(
                 f'Could not request URL "{url}"; unable to determine video id from URL'
             )
-
-        share_id = id_match.group(1)
-
-        response = requests.get(f"https://b23.tv/{share_id}", allow_redirects=False)
-
-        if response.status_code != 302:
-            raise VideoUnavailableError(f"No video link was returned by {url}")
-
-        video_url = re.sub(r"\?.+", "", response.next.url) # remove unnecessary tracking params
 
         return self.ytdlp_fetch_service.request(video_url)
 
