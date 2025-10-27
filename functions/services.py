@@ -2,7 +2,7 @@ from functions.general import load_text_data
 from functions.config import load_config_json
 from functions.messages import suc, inf, err
 from classes.fetcher import Fetcher
-from classes.fetch_services import YouTubeFetchService, YtDlpFetchService, DerpibooruFetchService, B23FetchService
+from classes.fetch_services import YouTubeFetchService, YtDlpFetchService, DerpibooruFetchService, BilibiliFetchService
 from classes.caching import FileCache
 from classes.printers import ConsolePrinter
 
@@ -50,7 +50,7 @@ def get_fetcher(
 
     fetch_services = {
         "YouTube": YouTubeFetchService(youtube_api_key),
-        "B23": B23FetchService(ytdlp_fetch_service),
+        "Bilibili": BilibiliFetchService(ytdlp_fetch_service),
         "Derpibooru": DerpibooruFetchService(),
         "yt-dlp": ytdlp_fetch_service,
     }
