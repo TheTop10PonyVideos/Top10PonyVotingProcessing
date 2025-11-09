@@ -1,5 +1,6 @@
+import pytest
 from unittest import TestCase
-from functions.url import is_youtube_url, normalize_youtube_url
+from functions.url import is_youtube_url, normalize_youtube_url, normalize_derpibooru_url
 
 
 class TestFunctionsUrl(TestCase):
@@ -56,3 +57,16 @@ class TestFunctionsUrl(TestCase):
 
         with self.assertRaises(ValueError):
             normalize_youtube_url("https://pony.tube/w/bYSyWpjg6r6zo68o1imK5t")
+
+
+# pytest tests
+def test_normalize_derpibooru_url():
+    assert normalize_derpibooru_url("https://derpibooru.org/images/1130155?sort%5B%5D=452&sort%5B%5D=1130155&sd=desc&sf=score&q=derpy%2Cmuffin") == "https://derpibooru.org/images/1130155"
+
+    assert normalize_derpibooru_url("https://derpibooru.org/images/1130155") == "https://derpibooru.org/images/1130155"
+
+    with pytest.raises(ValueError):
+        normalize_derpibooru_url("https://derpibooru.org/tags/derpy+hooves")
+
+    with pytest.raises(ValueError):
+        assert normalize_derpibooru_url("https://derpibooru.org")

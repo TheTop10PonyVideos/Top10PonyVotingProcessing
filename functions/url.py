@@ -60,11 +60,26 @@ def normalize_youtube_url(url: str):
         video_id = shortened_match.group(1)
 
     if video_id is None:
-        raise ValueError(f"Cannot normalize URL {url}; malformed link")
+        raise ValueError(f"Cannot normalize YouTube URL {url} - malformed link")
     if len(video_id) != 11:
-        raise ValueError(f"Cannot normalize URL {url}; video id is not 11 characters")
+        raise ValueError(f"Cannot normalize YouTube URL {url} - video id is not 11 characters")
 
     # Using the video id, construct a normalized version of the YouTube URL.
     normalized_url = f"https://www.youtube.com/watch?v={video_id}"
 
     return normalized_url, video_id
+
+
+def normalize_derpibooru_url(url: str):
+    """Given a Derpibooru URL which may contain various extraneous search query
+    parameters, return a "normalized" URL with just the Derpibooru id."""
+    url_components = urlparse(url)
+    print(url_components)
+    scheme = url_components.scheme
+    netloc = url_components.netloc
+    path = url_components.path
+
+    if not path.startswith("/images/"):
+        raise ValueError(f'Cannot normalize Derpibooru URL {url} - path must begin with "/images/"')
+
+    return f"{scheme}://{netloc}{path}"

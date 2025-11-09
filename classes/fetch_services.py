@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from googleapiclient.discovery import build
 from yt_dlp import YoutubeDL
 from functions.date import convert_iso8601_duration_to_seconds
-from functions.url import normalize_youtube_url
+from functions.url import normalize_youtube_url, normalize_derpibooru_url
 from functions.messages import err
 from data.globals import ydl_opts
 from classes.exceptions import FetchRequestError, FetchParseError, VideoUnavailableError
@@ -103,6 +103,8 @@ class DerpibooruFetchService:
 
     def request(self, url: str) -> VideoData:
         """Query the Derpibooru API for the given URL."""
+        url = normalize_derpibooru_url(url)
+
         id_match = re.search("derpibooru.org/images/([0-9]+)", url)
 
         if not id_match:
