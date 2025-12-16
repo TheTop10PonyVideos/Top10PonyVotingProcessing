@@ -46,6 +46,8 @@ def normalize_voting_data(rows: list[list[str]]) -> list[list[str]]:
                 cell = f"https://{cell}"
             if is_youtube_url(cell):
                 cell, _ = normalize_youtube_url(cell)
+            if is_derpibooru_url(cell):
+                cell = normalize_derpibooru_url(cell)
 
             normalized_rows[row_idx][cell_idx] = cell
 

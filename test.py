@@ -7,6 +7,12 @@
 #
 # pytest can still run unittest tests, so the tests themselves don't need to be
 # rewritten.
+#
+# pytest is included in the poetry dependencies, so you can run it with
+#
+#     poetry run pytest
+#
+# instead of using this script.
 
 import unittest
 from tests.classes.fetcher import TestFetcher

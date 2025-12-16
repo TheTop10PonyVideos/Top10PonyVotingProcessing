@@ -1,69 +1,87 @@
 # Top 10 Pony Voting Processing
 Python GUI application to process the monthly voting for the Top 10 Pony Videos showcase.
 
-### Prerequisites
-- Python 3.13 or higher
-- [Poetry](https://python-poetry.org/docs/#installation) for dependency management
+## Prerequisites
+* Python 3.13 or higher
+* [Poetry](https://python-poetry.org/docs/#installation) for dependency management
 
-### Development Setup
-1. Clone the repository
-2. Run the setup script: `python setup_dev.py`
-3. Or manually install dependencies: `poetry install`
+## Setting up your development environment
+1. Create a [fork](https://github.com/TheTop10PonyVideos/Top10PonyVotingProcessing/fork) of the live [Top10PonyVotingProcessing](https://github.com/TheTop10PonyVideos/Top10PonyVotingProcessing) repository on GitHub. This is so you have somewhere to push your code after you've made changes, as you won't have access to the live repository.
 
-### Running the Application
-- Main application: `poetry run python main.py`
-- Run tests: `poetry run python test.py`
-- Activate virtual environment: `poetry shell`
+2. Clone the forked repository to your machine with `git clone`.
 
-### Development Commands
-- Add a dependency: `poetry add <package>`
-- Add a dev dependency: `poetry add --group dev <package>`
-- Update dependencies: `poetry update`
-- Format code: `poetry run black .`
+3. Add the live repository as an upstream remote. This will allow you to keep your fork in sync with live.
+
+       git remote add upstream https://github.com/TheTop10PonyVideos/Top10PonyVotingProcessing
+
+   Use `git fetch upstream` whenever you need to fetch new changes from the live repo. You can bring your local `master` branch up-to-date with live by using `git merge upstream/master`. 
+
+4. In the project root directory, run `poetry install` to install all dependencies for the project. Poetry automatically creates a virtual environment for your project.
+
+## Running the application
+The main application is called `main.py`. To run it, use
+
+    poetry run python main.py
+
+Using `poetry run` will run the command in the context of the Poetry virtual environment, where the project dependencies are defined. If it worked, you should see a GUI window appear.
+
+## Useful development commands
+* Add a project dependency (e.g. a third-party Python package):
+
+      poetry add PACKAGE
+
+* Add a dev dependency (something needed for development but not for the end user, e.g. testing software):
+
+      poetry add --group dev PACKAGE
+
+* Update all project dependencies to latest versions:
+
+      poetry update
+
+* Run (old, to be deprecated) unit tests:
+
+      poetry run python test.py
+
+* Run unit tests:
+
+      poetry run pytest
+
+* Format Python files to PEP8 style (save your code changes first!):
+
+      poetry run black .
+
+## Making code changes
+* Make sure your local `master` branch is up-to-date with the live repository. (See "Setting up your development environment" if you're not sure how to synchronize a forked repo with live).
+* Before starting on a new feature, check out a new local branch:
+
+      git checkout -b feature/your-new-feature
+
+* Make your code changes and commit them.
+* Use `git push` to push your new branch to your forked repository.
+* Open a pull request (PR) for your changes. If using command-line Git, it should automatically give you a URL for this - if not, go to GitHub in your browser and open the pull request there. The merge target should be the live repository.
+* Ask someone in the #tech-team channel to review your pull request. If they are satisfied, they will merge your changes to live!
 
 ## Project structure
-* `classes`: Directory containing various custom classes used by the project.
-* `config`: Directory containing configuration files for the application.
-* `processes`: Directory containing the individual main processes that can be accessed via the application.
-* `data`: Directory containing data used by the application to make decisions, eg. allowed domains, uploader whitelists.
-* `functions`: Directory containing various Python functions used in the project, organized by purpose.
-* `images`: Directory containing images used in the application's GUI.
+* `classes`: Various custom classes used by the project.
+* `config`: Configuration files for the application.
+* `processes`: The individual main processes (sub-applications) that can be accessed via the main application.
+* `data`: Data used by the application to make decisions, e.g. allowed domains, uploader whitelists.
+* `functions`: Various Python functions used in the project, organized by purpose.
+* `images`: Images used in the application's GUI.
 * `outputs`: Directory to which the application typically writes out data after processing.
-* `tests`: Contains unit tests for the project.
-* `test.py`: Runs unit tests for the project. Use `poetry run python test.py` to run.
+* `tests`: Unit tests for the project.
+* `test.py`: Test runner script for the project. Use `poetry run python test.py` to run.
 * `main.py`: Entry point to the application. Use `poetry run python main.py` to run.
-* `setup_dev.py`: Development environment setup script.
-* `build_exe.py`: Automated installer script that handles complete setup.
-* `install_and_run.bat`: Windows batch file for one-click installation.
-* `install_and_run.ps1`: PowerShell script for installation.
-* `create_installer_exe.py`: Script to build standalone executable installer.
 
 ## Guidelines
-- Python and VSC on Windows are the main tools we will be using. Feel free to use any other IDEs that suit you better but be aware that you will not get support from us if you do so.  
-
-- Black is the most common Python code formatter and we will be using it throughout the project. If you are capable of producing PEP8 compliant code without using Black feel free to do so though we would appreciate if you did use it.  
-
-- Code should be always commented to explain how it works and only to explain how it works. Explaining each function is the standard but if you feel like any lines are more complicated and thus worth further comment feel free to do so. Any questions in regards to the quality of the code ("How could I make this more efficient/why doesn't this work/why is Pi==3?") or the administrative part of it (pushing/branching/merging etc) should be discussed using Github's built in tools and their code commenting system in particular. This is so that in the future, whenever someone wants to read our code there are no confusing leftovers which are not related to the code itself.  
-
-- Absolutely never, and I mean never push an update directly into master. The correct workflow is the usual; clone to your computer, create branch, work on that branch, ask for a PR. Most of us will have the right to push into master but even then we should never do so. PRs will always be reviewed by at least one other member before merging.   
-
-- If any of this points aren't crystal clear or you don't understand what exactly I mean feel free to contact me via Discord ping (preferably on #tech-team) or DM (@Vari2508 on most MLP discord servers). I don't care if you think it is a dumb question or it will make you look stupid, chances are if you are not sure, we won't be sure either and the discussion will be beneficial for all of us. Nobody expects anyone to remember things they learnt years ago in college and the only way we can all freshen up a bit is by asking questions.   
-
- I will be making a Guide on the installation of everything I mentioned here over the next couple weeks. Meanwhile, have a few links you'll probably find useful:  
+* We use the [PEP8 style guide](https://pep8.org/) for formatting Python code, but you don't have to remember the rules or write perfectly-formatted code - just use the [Black formatter](https://pypi.org/project/black/) (`poetry run black .`) to apply PEP8 formatting to all Python source files. (Save your code changes first!)
+* Don't push updates directly to the master branch - always check out a new branch when working on a new feature. See "Making code changes" for more details.
+* Please comment your code to help future developers (or future you!). Use Python [docstrings](https://peps.python.org/pep-0257/) (triple-quotes underneath the function definition) to describe what a particular function does, and feel free to add inline comments to ease understanding, particularly if the reason for the code isn't obvious.
+* Writing unit tests isn't mandatory, but is encouraged! Check the [tests](/tests) directory for examples of tests and use `poetry run pytest` to run the test suite. If you're not sure how to write a test, feel free to ask in the #tech-team channel.
 
 ## Links
-
-[Our Github](https://github.com/TheTop10PonyVideos)
-
-[Visual Studio Install](https://code.visualstudio.com/)
-
-[An introduction to PEP8 styling](https://pep8.org/)
-
-[Black Formatter](https://pypi.org/project/black/)
-
-[Github with VSC 101](https://www.youtube.com/watch?v=RGOj5yH7evk)
-
-[Overhaul Meeting](https://docs.google.com/drawings/d/1p4D8QmpdhN-f_IkulZAoQoT7WqaGD-Hd2b8RkN1IWOA/edit?usp=sharing)
+* [TheTop10PonyVideos Github](https://github.com/TheTop10PonyVideos)
+* [Overhaul Meeting](https://docs.google.com/drawings/d/1p4D8QmpdhN-f_IkulZAoQoT7WqaGD-Hd2b8RkN1IWOA/edit?usp=sharing)
 
 
 ***

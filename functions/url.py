@@ -18,6 +18,14 @@ def is_youtube_url(url: str) -> bool:
     return url_components.netloc in youtube_domains
 
 
+def is_derpibooru_url(url: str) -> bool:
+    """Return True if the given URL contains one of the YouTube web domains."""
+
+    url_components = urlparse(url)
+
+    return "derpibooru.org" in url_components.netloc
+
+
 def normalize_youtube_url(url: str):
     """Given a YouTube URL which may contain various combinations and orderings
     of query parameters, return a "normalized" URL with the minimal
