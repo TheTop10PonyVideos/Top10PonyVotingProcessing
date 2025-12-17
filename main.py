@@ -11,20 +11,23 @@ from processes import (
     vote_processing,
     top_10_calculator,
     archive_checker,
+    leaderboard
 )
 
-# Initialize all of the core utility classes. This automatically populates
-# the static variable `GUI.instances` with an instance of each core utility,
-# making them globally available.
+# Initialize all of the process classes (i.e. the sub-applications that can be
+# selected from the main menu). This automatically populates the static variable
+# `GUI.instances` with an instance of each process, making them globally
+# available.
 post_processing.PostProcessing()
 vote_processing.VoteProcessing()
 top_10_calculator.Top10Calculator()
 archive_checker.ArchiveStatusChecker()
+leaderboard.Leaderboard()
 
 
 class MainMenu(GUI):
-    """GUI application for the main menu, from which each of the core utilities
-    can be launched."""
+    """GUI application for the main menu, from which each of the processes can
+    be launched."""
 
     def __init__(self, max_frame_rate, rate_deriv):
         super().__init__()
@@ -39,7 +42,7 @@ class MainMenu(GUI):
     def gui(self, root):
         self.root = root
         root.title("Top 10 Pony Videos: Main Menu")
-        root.geometry(f"{800}x{400}")
+        root.geometry("600x600")
 
         self.gif_frames = [
             ImageTk.PhotoImage(frame.copy())
@@ -55,45 +58,49 @@ class MainMenu(GUI):
         main_frame = tk.Frame(root)
         main_frame.pack(expand=True, fill="both", padx=10, pady=10)
 
-        # Create buttons bar
+        # Create buttons for each process that the user can select and run
+        buttons_layout = [
+            {
+                "label": "📜 Vote Processing",
+                "cmd": lambda: GUI.run("VoteProcessing"),
+            },
+            {
+                "label": "🧮 Top 10 Calculator",
+                "cmd": lambda: GUI.run("Top10Calculator"),
+            },
+            {
+                "label": "🏁 Post Processing",
+                "cmd": lambda: GUI.run("PostProcessing"),
+            },
+            {
+                "label": "📚 Archive Status Checker",
+                "cmd": lambda: GUI.run("ArchiveStatusChecker"),
+            },
+            {
+                "label": "🏆 Leaderboard",
+                "cmd": lambda: GUI.run("Leaderboard"),
+            },
+        ]
+
         buttons_frame = tk.Frame(main_frame)
         buttons_frame.pack()
+        buttons_frame.columnconfigure(0, weight=1)
 
         label_font = Font(size=10)
 
-        text_label = ttk.Label(buttons_frame, text="Select a Process:", font=label_font)
+        text_label = ttk.Label(buttons_frame, text="Select a process:", font=label_font)
         text_label.grid(column=0, row=0)
 
-        btn_vote_processing = ttk.Button(
-            buttons_frame,
-            text="Vote Processing",
-            command=lambda: GUI.run("VoteProcessing"),
-        )
-        btn_vote_processing.grid(column=0, row=1, padx=5, pady=5)
-
-        btn_top_10_calculator = ttk.Button(
-            buttons_frame,
-            text="Top 10 Calculator",
-            command=lambda: GUI.run("Top10Calculator"),
-        )
-        btn_top_10_calculator.grid(column=1, row=1, padx=5, pady=5)
-
-        btn_post_processing = ttk.Button(
-            buttons_frame,
-            text="Post Processing",
-            command=lambda: GUI.run("PostProcessing"),
-        )
-        btn_post_processing.grid(column=2, row=1, padx=5, pady=5)
-
-        btn_archive_checker = ttk.Button(
-            buttons_frame,
-            text="Archive Status Checker",
-            command=lambda: GUI.run("ArchiveStatusChecker"),
-        )
-        btn_archive_checker.grid(column=3, row=1, padx=5, pady=5)
+        for i, btn_data in enumerate(buttons_layout):
+            btn = ttk.Button(
+                buttons_frame,
+                text=btn_data["label"],
+                command=btn_data["cmd"],
+            )
+            btn.grid(column=0, row=i+1, padx=5, pady=5, sticky=tk.W+tk.E)
 
         btn_quit = ttk.Button(buttons_frame, text="Quit", command=root.destroy)
-        btn_quit.grid(column=0, row=2, columnspan=4, padx=5, pady=20)
+        btn_quit.grid(column=0, row=len(buttons_layout)+2, columnspan=len(buttons_layout), padx=5, pady=20)
 
     def start_gif(self, event):
         if not self.gif_playing:
