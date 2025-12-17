@@ -3,7 +3,12 @@
 import csv
 from pathlib import Path
 from functions.date import parse_votes_csv_timestamp, format_votes_csv_timestamp
-from functions.url import is_youtube_url, normalize_youtube_url
+from functions.url import (
+    is_youtube_url,
+    is_derpibooru_url,
+    normalize_youtube_url,
+    normalize_derpibooru_url,
+)
 from classes.voting import Ballot, Vote, Video
 from classes.fetcher import Fetcher
 from classes.exceptions import (
