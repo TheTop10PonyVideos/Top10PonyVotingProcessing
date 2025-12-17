@@ -3,7 +3,12 @@
 import csv
 from pathlib import Path
 from functions.date import parse_votes_csv_timestamp, format_votes_csv_timestamp
-from functions.url import is_youtube_url, normalize_youtube_url
+from functions.url import (
+    is_youtube_url,
+    is_derpibooru_url,
+    normalize_youtube_url,
+    normalize_derpibooru_url,
+)
 from classes.voting import Ballot, Vote, Video
 from classes.fetcher import Fetcher
 from classes.exceptions import (
@@ -46,6 +51,8 @@ def normalize_voting_data(rows: list[list[str]]) -> list[list[str]]:
                 cell = f"https://{cell}"
             if is_youtube_url(cell):
                 cell, _ = normalize_youtube_url(cell)
+            if is_derpibooru_url(cell):
+                cell = normalize_derpibooru_url(cell)
 
             normalized_rows[row_idx][cell_idx] = cell
 
