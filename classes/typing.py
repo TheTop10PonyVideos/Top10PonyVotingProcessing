@@ -13,6 +13,9 @@ class ArchiveRecord(TypedDict):
     alternate_link: str
     found: str
     notes: str
+    # TODO: A "Voters" field was added to the Google Sheet to keep a record of
+    # how many votes a video received - should it be included as a property on
+    # this TypedDict?
 
 class VideoData(TypedDict):
     title: str

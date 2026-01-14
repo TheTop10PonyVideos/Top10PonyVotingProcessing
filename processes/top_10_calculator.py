@@ -24,7 +24,8 @@ from functions.date import (
     get_preceding_month_date,
     get_most_common_month_year,
 )
-from functions.general import pad_csv_rows, load_top_10_master_archive
+from functions.general import pad_csv_rows
+from functions.archive import load_top_10_master_archive
 from functions.video_data import fetch_videos_data
 from functions.messages import suc, inf, err
 from classes.gui import GUI
