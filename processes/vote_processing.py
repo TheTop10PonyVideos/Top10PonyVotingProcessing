@@ -8,7 +8,8 @@ from tkinter import ttk, filedialog
 from tkinter.font import Font
 from PIL import ImageTk, Image
 from tktooltip import ToolTip
-from functions.general import load_text_data, load_top_10_master_archive
+from functions.general import load_text_data
+from functions.archive import load_top_10_master_archive
 from functions.config import load_config_json
 from functions.voting import (
     load_votes_csv,

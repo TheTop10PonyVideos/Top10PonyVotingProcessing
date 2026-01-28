@@ -25,7 +25,7 @@ class PostProcessing(GUI):
     def gui(self, root):
         # Create application window
         root.title("Top 10 Pony Videos: Post-processing")
-        root.geometry(f"800x400")
+        root.geometry("800x400")
 
         # Create main frame
         main_frame = tk.Frame(root)

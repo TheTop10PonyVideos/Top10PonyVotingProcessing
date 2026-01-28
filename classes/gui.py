@@ -4,9 +4,20 @@ from PIL import Image, ImageTk
 dotenv.load_dotenv()
 
 class GUI:
+    """Base user interface class."""
+    # Static Tk instance which is started in main.py and runs until the
+    # application exits. All GUI subclasses construct their interfaces inside
+    # this instance.
     root = tk.Tk()
+
+    # Static dictionary that gets populated with each instance of a GUI subclass
+    # when they are initialized. This allows GUI instances to reference each
+    # other via this dictionary.
     instances = {}
+
+    # Stores the GUI currently being shown to the user.
     active_gui = None
+
     _key_image = None
     _var_yt_api_key = None
     _frame_api_key = None
@@ -30,6 +41,8 @@ class GUI:
 
     @staticmethod
     def _toggle_key_entry():
+        """Handler for the "YT API Key" button, which appears on all GUI windows
+        as a key icon in the bottom-right corner."""
         if GUI._frame_api_key is not None and GUI._frame_api_key.winfo_exists():
             return GUI._frame_api_key.destroy()
 
@@ -42,19 +55,24 @@ class GUI:
 
     @staticmethod
     def run(gui_name: str):
-        """Clears the current window and builds the gui from the provided class name into it"""
+        """Clear the current window and build the gui from the provided class
+        name into it."""
 
+        # Decommission the current active GUI and destroy it.
         if GUI.active_gui:
             GUI.active_gui.ready = False
 
             for widget in GUI.root.winfo_children():
                 widget.destroy()
 
+        # Switch the active GUI to the new instance.
         GUI.active_gui = GUI.instances[gui_name]
 
+        # Call the new GUI's interface builder and construct the requested GUI.
         GUI.active_gui.ready = False
         GUI.active_gui.gui(GUI.root)
 
+        # Add the YT API Key field toggle button.
         if not GUI._key_image:
             GUI._key_image = ImageTk.PhotoImage(
                 Image.open("images/key.png").resize((30, 30))
@@ -69,6 +87,7 @@ class GUI:
             command=lambda: GUI._toggle_key_entry(),
         ).place(relx=0.95, rely=0.95, anchor="se")
 
+        # Ready the GUI.
         GUI.active_gui.ready = True
     
     @staticmethod

@@ -14,7 +14,7 @@ from enum import Enum
 from classes.typing import ArchiveRecord
 from classes.gui import GUI
 from data.globals import ydl_opts
-from functions.general import (
+from functions.archive import (
     load_top_10_master_archive,
     load_honorable_mentions_archive
 )
