@@ -169,8 +169,8 @@ def calc_ranked_records(
     and returns a score for each title, plus the total possible score. These
     scores are used to determine the ranking of each record."""
 
-    # Ensure each (non-blank) title row has at least 5 titles.
-    min_votes = 5
+    # Ensure each (non-blank) title row has at least 1 title.
+    min_votes = 1
     title_row_checks = check_blank_titles(title_rows)
     for i, checked_row in enumerate(title_row_checks):
         num_non_blank, num_blank = checked_row
@@ -181,8 +181,9 @@ def calc_ranked_records(
             # most editors start row indices at 1, and there's a header row that
             # needs to be skipped.
             ballot_line = i + 2
+            only = "" if min_votes == 1 else " only "
             raise ValueError(
-                f"Error when calculating rankings; at least {min_votes} votes are required in each ballot, but ballot line {ballot_line} has only {num_non_blank}"
+                f"Error when calculating rankings; at least {min_votes} votes are required in each ballot, but ballot line {ballot_line} has{only}{num_non_blank}"
             )
 
     scores, total_score = scoring_func(title_rows)
