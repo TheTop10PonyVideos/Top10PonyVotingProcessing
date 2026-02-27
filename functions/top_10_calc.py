@@ -160,6 +160,7 @@ def calc_ranked_records(
     titles_to_urls: dict[str, str],
     titles_to_uploaders: dict[str, str],
     scoring_func,
+    min_votes = 1
 ) -> list[dict]:
     """Given a list of title rows, where each row represents the titles voted on
     in one ballot, calculate the frequency of occurrence of each title and
@@ -169,8 +170,7 @@ def calc_ranked_records(
     and returns a score for each title, plus the total possible score. These
     scores are used to determine the ranking of each record."""
 
-    # Ensure each (non-blank) title row has at least 5 titles.
-    min_votes = 5
+    # Ensure each (non-blank) title row has at least the minimum allowed number of titles.
     title_row_checks = check_blank_titles(title_rows)
     for i, checked_row in enumerate(title_row_checks):
         num_non_blank, num_blank = checked_row
