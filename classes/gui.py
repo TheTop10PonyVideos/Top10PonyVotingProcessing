@@ -35,8 +35,8 @@ class GUI:
     def gui(self, root: tk.Tk):
         """Code to build the gui should override this method.
 
-        NOTE: Some variables may be garbage collected after the gui is built,
-        so if anything appears to be missing, try saving its variable to self.
+        NOTE: Some items like ImageTk.PhotoImage may be garbage collected when building the gui,
+        so if anything appears to be missing, try saving them to self.
         """
 
     @staticmethod
@@ -101,7 +101,7 @@ class GUI:
         if not youtube_api_key:
             youtube_api_key = os.getenv("apikey", "").strip()
 
-        if not youtube_api_key:
+        if not youtube_api_key or youtube_api_key == "YOUR_API_KEY":
             tk.messagebox.showinfo("Error", "Please provide a Youtube API key.")
 
         return youtube_api_key
