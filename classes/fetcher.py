@@ -1,4 +1,4 @@
-from classes.exceptions import UnsupportedHostError, FetchRequestError
+from classes.exceptions import UnsupportedHostError
 from functions.manual_input import resolve
 
 
@@ -9,11 +9,11 @@ class Fetcher:
     requests.
     """
 
-    def __init__(self, ensure_complete_data=False):
-        self.services = {}
-        self.cache = None
-        self.printer = None
-        self.ensure_complete_data = ensure_complete_data
+    def __init__(self):
+        self._services = {}
+        self._cache = None
+        self._printer = None
+        self._prompt_on_missing_data = False
 
     def add_service(self, name: str, fetch_service):
         """Add a fetch service to the fetcher."""
@@ -26,7 +26,7 @@ class Fetcher:
             raise NotImplementedError(
                 f'Cannot add fetch service "{name}" to video data fetcher; fetch services must define the methods {", ".join(required_methods)}'
             )
-        self.services[name] = fetch_service
+        self._services[name] = fetch_service
 
     def get_capable_services(self, url: str) -> dict:
         """Return a dictionary of services that are capable of fetching data for
@@ -34,7 +34,7 @@ class Fetcher:
         """
         return {
             name: service
-            for name, service in self.services.items()
+            for name, service in self._services.items()
             if service.can_fetch(url)
         }
 
@@ -68,14 +68,14 @@ class Fetcher:
         cache_key = self.generate_cache_key(service_name, url)
         cached_video_data = None
 
-        if self.cache is not None and self.cache.has(cache_key):
-            cached_video_data = self.cache.get(cache_key)
+        if self._cache is not None and self._cache.has(cache_key):
+            cached_video_data = self._cache.get(cache_key)
             self.print(f"[cache]: Video data for {url} loaded from cache.", "suc")
 
         if cached_video_data is not None:
             video_data = cached_video_data
 
-            if self.ensure_complete_data and not self.is_complete_video_data(
+            if self._prompt_on_missing_data and not self.is_complete_video_data(
                 video_data
             ):
                 resolve(video_data)
@@ -91,7 +91,7 @@ class Fetcher:
                 self.print(f"[{service_name}]: Request error: {e}", "err")
                 raise e
 
-            if self.ensure_complete_data and not self.is_complete_video_data(
+            if self._prompt_on_missing_data and not self.is_complete_video_data(
                 video_data
             ):
                 resolve(video_data)
@@ -112,7 +112,7 @@ class Fetcher:
         """Set the fetcher to use a cache object. Fetched video data will be
         stored in the cache.
         """
-        self.cache = cache
+        self._cache = cache
 
     def generate_cache_key(self, service_name: str, url: str):
         """Generate a cache key for a given service+url combination. This allows
@@ -125,11 +125,11 @@ class Fetcher:
     def save_to_cache(self, video_data, cache_key, url):
         # If using a cache, and if the response object is JSON-serializable,
         # cache the response object so we don't need to retrieve it again.
-        if self.cache is None:
+        if self._cache is None:
             return
 
         try:
-            self.cache.set(cache_key, video_data)
+            self._cache.set(cache_key, video_data)
         except TypeError as e:
             # If we can't cache the response (because the response isn't
             # JSON-serializable), give a warning, but continue.
@@ -140,11 +140,14 @@ class Fetcher:
     def is_complete_video_data(self, video_data: dict):
         return all(val is not None for val in video_data.values())
 
+    def set_prompt_on_missing_data(self, value: bool):
+        self._prompt_on_missing_data = value
+
     def set_printer(self, printer):
         """Set the fetcher to use a printer. Output will be sent to the printer."""
-        self.printer = printer
+        self._printer = printer
 
     def print(self, text: str, msg_type: str = "inf"):
         """Output a message to the printer, if available."""
-        if self.printer is not None:
-            self.printer.print(text, msg_type)
+        if self._printer is not None:
+            self._printer.print(text, msg_type)
