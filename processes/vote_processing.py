@@ -277,9 +277,8 @@ class VoteProcessing(GUI):
 
         inf(f'Preparing to run checks on "{selected_csv_file}"...')
 
-        fetcher = get_fetcher(
-            youtube_api_key, self.tools_vars["ensure_complete_data"].get()
-        )
+        fetcher = get_fetcher(youtube_api_key)
+        fetcher.set_prompt_on_missing_data(self.tools_vars["ensure_complete_data"].get())
 
         # Load all ballots from the CSV file.
         inf(f'Loading all votes from CSV file "{selected_csv_file}"...')
