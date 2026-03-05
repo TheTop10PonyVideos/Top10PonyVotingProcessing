@@ -126,7 +126,7 @@ def generate_sharable_records(
     # (instead, some votes will be weighted less than 1 depending on their
     # ballot).
     percentage = float(top_10_records[0]["Percentage"].strip("%"))
-    votes = int(top_10_records[0]["Total Votes"])
+    votes = float(top_10_records[0]["Total Votes"])
     total_voters = round((100 * votes) / percentage)
 
     records = []
