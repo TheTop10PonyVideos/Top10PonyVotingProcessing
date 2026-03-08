@@ -34,7 +34,11 @@ class Leaderboard(GUI):
         super().__init__()
 
         self.master_archive = None
-        self.merged_creators = None
+        # List of all creators whose leaderboard results are the merger of two
+        # or more creators.
+        self.merged_creators: list[str] = None
+        # Dictionary which maps creators to a list of their aliases.
+        self.aliases: list[list[str]] = None
 
         self.latest_data_label = None
         self.warning = None
@@ -194,9 +198,9 @@ class Leaderboard(GUI):
         """Load the master archive (from the local file, if available) and
         initialize the leaderboard interface."""
         with open(Leaderboard.aliases_path) as aliases_file:
-            aliases = json.load(aliases_file)
+            self.aliases = json.load(aliases_file)
         self.master_archive = load_top_10_master_archive()
-        self.merged_creators = merge_aliased_creators(self.master_archive, aliases)
+        self.merged_creators = merge_aliased_creators(self.master_archive, self.aliases)
         self.refresh_controls(True)
 
     def get_datepicker_date(self) -> tuple[MonthYear, int]:
@@ -277,10 +281,6 @@ class Leaderboard(GUI):
         for i, creator in enumerate(sorted_creators):
             diff = leaderboard_diff[creator]
             rank = diff["new_rank"]
-            # Append an asterisk for creators who were merged from multiple
-            # aliases.
-            if creator in self.merged_creators:
-                rank = f"{rank}*"
             old_rank = "-" if diff["old_rank"] is None else diff["old_rank"]
             new_rank = "-" if diff["new_rank"] is None else diff["new_rank"]
             rank_diff = "-" if diff["rank_diff"] is None else diff["rank_diff"]
@@ -289,7 +289,7 @@ class Leaderboard(GUI):
 
             row = [
                 rank,
-                creator,
+                self.leaderboard_name(creator),
                 old_rank,
                 "→",
                 new_rank,
@@ -437,6 +437,10 @@ class Leaderboard(GUI):
         """Force a new copy of the master archive to be downloaded and saved to
         disk."""
         self.master_archive = load_top_10_master_archive(False)
+
+        # Reloading the master archive undoes any previous merging of aliased
+        # creators, so repeat the merge.
+        self.merged_creators = merge_aliased_creators(self.master_archive, self.aliases)
         self.refresh_controls()
 
     def refresh_controls(self, auto_select_date: bool=False):
@@ -515,7 +519,7 @@ class Leaderboard(GUI):
                     
             row = [
                 str(diff["new_rank"]),
-                creator,
+                self.leaderboard_name(creator),
                 str(old_rank),
                 str(rank_diff),
                 f"{diff['old_vote_share']:.2f}",
@@ -543,3 +547,16 @@ class Leaderboard(GUI):
             csv_writer = csv.writer(output_csv_file, lineterminator="\n")
             csv_writer.writerows(table)
             tk.messagebox.showinfo("Export complete", f"Leaderboard exported to {output_path}")
+
+    def leaderboard_name(self, creator: str) -> str:
+        """Return the creator's name as it should be displayed on the
+        leaderboard. For most creators this is just their name, for creators
+        with multiple aliases, this is their main name followed by their
+        aliases, separated by slashes."""
+        if creator in self.merged_creators:
+            names = [creator]
+            names.extend(self.aliases[creator])
+            return "/".join(names)
+
+        return creator
+

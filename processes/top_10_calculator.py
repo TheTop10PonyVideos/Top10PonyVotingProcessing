@@ -40,26 +40,19 @@ class Top10Calculator(GUI):
     def __init__(self):
         super().__init__()
         self.rank_algorithms = {
-            "total_votes": {
-                "label": "Total Votes",
-                "tooltip": "Videos are ranked by the total number of votes they received.",
-                "var": None,
-                "score_func": score_by_total_votes,
-                "file_suffix": "",
-            },
-            "weight_by_ballot_size": {
-                "label": "Weight by ballot size",
-                "tooltip": "Votes are weighted in proportion to the size of their ballot. This gives more voting power to people who voted for more videos.",
-                "var": None,
-                "score_func": score_weight_by_ballot_size,
-                "file_suffix": "-weighted-by-ballot-size",
-            },
             "half_weight_by_ballot_size": {
                 "label": "Half-weight by ballot size",
                 "tooltip": "Ballots with 5 or more votes have a weighting of 1, otherwise the weighting is s/5 where s is the ballot size. This gives less voting power to people who voted for fewer than 5 videos.",
                 "var": None,
                 "score_func": score_half_weight_by_ballot_size,
-                "file_suffix": "-half-weighted-by-ballot-size",
+                "file_suffix": "-half-weighted",
+            },
+            "total_votes": {
+                "label": "Total Votes",
+                "tooltip": "Videos are ranked by the total number of votes they received.",
+                "var": None,
+                "score_func": score_by_total_votes,
+                "file_suffix": "-total-votes",
             },
         }
 
@@ -135,9 +128,9 @@ class Top10Calculator(GUI):
         rank_methods_frame = tk.LabelFrame(main_frame, text="Ranking Algorithms")
 
         # Create variables and checkboxes for ranking methods
-        # Auto-select the "Total Votes" ranking algorithm
+        # Auto-select the "Half-weight by ballot size" ranking algorithm
         for key, algo in self.rank_algorithms.items():
-            algo["var"] = tk.BooleanVar(value=True if key == "total_votes" else False)
+            algo["var"] = tk.BooleanVar(value=True if key == "half_weight_by_ballot_size" else False)
 
         # Create checkboxes for ranking methods
         for key, algo in self.rank_algorithms.items():
