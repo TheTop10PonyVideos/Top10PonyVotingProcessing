@@ -14,6 +14,23 @@ local_top_10_archive_csv_path = "data/top_10_master_archive.csv"
 # Path to a local copy of the honorable mentions list (in CSV format).
 local_honorable_mentions_csv_path = "data/honorable_mentions_archive.csv"
 
+# More convenient aliases for the various archives.
+archives = {
+    "master": {
+        "local": local_top_10_archive_csv_path,
+        "url": top_10_archive_csv_url,
+    },
+    "honorable": {
+        "local": local_honorable_mentions_csv_path,
+        "url": honorable_mentions_csv_url,
+    },
+    "ancient": {
+        "local": "data/ancient_pony_videos.csv",
+        "url": "https://docs.google.com/spreadsheets/d/1_kAxJhcbHLvE1YeyWHj2KjgOcgQMC84wDoavzeLkpx8/export?format=csv",
+        "header_idx": 1
+    },
+}
+
 ydl_opts = {
     "quiet": True,
     "no_warnings": True,

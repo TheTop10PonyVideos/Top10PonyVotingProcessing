@@ -1,6 +1,7 @@
 from typing import TypedDict, NotRequired
 from collections.abc import Callable
 
+
 class ArchiveRecord(TypedDict):
     year: str
     month: str
@@ -13,9 +14,7 @@ class ArchiveRecord(TypedDict):
     alternate_link: str
     found: str
     notes: str
-    # TODO: A "Voters" field was added to the Google Sheet to keep a record of
-    # how many votes a video received - should it be included as a property on
-    # this TypedDict?
+
 
 class VideoData(TypedDict):
     title: str
@@ -23,6 +22,7 @@ class VideoData(TypedDict):
     upload_date: str
     duration: str
     platform: str
+
 
 class StatusRow(TypedDict):
     row: int

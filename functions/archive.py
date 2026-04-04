@@ -7,14 +7,17 @@ downloads a local copy of the spreadsheet and reads from that.
 """
 
 import csv, requests
+import pandas as pd
 from pathlib import Path
+from datetime import datetime
 from functions.messages import suc, inf
 from classes.typing import ArchiveRecord
 from data.globals import (
     honorable_mentions_csv_url,
     local_honorable_mentions_csv_path,
     local_top_10_archive_csv_path,
-    top_10_archive_csv_url
+    top_10_archive_csv_url,
+    archives,
 )
 
 def load_top_10_master_archive(local_first = True) -> list[ArchiveRecord]:
@@ -84,7 +87,7 @@ def load_honorable_mentions_archive(local_first = True) -> list[ArchiveRecord]:
                 break
         except Exception:
             inf(
-                "Downloading a copy of the honorable mentions archive one..."
+                "Downloading a copy of the honorable mentions archive..."
             )
             response = requests.get(honorable_mentions_csv_url)
             response.encoding = "utf-8"
@@ -96,6 +99,63 @@ def load_honorable_mentions_archive(local_first = True) -> list[ArchiveRecord]:
             )
 
     return archive_records
+
+
+def load_archive(archive_name: str) -> DataFrame:
+    """Load the named archive as a Pandas DataFrame."""
+
+    local_path = archives[archive_name]["local"]
+    archive_url = archives[archive_name]["url"]
+
+    # Some archives don't have their header on the first row, in which case they
+    # should specify a different header row.
+    header_idx = 0
+    try:
+        header_row_idx = archives[archive_name]["header_idx"]
+    except KeyError:
+        pass
+
+    try:
+        inf(f"Loading local copy of {archive_name} archive CSV...")
+        dataframe = pd.read_csv(local_path, header=header_idx)
+    except Exception:
+        inf(f"Downloading a copy of the {archive_name} archive...")
+        dataframe = pd.read_csv(archive_url, header=header_idx)
+        dataframe.to_csv(local_path)
+        suc(f"Local copy of {archive_name} archive saved to {local_path}.")
+
+    return dataframe
+    
+
+def convert_ancient_to_master_format(dataframe: pd.DataFrame) -> list[ArchiveRecord]:
+    """Given a Pandas DataFrame containing records from the ancient archive,
+    convert it to a list of ArchiveRecords."""
+    records = []
+
+    for index, row in dataframe.iterrows():
+        upload_date_ymd = row["upload_date YMD"]
+        # Ignore any ancient video without an upload date, since it won't be of
+        # any use for historical purposes
+        if pd.isna(upload_date_ymd):
+            continue
+
+        upload_date = datetime.strptime(upload_date_ymd, "%Y-%m-%d")
+
+        record = ArchiveRecord(
+            year = str(upload_date.year),
+            month = str(upload_date.month),
+            link = row["Original link"],
+            alternate_link = row["Current link"],
+            title = row["title"],
+            channel = row["Last known channel name"],
+            upload_date = row["upload_date YMD"],
+            state = row["last status"],
+            notes = row["Notes"],
+        )
+
+        records.append(record)
+
+    return records
 
 
 def merge_aliased_creators(archive: list[ArchiveRecord], aliases: dict[str, list[str]]) -> list[str]:
