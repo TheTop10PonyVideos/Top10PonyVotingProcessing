@@ -293,7 +293,7 @@ def generate_showcase_description(
 
     project_links = {
         "Website": "https://www.thetop10ponyvideos.com/",
-        "Discord server": "https://www.thetop10ponyvideos.com/discord",
+        #"Discord server": "https://www.thetop10ponyvideos.com/discord",
     }
 
     sharable_links = {

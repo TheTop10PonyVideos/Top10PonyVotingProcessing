@@ -25,15 +25,15 @@ from functions.date import (
     get_most_common_month_year,
 )
 from functions.general import pad_csv_rows
-from functions.archive import load_top_10_master_archive
+from functions.archive import load_top_10_master_archive, load_archive, convert_ancient_to_master_format
 from functions.video_data import fetch_videos_data
 from functions.messages import suc, inf, err
 from classes.gui import GUI
 
 
-# A list of year-anniversaries used for the History section (eg. 1 year, 5 year,
-# 10 year)
-anniversaries = [1, 5, 10]
+# A list of year-anniversaries used for the History section (1 year, 5 year,
+# 10 year, 15 year)
+anniversaries = [1, 5, 10, 15]
 
 
 class Top10Calculator(GUI):
@@ -300,7 +300,13 @@ class Top10Calculator(GUI):
         # For each ranking method, output a CSV file containing a top 10
         # calculated using it.
         output_csv_paths = []
+
+        # Load the master archive and merge in the Ancient Pony Videos archive,
+        # so that we can get data on REALLY old videos for the History section.
         master_archive = load_top_10_master_archive()
+        ancient_archive = convert_ancient_to_master_format(load_archive("ancient"))
+        archive_records = master_archive + ancient_archive
+
         for algo in rank_algorithms:
             suc(f'Calculating rankings using "{algo["label"]}" algorithm...')
 
@@ -311,7 +317,7 @@ class Top10Calculator(GUI):
                 algo["score_func"],
                 upload_date,
                 anniversaries,
-                master_archive,
+                archive_records,
             )
 
             # Write the calculated top 10 to a CSV file.

@@ -1,5 +1,6 @@
 import pytest
-from functions.archive import merge_aliased_creators
+from pandas import DataFrame
+from functions.archive import merge_aliased_creators, convert_ancient_to_master_format
 from classes.typing import ArchiveRecord
 
 def test_merge_aliased_creators():
@@ -108,3 +109,28 @@ def test_merge_aliased_creators():
     assert len(merged_creators) == 2
     assert merged_creators[0] == "Creator A"
     assert merged_creators[1] == "Creator B"
+
+
+def test_convert_ancient_to_master_format():
+    df = DataFrame({
+        "title": ["Ancient 1", "Ancient 2", "Ancient 3", "Ancient 4"],
+        "upload_date YMD": ["2011-04-01", "2010-10-10", "2010-07-10", None],
+        "Original link": ["https://example.com/1", "https://example.com/2", "https://example.com/3", "https://example.com/4"],
+        "last status": ["", "Deleted", "Unavailable", ""],
+        "Current link": ["https://example.com/4", "https://example.com/5", "https://example.com/6", "https://example.com/7"],
+        "Last known channel name": ["Uploader A", "Uploader B", "Uploader C", "Uploader D"],
+        "Notes": ["", "", "example", "no upload date"]
+    })
+
+    records = convert_ancient_to_master_format(df)
+
+    assert len(records) == 3
+    assert records[0]["year"] == "2011"
+    assert records[0]["month"] == "4"
+    assert records[0]["title"] == "Ancient 1"
+    assert records[1]["year"] == "2010"
+    assert records[1]["link"] == "https://example.com/2"
+    assert records[1]["upload_date"] == "2010-10-10"
+    assert records[1]["state"] == "Deleted"
+    assert records[2]["channel"] == "Uploader C"
+    assert records[2]["alternate_link"] == "https://example.com/6"

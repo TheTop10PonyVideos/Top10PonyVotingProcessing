@@ -61,16 +61,20 @@ def create_top10_csv_data(
     scoring_func,
     upload_date: datetime,
     anniversaries: list[int],
-    master_archive: list[dict],
+    archive_records: list[ArchiveRecord]
 ) -> list[dict]:
     """Given a list of title rows, use a scoring function to calculate
     rankings for all titles, and generate the CSV data for a Top 10 CSV file.
+    The resulting file includes the top 10 videos from those provided, an
+    Honorable Mentions list containing all videos that didn't make the top 10,
+    and a History section which sources old videos published on anniversaries of
+    the current showcase month.
 
     Mappings for URLs and uploaders must be supplied to populate the URL and
     Uploader columns.
 
-    For the History section, the upload date, desired year-anniversaries, and
-    master archive date must also be supplied."""
+    For the History section, the upload date, desired year-anniversaries, and a
+    list of master archive records must also be supplied."""
 
     # Calculate a ranked list of videos, highest ranked first, with tie-breaks
     # resolved automatically by random choice.
@@ -108,30 +112,30 @@ def create_top10_csv_data(
 
     # Read the Top 10 Pony Videos master archive and extract records for the 1
     # year, 5 year, and 10 year anniversaries of the upload date.
-    history = get_history(master_archive, upload_date, anniversaries)
+    history = get_history(archive_records, upload_date, anniversaries)
 
     # Create history records for each of the anniversaries.
     s = lambda n: "" if n == 1 else "s"
     anni_headings = {y: {"Title": f"{y} year{s(y)} ago"} for y in anniversaries}
     anni_records = {}
     for years_ago in anniversaries:
-        archive_records = history.get(years_ago, [])
+        records = history.get(years_ago, [])
 
         # Sort the archive records by rank, so that they match the ordering in
         # the calculated top 10 spreadsheet.
-        archive_records = sorted(archive_records, key=lambda r: r["rank"])
+        records = sorted(records, key=lambda r: r["rank"])
         anni_records[years_ago] = []
-        for archive_record in archive_records:
-            link = archive_record["link"]
-            alt_link = archive_record["alternate_link"]
+        for record in records:
+            link = record["link"]
+            alt_link = record["alternate_link"]
             anni_record = {
-                "Title": archive_record["title"],
-                "Uploader": archive_record["channel"],
+                "Title": record["title"],
+                "Uploader": record["channel"],
                 "URL": link,
             }
 
             if alt_link != link:
-                anni_record["Notes"] = f'Alt link: {archive_record["alternate_link"]}'
+                anni_record["Notes"] = f'Alt link: {record["alternate_link"]}'
 
             anni_records[years_ago].append(anni_record)
 
@@ -355,7 +359,9 @@ def score_half_weight_by_ballot_size(
 
 
 def get_history(
-    archive_records: list[ArchiveRecord], from_date: datetime, anniversaries: list[int]
+    archive_records: list[ArchiveRecord],
+    from_date: datetime,
+    anniversaries: list[int]
 ) -> dict[int, dict]:
     """Given a set of archive records (in the format specified by the header of
     the Top 10 Pony Videos master archive), return all records which occurred on
@@ -384,7 +390,7 @@ def get_history(
             anni_date = datetime(anni_year, month, 1)
             anni_month_year_str = anni_date.strftime("%B %Y")
             err(
-                f"Warning: No historical entries found for {anni_month_year_str}. Your local copy of the Top 10 Pony Videos master archive ({local_top_10_archive_csv_path}) may be out of date."
+                f"Warning: No historical entries found for {anni_month_year_str}. Your local copy of the Top 10 Pony Videos master archive ({local_top_10_archive_csv_path}) may be out of date, or you may be running a calculation on old voting data."
             )
 
     return history_records
