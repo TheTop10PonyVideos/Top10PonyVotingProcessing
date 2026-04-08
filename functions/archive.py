@@ -111,7 +111,7 @@ def load_archive(archive_name: str) -> DataFrame:
     # should specify a different header row.
     header_idx = 0
     try:
-        header_row_idx = archives[archive_name]["header_idx"]
+        header_idx = archives[archive_name]["header_idx"]
     except KeyError:
         pass
 
