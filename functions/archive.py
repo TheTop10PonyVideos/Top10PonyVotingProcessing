@@ -101,7 +101,7 @@ def load_honorable_mentions_archive(local_first = True) -> list[ArchiveRecord]:
     return archive_records
 
 
-def load_archive(archive_name: str) -> DataFrame:
+def load_archive(archive_name: str) -> pd.DataFrame:
     """Load the named archive as a Pandas DataFrame."""
 
     local_path = archives[archive_name]["local"]
