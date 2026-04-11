@@ -1,8 +1,7 @@
 """Functions related to processing the votes CSV."""
 
-import csv
-from pathlib import Path
-from functions.date import parse_votes_csv_timestamp, format_votes_csv_timestamp
+import pandas as pd
+from functions.date import format_votes_csv_timestamp
 from functions.url import (
     is_youtube_url,
     is_derpibooru_url,
@@ -18,74 +17,69 @@ from classes.exceptions import (
 )
 
 
-def load_votes_csv(csv_file_path_str: str) -> list[list[str]]:
-    """Given the path to a CSV file containing votes, load the votes, and return
-    a list of data rows."""
-
-    csv_file_path = Path(csv_file_path_str)
-    rows = None
-    with csv_file_path.open(encoding="utf8") as csv_file:
-        csv_reader = csv.reader(csv_file)
-        rows = [row for row in csv_reader]
-
-    return rows
+def load_votes_csv(csv_file_path_str: str) -> pd.DataFrame:
+    """Given the path to a CSV file containing votes, load the votes,
+    and return them in a dataframe."""
+    return pd.read_csv(csv_file_path_str, header=0, keep_default_na=False)
 
 
-def normalize_voting_data(rows: list[list[str]]) -> list[list[str]]:
-    """Given a set of data rows from a voting CSV, replace all of the URLs with
+def normalize_url(url: str):
+    url = url.strip()
+
+    if not url:
+        return url
+
+    if '://' not in url:
+        url = 'https://' + url
+
+    if is_youtube_url(url):
+        url, _ = normalize_youtube_url(url)
+    elif is_derpibooru_url(url):
+        url = normalize_derpibooru_url(url)
+    
+    return url
+
+
+def normalize_voting_data(df: pd.DataFrame) -> pd.DataFrame:
+    """Given raw voting data, replace all of the URLs with
     "normalized" forms, such that different forms of the same URL become
     identical. This makes the output neater and prevents accidental
     undercounting.
 
     The data is assumed to be from the "unshifted" version of the voting data
     (ie. the voting CSV as obtained from Google Forms)."""
-    normalized_rows = [[cell.strip() for cell in row] for row in rows]
+    normalized = df.copy()
+    normalized.iloc[:, 1:] = df.iloc[:, 1:].map(normalize_url)
+    normalized.columns = ['Timestamp'] + [''] * (len(df.columns) - 1)
 
-    # Skipping header row
-    for row_idx, row in enumerate(normalized_rows[1:], 1):
-        # Skipping "Timestamp" column
-        for cell_idx, cell in enumerate(row[1:], 1):
-            if not cell:
-                continue
-            if "://" not in cell:
-                cell = f"https://{cell}"
-            if is_youtube_url(cell):
-                cell, _ = normalize_youtube_url(cell)
-            if is_derpibooru_url(cell):
-                cell = normalize_derpibooru_url(cell)
-
-            normalized_rows[row_idx][cell_idx] = cell
-
-    return normalized_rows
+    return normalized
 
 
-def process_voting_data(csv_rows: list[list[str]]) -> list[Ballot]:
+def process_voting_data(df: pd.DataFrame) -> list[Ballot]:
     """Process the data from a (unshifted) votes CSV into a list of ballots.
 
     As a validity check, the header row of a votes CSV is required to begin with
     a "Timestamp" cell.
     """
-    header_row = csv_rows[0]
-    if header_row[0].strip() != "Timestamp":
+    if df.columns[0].strip() != "Timestamp":
         raise ValueError(
             'Cannot process votes CSV; header row is invalid. The first cell must be the string "Timestamp"'
         )
-    data_rows = csv_rows[1:]
+    
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'], format='%m/%d/%Y %H:%M:%S')
 
-    ballots = [process_votes_csv_row(row) for row in data_rows]
+    ballots: pd.Series = df.apply(process_votes_csv_row, axis=1)
+    return ballots.to_list()
 
-    return ballots
 
-
-def process_votes_csv_row(row: list[str]) -> Ballot:
+def process_votes_csv_row(row: pd.Series) -> Ballot:
     """Process a data row of a votes CSV into a Ballot object."""
-    timestamp = row[0]
-    timestamp_dt = parse_votes_csv_timestamp(timestamp)
+    timestamp = row['Timestamp']
 
-    vote_cells = row[1:]
-    votes = [Vote(cell.strip()) for cell in vote_cells if cell.strip() != ""]
+    vote_cells = row.iloc[1:].str.strip()
+    votes = vote_cells[vote_cells != ''].map(Vote).to_list()
 
-    return Ballot(timestamp_dt, votes)
+    return Ballot(timestamp, votes)
 
 
 def fetch_video_data_for_ballots(
@@ -148,8 +142,8 @@ def validate_video_data(data: dict) -> list[str]:
 
 def generate_annotated_csv_data(
     ballots: list[Ballot], videos: dict[str, Video]
-) -> list[list[str]]:
-    """Given a list of ballots, generate a list of data rows that can be written
+) -> pd.DataFrame:
+    """Given a list of ballots, generate a dataframe that can be written
     to a CSV file, for use with the `calc.py` calculation script. The output
     resembles the input CSV, but with an additional column inserted after each
     URL column, in which the annotations for each vote are written next to each
@@ -159,53 +153,37 @@ def generate_annotated_csv_data(
     # Number of columns = 1 Timestamp column, plus 10 vote columns, multiplied
     # by 2 for annotation columns = 22
     num_cols = (1 + 10) * 2
-    header_row = ["" for i in range(num_cols)]
+    header_row = [''] * num_cols
     header_row[0] = "Timestamp"
-    data_rows = []
 
-    for ballot in ballots:
-        data_row = [format_votes_csv_timestamp(ballot.timestamp), ""]
-        for vote in ballot.votes:
+    df = pd.DataFrame('', index=range(len(ballots)), columns=header_row)
+
+    df['Timestamp'] = [format_votes_csv_timestamp(ballot.timestamp) for ballot in ballots]
+    for r, ballot in enumerate(ballots):
+        df.iloc[r, 0] = format_votes_csv_timestamp(ballot.timestamp)
+
+        for c, vote in enumerate(ballot.votes, 1):
             video = videos[vote.url]
-            if video.data is not None:
-                data_row.append(video["title"])
-            else:
-                # By convention, we include the voted-for URL if we weren't able
-                # to obtain any video data for it - this makes it easier for the
-                # user to check the URL themselves to see what's wrong.
-                data_row.append(vote.url)
+            # By convention, we include the voted-for URL if we weren't able
+            # to obtain any video data for it - this makes it easier for the
+            # user to check the URL themselves to see what's wrong.
+            df.iloc[r, c * 2] = video["title"] if video.data is not None else vote.url
 
-            if vote.annotations.has_none():
-                data_row.append("")
-            else:
-                data_row.append(vote.annotations.get_label())
+            if not vote.annotations.has_none():
+                df.iloc[r, c * 2 + 1] = vote.annotations.get_label()
 
-        # Pad any missing columns with empty cells
-        while len(data_row) < num_cols:
-            data_row.append("")
-
-        data_rows.append(data_row)
-
-    csv_rows = [header_row]
-    for data_row in data_rows:
-        csv_rows.append(data_row)
-
-    return csv_rows
+    return df
 
 
-def shift_cells(row: list[str]) -> list[str]:
-    """Given a list of string values, return a "shifted" list in which each cell
-    is succeeded by an empty cell."""
-    shifted_row = []
-    for cell in row:
-        shifted_row.extend([cell, ""])
+def shift_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Given a dataframe, return a dataframe of string columns where each
+    cell of each row is succeeded by an empty cell. This results in a grid
+    of cells interlaced with blank columns."""
+    num_cols = len(df.columns) * 2
+    cols = [''] * num_cols
+    cols[::2] = df.columns
 
-    return shifted_row
+    shifted = pd.DataFrame('', index=df.index, columns=cols)
+    shifted.iloc[:,::2] = df.astype(str)
 
-
-def shift_columns(rows: list[list[str]]) -> list[list[str]]:
-    """Given a list of rows of string values, return a list in which each cell
-    of each row is succeeded by an empty cell. This results in a grid of cells
-    interlaced with blank columns."""
-
-    return [shift_cells(row) for row in rows]
+    return shifted

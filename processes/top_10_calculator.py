@@ -1,7 +1,7 @@
 """Top 10 Calculator script. This is typically run by the user after they have
 finished running vote-processing.py, as it uses the outputs from that script."""
 
-import csv
+import csv, pandas as pd
 from datetime import datetime
 from pathlib import Path
 import tkinter as tk
@@ -16,13 +16,10 @@ from functions.top_10_calc import (
     get_titles_to_urls_mapping,
     get_titles_to_uploaders,
     create_top10_csv_data,
-    calc_ranked_records,
     score_by_total_votes,
-    score_weight_by_ballot_size,
-    score_half_weight_by_ballot_size,
+    score_half_weight_by_ballot_size
 )
 from functions.date import (
-    parse_votes_csv_timestamp,
     get_preceding_month_date,
     get_most_common_month_year,
 )
@@ -190,9 +187,9 @@ class Top10Calculator(GUI):
         if not youtube_api_key:
             return
 
-        input_csv_path = self.input_file_var.get()
+        input_csv_path = self.input_file_var.get().strip()
         urls_csv_path = self.shifted_file_var.get()
-        if input_csv_path.strip() == "":
+        if input_csv_path == "":
             tk.messagebox.showinfo("Error", "Please select a CSV file.")
             return
 
@@ -214,15 +211,8 @@ class Top10Calculator(GUI):
         shifted_url_rows = None
 
         try:
-            with (
-                open(input_csv_path, "r", encoding="utf-8") as titles_csv_file,
-                open(urls_csv_path, "r", encoding="utf-8") as urls_csv_file,
-            ):
-                shifted_titles_reader = csv.reader(titles_csv_file)
-                shifted_urls_reader = csv.reader(urls_csv_file)
-
-                shifted_title_rows = [row for row in shifted_titles_reader]
-                shifted_url_rows = [row for row in shifted_urls_reader]
+            shifted_title_rows = pd.read_csv(input_csv_path)
+            shifted_url_rows = pd.read_csv(urls_csv_path)
         except FileNotFoundError:
             tk.messagebox.showinfo(
                 "Error",
@@ -232,12 +222,9 @@ class Top10Calculator(GUI):
             return
 
         # Guess the voting month and year from the dates in the timestamps column.
-        timestamps = [row[0] for row in shifted_url_rows[1:]]
-        timestamp_dates = [
-            parse_votes_csv_timestamp(timestamp) for timestamp in timestamps
-        ]
+        shifted_url_rows['Timestamp'] = pd.to_datetime(shifted_url_rows['Timestamp'])
         voting_month, voting_year, is_unanimous = get_most_common_month_year(
-            timestamp_dates
+            shifted_url_rows['Timestamp']
         )
         voting_date = datetime(voting_year, voting_month, 1)
 

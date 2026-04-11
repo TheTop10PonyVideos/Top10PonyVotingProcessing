@@ -1,49 +1,9 @@
 """General functions for dealing with awkward dates and durations."""
 
-import re
 from datetime import datetime
 from pytz import timezone
 from functions.general import get_freq_table
 from classes.voting import Ballot
-
-
-def parse_votes_csv_timestamp(timestamp: str) -> datetime:
-    """Parse the timestamp from the votes CSV file into a datetime object.
-
-    The timestamp is in the format M/D/Y h:m:s, where - annoyingly - M, D, and h
-    can have either 1 or 2 digits. Python's `strptime` parser isn't able to
-    handle that, so we have to preprocess the date a little first.
-    """
-
-    timestamp = timestamp.strip()
-    pattern = r"^(\d+)/(\d+)/(\d+) (\d+):(\d+):(\d+)$"
-    match = re.match(pattern, timestamp)
-    try:
-        date_components = match.groups()
-    except AttributeError:
-        raise ValueError(
-            f'Cannot parse votes CSV timestamp "{timestamp}"; invalid format'
-        )
-
-    if len(date_components) != 6:
-        raise ValueError(
-            f'Cannot parse votes CSV timestamp "{timestamp}"; invalid format'
-        )
-
-    month, day, year, hour, minute, second = date_components
-    month = month.zfill(2)
-    day = day.zfill(2)
-    year = year.zfill(4)
-    hour = hour.zfill(2)
-    minute = minute.zfill(2)
-    second = second.zfill(2)
-
-    processed_timestamp = f"{month}/{day}/{year} {hour}:{minute}:{second}"
-
-    timestamp_format = "%m/%d/%Y %H:%M:%S"
-    dt = datetime.strptime(processed_timestamp, timestamp_format)
-
-    return dt.replace(tzinfo=None)
 
 
 def format_votes_csv_timestamp(dt: datetime) -> str:

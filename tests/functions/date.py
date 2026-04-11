@@ -2,7 +2,6 @@ from unittest import TestCase
 from pytz import timezone
 from datetime import datetime
 from functions.date import (
-    parse_votes_csv_timestamp,
     format_votes_csv_timestamp,
     get_preceding_month_date,
     get_month_year_bounds,
@@ -13,27 +12,6 @@ from classes.voting import Ballot
 
 
 class TestFunctionsDate(TestCase):
-    def test_parse_votes_csv_timestamp(self):
-        timestamp = "4/1/2024 9:00:00"
-        dt = parse_votes_csv_timestamp(timestamp)
-        self.assertEqual("2024-04-01T09:00:00", dt.isoformat())
-
-        timestamp = "12/31/2024 23:59:59"
-        dt = parse_votes_csv_timestamp(timestamp)
-        self.assertEqual("2024-12-31T23:59:59", dt.isoformat())
-
-        timestamp = "02/02/2022 02:02:02"
-        dt = parse_votes_csv_timestamp(timestamp)
-        self.assertEqual("2022-02-02T02:02:02", dt.isoformat())
-
-        timestamp = "11/6/2023 10:23:36"
-        dt = parse_votes_csv_timestamp(timestamp)
-        self.assertEqual("2023-11-06T10:23:36", dt.isoformat())
-
-        timestamp = "Invalid date string"
-        with self.assertRaises(ValueError):
-            dt = parse_votes_csv_timestamp(timestamp)
-
     def test_format_votes_csv_timestamp(self):
         dt = datetime(2024, 4, 1, 9, 0, 0)
         timestamp = format_votes_csv_timestamp(dt)

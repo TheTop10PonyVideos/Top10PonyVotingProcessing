@@ -2,6 +2,7 @@
 
 from random import randint
 from pathlib import Path
+import pandas as pd
 
 
 def load_text_data(path_str: str) -> list[str]:
@@ -44,38 +45,22 @@ def sample_item_without_replacement(items: list):
     return sampled_item
 
 
-def pad_csv_rows(rows: list[list], num_rows: int) -> list[list]:
-    """Given a list of lists representing the rows of a CSV, return the same
+def pad_csv_rows(df: pd.DataFrame, num_rows: int):
+    """Given a dataframe of string columns, return the same
     structure but padded with empty rows to the given amount. For example,
     padding a 5-row CSV to 10 rows will append 5 empty rows. An empty row is a
     list of zero-length strings.
 
-    It is expected that every row will have the same length, as this is usually
-    the case with CSVs produced by a spreadsheet program. If this is not the
-    case, an error is thrown.
-
     If the given list of rows is already greater than the desired pad length, it
     is returned unchanged."""
-    num_rows_diff = len(rows) - num_rows
+    num_rows_diff = len(df) - num_rows
 
     # No padding required
-    if len(rows) >= num_rows:
-        return rows
-
-    # Raise error if all rows not same length
-    row_length = len(rows[0])
-    for i, row in enumerate(rows):
-        if len(row) != row_length:
-            raise Exception(f"Cannot pad rows - all rows must be the same length. The first row has length {row_length}, but row {i} has length {len(rows[0])}")
+    if len(df) >= num_rows:
+        return df
 
     # Pad with empty rows 
-    padded_rows = []
-    for i in range(num_rows):
-        if i < len(rows):
-            padded_rows.append(rows[i])
-            continue
-
-        empty_row = ["" for j in range(row_length)]
-        padded_rows.append(empty_row)
+    empty_rows = pd.DataFrame('', index=range(num_rows_diff), columns=df.columns)
+    padded_rows = pd.concat([df, empty_rows], ignore_index=True)
 
     return padded_rows

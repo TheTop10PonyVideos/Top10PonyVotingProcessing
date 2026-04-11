@@ -1,6 +1,6 @@
 """Top 10 Pony Video Squeezer 3000 (vote processing) application."""
 
-import csv, sys, traceback
+import sys, traceback
 from datetime import datetime
 from pathlib import Path
 import tkinter as tk
@@ -481,9 +481,7 @@ class VoteProcessing(GUI):
         inf(f"Writing annotated ballot data...")
         output_csv_data = generate_annotated_csv_data(ballots, videos)
         output_csv_path = Path(output_csv_path_str)
-        with output_csv_path.open("w", newline="", encoding="utf-8") as output_csv_file:
-            output_csv_writer = csv.writer(output_csv_file)
-            output_csv_writer.writerows(output_csv_data)
+        output_csv_data.to_csv(output_csv_path, index=False)
 
         suc(f'Wrote annotated ballot data to "{output_csv_path_str}".')
 
@@ -495,13 +493,7 @@ class VoteProcessing(GUI):
         inf(f'Writing "shifted cells" CSV...')
         shifted_voting_data = shift_columns(normalized_voting_data)
 
-        with (
-            shifted_cells_path.open(
-                "w", newline="", encoding="utf-8"
-            ) as shifted_cells_file,
-        ):
-            writer = csv.writer(shifted_cells_file)
-            writer.writerows(shifted_voting_data)
+        shifted_voting_data.to_csv(shifted_cells_path, index=False)
 
         suc(f'Wrote "shifted cells" data to "{shifted_cells_path}".')
 
