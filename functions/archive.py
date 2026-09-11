@@ -10,6 +10,7 @@ import csv, requests
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
+from functions.url import normalize_url
 from functions.messages import suc, inf
 from classes.typing import ArchiveRecord
 from data.globals import (
@@ -102,7 +103,8 @@ def load_honorable_mentions_archive(local_first = True) -> list[ArchiveRecord]:
 
 
 def load_archive(archive_name: str) -> pd.DataFrame:
-    """Load the named archive as a Pandas DataFrame."""
+    """Load the named archive as a Pandas DataFrame. Archive names are sourced
+    from the data/globals.py module (e.g. "master", "honorable", "ancient")."""
 
     local_path = archives[archive_name]["local"]
     archive_url = archives[archive_name]["url"]
@@ -134,7 +136,13 @@ def convert_ancient_to_master_format(dataframe: pd.DataFrame) -> list[ArchiveRec
     records = []
 
     for index, row in dataframe.iterrows():
+        # Pandas converts missing values to its own "not a number" type, which
+        # don't mean anything outside of a Pandas context. Convert these values
+        # to regular None types.
+        row = {k: v if not pd.isna(v) else None for k, v in row.items()}
+
         upload_date_ymd = row["upload_date YMD"]
+
         # Ignore any ancient video without an upload date, since it won't be of
         # any use for historical purposes
         if pd.isna(upload_date_ymd):
@@ -163,6 +171,32 @@ def convert_ancient_to_master_format(dataframe: pd.DataFrame) -> list[ArchiveRec
         records.append(record)
 
     return records
+
+
+def merge_archives(archives: list[list[ArchiveRecords]]) -> list[ArchiveRecords]:
+    """Given a list of archives (each a list of ArchiveRecords), merge them all
+    into a single list of ArchiveRecords. If two archives contain a video with
+    the same URL, favor the record from the first archive in the list and
+    disregard all others. The resulting list should contain exactly one record
+    for each video URL."""
+
+    merged_archive = []
+    added_urls = []
+
+    for archive in archives:
+        for record in archive:
+            # If the record doesn't have a link attribute (some don't, if the
+            # original video was deleted), include the record but don't attempt
+            # to deduplicate.
+            url = record["link"]
+            if url is not None:
+                url = normalize_url(url)
+                if url in added_urls:
+                    continue
+                added_urls.append(url)
+            merged_archive.append(record)
+
+    return merged_archive
 
 
 def merge_aliased_creators(archive: list[ArchiveRecord], aliases: dict[str, list[str]]) -> list[str]:

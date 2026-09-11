@@ -1,7 +1,198 @@
 import pytest
 from pandas import DataFrame
-from functions.archive import merge_aliased_creators, convert_ancient_to_master_format
+from functions.archive import (
+    merge_archives,
+    merge_aliased_creators,
+    convert_ancient_to_master_format,
+)
 from classes.typing import ArchiveRecord
+
+def test_merge_archives_single():
+    archive: list[ArchiveRecord] = [
+        {
+            "year": "2026",
+            "month": "4",
+            "rank": "1",
+            "link": "https://example.com/1",
+            "title": "Example 1",
+            "channel": "Creator A",
+            "upload_date": "2026-04-01",
+            "state": "",
+            "alternate_link": "",
+            "found": "found",
+            "notes": "",
+            "Voters": "60",
+        },
+        {
+            "year": "2026",
+            "month": "4",
+            "rank": "2",
+            "link": "https://example.com/2",
+            "title": "Example 2",
+            "channel": "Creator A",
+            "upload_date": "2026-04-02",
+            "state": "",
+            "alternate_link": "",
+            "found": "found",
+            "notes": "",
+            "Voters": "50",
+        },
+        {
+            "year": "2026",
+            "month": "4",
+            "rank": "3",
+            "link": "https://example.com/3",
+            "title": "Example 3",
+            "channel": "Creator B",
+            "upload_date": "2026-04-03",
+            "state": "",
+            "alternate_link": "",
+            "found": "found",
+            "notes": "",
+            "Voters": "40",
+        },
+    ]
+
+    merged = merge_archives([archive])
+
+    assert len(merged) == 3
+    assert merged[0]["link"] == "https://example.com/1"
+    assert merged[1]["link"] == "https://example.com/2"
+    assert merged[2]["link"] == "https://example.com/3"
+
+
+def test_merge_archives_multiple():
+    archives: list[list[ArchiveRecord]] = [
+        [
+            {
+                "year": "2026",
+                "month": "4",
+                "rank": "1",
+                "link": "https://example.com/1",
+                "title": "Example 1",
+                "channel": "Creator A",
+                "upload_date": "2026-04-01",
+                "state": "",
+                "alternate_link": "",
+                "found": "found",
+                "notes": "",
+                "Voters": "60",
+            },
+            {
+                "year": "2026",
+                "month": "4",
+                "rank": "2",
+                "link": "https://example.com/2",
+                "title": "Example 2",
+                "channel": "Creator A",
+                "upload_date": "2026-04-02",
+                "state": "",
+                "alternate_link": "",
+                "found": "found",
+                "notes": "",
+                "Voters": "50",
+            },
+            {
+                "year": "2026",
+                "month": "4",
+                "rank": "3",
+                "link": "https://example.com/3",
+                "title": "Example 3",
+                "channel": "Creator B",
+                "upload_date": "2026-04-03",
+                "state": "",
+                "alternate_link": "",
+                "found": "found",
+                "notes": "",
+                "Voters": "40",
+            },
+        ],
+        [
+            {
+                "year": "2016",
+                "month": "3",
+                "rank": "1",
+                "link": "https://example.com/4",
+                "title": "Example 4",
+                "channel": "Creator C",
+                "upload_date": "2016-03-01",
+                "state": "",
+                "alternate_link": "",
+                "found": "found",
+                "notes": "",
+                "Voters": "71",
+            },
+            {
+                "year": "2016",
+                "month": "3",
+                "rank": "2",
+                "link": "https://example.com/5",
+                "title": "Example 5",
+                "channel": "Creator D",
+                "upload_date": "2026-03-02",
+                "state": "",
+                "alternate_link": "",
+                "found": "found",
+                "notes": "",
+                "Voters": "61",
+            },
+            {
+                "year": "2016",
+                "month": "3",
+                "rank": "3",
+                "link": "https://example.com/6",
+                "title": "Example 6",
+                "channel": "Creator E",
+                "upload_date": "2026-03-03",
+                "state": "",
+                "alternate_link": "",
+                "found": "found",
+                "notes": "",
+                "Voters": "51",
+            },
+        ],
+        [
+            {
+                "year": "2011",
+                "month": "2",
+                "rank": "1",
+                "link": "https://example.com/7",
+                "title": "Example 7",
+                "channel": "Creator F",
+                "upload_date": "2011-02-01",
+                "state": "",
+                "alternate_link": "",
+                "found": "found",
+                "notes": "",
+                "Voters": "112",
+            },
+            {
+                "year": "2011",
+                "month": "2",
+                "rank": "2",
+                "link": "https://example.com/2",
+                "title": "Example 2",
+                "channel": "Creator A",
+                "upload_date": "2011-02-02",
+                "state": "",
+                "alternate_link": "",
+                "found": "found",
+                "notes": "",
+                "Voters": "102",
+            },
+        ],
+    ]
+
+    merged = merge_archives(archives)
+
+    assert len(merged) == 7
+    assert merged[0]["link"] == "https://example.com/1"
+    assert merged[1]["link"] == "https://example.com/2"
+    assert merged[2]["link"] == "https://example.com/3"
+    assert merged[3]["link"] == "https://example.com/4"
+    assert merged[4]["link"] == "https://example.com/5"
+    assert merged[5]["link"] == "https://example.com/6"
+    assert merged[6]["link"] == "https://example.com/7"
 
 def test_merge_aliased_creators():
     aliases = {

@@ -26,7 +26,18 @@ def is_derpibooru_url(url: str) -> bool:
     return "derpibooru.org" in url_components.netloc
 
 
-def normalize_youtube_url(url: str):
+def normalize_url(url: str) -> str:
+    """Attempt to normalize the given URL, using the normalization methods known
+    to the application. If the URL cannot be normalized, it is returned
+    unchanged."""
+    if is_youtube_url(url):
+        return normalize_youtube_url(url)[0]
+    if is_derpibooru_url(url):
+        return normalize_derpibooru_url(url)
+
+    return url
+
+def normalize_youtube_url(url: str) -> tuple[str, str]:
     """Given a YouTube URL which may contain various combinations and orderings
     of query parameters, return a "normalized" URL with the minimal
     set of parameters needed, as well as the video id."""

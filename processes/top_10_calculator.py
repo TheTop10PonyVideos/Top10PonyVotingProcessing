@@ -27,7 +27,12 @@ from functions.date import (
     get_most_common_month_year,
 )
 from functions.general import pad_csv_rows
-from functions.archive import load_top_10_master_archive, load_archive, convert_ancient_to_master_format
+from functions.archive import (
+    load_top_10_master_archive,
+    load_archive,
+    convert_ancient_to_master_format,
+    merge_archives,
+)
 from functions.video_data import fetch_videos_data
 from functions.messages import suc, inf, err
 from classes.gui import GUI
@@ -304,7 +309,7 @@ class Top10Calculator(GUI):
         # so that we can get data on REALLY old videos for the History section.
         master_archive = load_top_10_master_archive()
         ancient_archive = convert_ancient_to_master_format(load_archive("ancient"))
-        archive_records = master_archive + ancient_archive
+        archive_records = merge_archives([master_archive, ancient_archive])
 
         for algo in rank_algorithms:
             suc(f'Calculating rankings using "{algo["label"]}" algorithm...')
