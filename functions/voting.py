@@ -152,7 +152,6 @@ def generate_annotated_csv_data(
 
     df = pd.DataFrame('', index=range(len(ballots)), columns=header_row)
 
-    df['Timestamp'] = [format_votes_csv_timestamp(ballot.timestamp) for ballot in ballots]
     for r, ballot in enumerate(ballots):
         df.iloc[r, 0] = format_votes_csv_timestamp(ballot.timestamp)
 
