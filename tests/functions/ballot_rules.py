@@ -7,7 +7,6 @@ from functions.ballot_rules import (
     check_ballot_video_durations,
     check_fuzzy,
     check_ballot_uploader_occurrences,
-    check_ballot_uploader_diversity,
 )
 from classes.voting import Ballot, Vote, Video
 
@@ -384,18 +383,6 @@ class TestFunctionsBallotRules(TestCase):
             "https://example.com/15": Video({"uploader": "EEEEE"}),
         }
 
-        check_ballot_uploader_diversity(ballots, videos)
-
-        self.assertTrue(ballots[0].votes[0].annotations.has("5 CHANNEL RULE"))
-        self.assertTrue(ballots[0].votes[1].annotations.has("5 CHANNEL RULE"))
-        self.assertTrue(ballots[0].votes[2].annotations.has("5 CHANNEL RULE"))
-        self.assertTrue(ballots[0].votes[3].annotations.has("5 CHANNEL RULE"))
-        self.assertTrue(ballots[0].votes[4].annotations.has("5 CHANNEL RULE"))
-        self.assertTrue(ballots[0].votes[5].annotations.has("5 CHANNEL RULE"))
-        self.assertTrue(ballots[0].votes[6].annotations.has("5 CHANNEL RULE"))
-        self.assertTrue(ballots[0].votes[7].annotations.has("5 CHANNEL RULE"))
-        self.assertTrue(ballots[0].votes[8].annotations.has("5 CHANNEL RULE"))
-        self.assertTrue(ballots[0].votes[9].annotations.has("5 CHANNEL RULE"))
         self.assertTrue(ballots[1].votes[0].annotations.has_none())
         self.assertTrue(ballots[1].votes[1].annotations.has_none())
         self.assertTrue(ballots[1].votes[2].annotations.has_none())

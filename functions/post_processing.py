@@ -118,16 +118,8 @@ def generate_sharable_records(
     [2]: https://docs.google.com/spreadsheets/d/1CCXeLR18mdDx6T2wQcxjTW-LRauTNFmG88OKvfSHy_M
     """
 
-    # Probably shouldn't do this, but since one of the fields requested by the
-    # sharable spreadsheet is the total number of voters, we can
-    # reverse-engineer that figure from votes and percentage:
-    # TODO: This won't give the correct result for Total voters when we switch
-    # to weighted votes, as we'll no longer have exactly one vote per voter
-    # (instead, some votes will be weighted less than 1 depending on their
-    # ballot).
-    percentage = float(top_10_records[0]["Percentage"].strip("%"))
-    votes = float(top_10_records[0]["Total Votes"])
-    total_voters = round((100 * votes) / percentage)
+    max_votes = top_10_records[0]["Max Votes"]
+    total_voters = top_10_records[0]["Total Voters"]
 
     records = []
 
@@ -137,9 +129,10 @@ def generate_sharable_records(
             "Rank": rank,
             "Title": top_10_record["Title"],
             "Link": f'=VLOOKUP("{top_10_record["URL"]}", IMPORTRANGE("{MASTER_ARCHIVE_URL}", "top10!D:I"), 6, FALSE)',
-            "Votes": top_10_record["Total Votes"],
+            "Votes": top_10_record["Votes"],
             "Popularity": top_10_record["Percentage"],
-            "Total voters": total_voters,
+            "Max Votes": max_votes,
+            "Total Voters": total_voters,
             "Notes": top_10_record["Notes"],
         }
 
@@ -154,9 +147,10 @@ def generate_sharable_records(
             "Rank": "HM",
             "Title": hm_record["Title"],
             "Link": f'=VLOOKUP("{hm_record["URL"]}", IMPORTRANGE("{MASTER_ARCHIVE_URL}", "Honorable Mentions!C:I"), 6, FALSE)',
-            "Votes": hm_record["Total Votes"],
+            "Votes": hm_record["Votes"],
             "Popularity": hm_record["Percentage"],
-            "Total voters": total_voters,
+            "Max Votes": max_votes,
+            "Total Voters": total_voters,
             "Notes": hm_notes,
         }
 
@@ -238,7 +232,7 @@ def generate_sharable_csv(records: list[dict], filename: str):
     """Given a list of sharable spreadsheet records, write them to a CSV file in
     a tabular format."""
     csv_path = Path(filename)
-    header = ["Rank", "Title", "Link", "Votes", "Popularity", "Total voters", "Notes"]
+    header = ["Rank", "Title", "Link", "Votes", "Popularity", "Max Votes", "Total Voters", "Notes"]
 
     for record in records:
         if len(record) != len(header):

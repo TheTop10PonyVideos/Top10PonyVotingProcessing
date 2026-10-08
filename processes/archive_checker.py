@@ -174,7 +174,7 @@ class ArchiveStatusChecker(GUI):
         # Info Frame
         self.label_progress = tk.Label(
             frame_info,
-            text=f"Progress: {0}/{self.num_to_fetch} videos checked",
+            text=f"Progress: 0/{self.num_to_fetch} videos checked",
         )
         self.label_progress.grid(column=0, row=1, padx=3, pady=3)
 
@@ -310,9 +310,7 @@ class ArchiveStatusChecker(GUI):
                 if not status_info.get("embeddable"):
                     states.add(VideoState.NON_EMBEDDABLE)
 
-                if (
-                    video_details.get("contentRating", {}).get("ytRating") == "ytAgeRestricted"
-                ):
+                if video_details.get("contentRating", {}).get("ytRating") == "ytAgeRestricted":
                     states.add(VideoState.AGE_RESTRICTED)
 
                 region_restriction = video_details.get("regionRestriction", {})
