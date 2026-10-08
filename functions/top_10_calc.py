@@ -5,34 +5,35 @@ from classes.typing import ArchiveRecord
 from functions.general import sample_item_without_replacement
 from functions.messages import err
 from data.globals import local_top_10_archive_csv_path
+import pandas as pd
 
 
-def process_shifted_voting_data(rows: list[list[str]]) -> list[list[str]]:
+def process_shifted_voting_data(df: pd.DataFrame):
     """Given a set of data obtained from a "shifted" CSV (ie. a votes CSV with
-    annotation columns inserted after every original column), return a list of
+    annotation columns inserted after every original column), return a view of
     rows containing just the data fields, with the "shifted" cells removed."""
-    # Remove the header row
-    data_rows = rows[1:]
-
     # Ignore the first column and odd-indexed columns
-    data_rows = [row[2::2] for row in data_rows]
-
-    return data_rows
+    return df.iloc[:, 2::2]
 
 
 def get_titles_to_urls_mapping(
-    title_rows: list[list[str]], url_rows: list[list[str]]
+    titles_df: pd.DataFrame, urls_df: pd.DataFrame
 ) -> dict[str, str]:
-    """Given a set of (unshifted) title rows and a matching set of URL rows,
+    """Given an (unshifted) titles df and a matching one of URLs,
     return a dictionary that maps each title to its corresponding URL.
 
     If the same title maps to multiple URLs, the last-encountered title-to-URL
     mapping will be used."""
     titles_to_urls = {}
 
-    for title_row, url_row in zip(title_rows, url_rows, strict=True):
-        for title, url in zip(title_row, url_row):
-            titles_to_urls[title] = url
+    # Using numpy indexing to flatten since pandas would just return
+    # a dataframe with NA cells where the condition was False
+    nonempty = titles_df.notna().to_numpy()
+    titles = titles_df.to_numpy()[nonempty]
+    urls = urls_df.to_numpy()[nonempty]
+
+    for title, url in zip(titles, urls, strict=True):
+        titles_to_urls[title] = url
 
     return titles_to_urls
 
@@ -55,7 +56,7 @@ def get_titles_to_uploaders(
 
 
 def create_top10_csv_data(
-    title_rows: list[list[str]],
+    title_rows: pd.DataFrame,
     titles_to_urls: dict[str, str],
     titles_to_uploaders: dict[str, str],
     scoring_func,
@@ -100,7 +101,7 @@ def create_top10_csv_data(
     # were excluded due to a tie break, add a special note for them.
     tenth_place_record = top_10_records[9]
     for record in non_top_10_records:
-        if record["Total Votes"] == tenth_place_record["Total Votes"]:
+        if record["Votes"] == tenth_place_record["Votes"]:
             record["Notes"] = "Missed out on top 10 due to tie break"
         else:
             break
@@ -160,13 +161,13 @@ def create_top10_csv_data(
 
 
 def calc_ranked_records(
-    title_rows: list[list[str]],
+    titles_df: pd.DataFrame,
     titles_to_urls: dict[str, str],
     titles_to_uploaders: dict[str, str],
     scoring_func,
     min_votes = 1
 ) -> list[dict]:
-    """Given a list of title rows, where each row represents the titles voted on
+    """Given a dataframe of title rows, where each row represents the titles voted on
     in one ballot, calculate the frequency of occurrence of each title and
     generate a set of data records for the top 10 spreadsheet.
 
@@ -175,21 +176,21 @@ def calc_ranked_records(
     scores are used to determine the ranking of each record."""
 
     # Ensure each (non-blank) title row has at least the minimum allowed number of titles.
-    title_row_checks = check_blank_titles(title_rows)
-    for i, checked_row in enumerate(title_row_checks):
-        num_non_blank, num_blank = checked_row
-        if num_non_blank == 0:
-            continue
-        if num_non_blank < min_votes:
-            # The ballot line is reported as 2 indices after the row index, since
-            # most editors start row indices at 1, and there's a header row that
-            # needs to be skipped.
-            ballot_line = i + 2
-            raise ValueError(
-                f"Error when calculating rankings; at least {min_votes} votes are required in each ballot, but ballot line {ballot_line} has only {num_non_blank}"
-            )
+    vote_counts = titles_df.apply(lambda row: row.notna().sum(), axis=1)
+    sub_min_idx = vote_counts.index[(vote_counts < min_votes) & (vote_counts != 0)].tolist()
 
-    scores, total_score = scoring_func(title_rows)
+    if len(sub_min_idx):
+        idx = sub_min_idx[0]
+        # The ballot line is reported as 2 indices after the row index, since
+        # most editors start row indices at 1, and there's a header row that
+        # needs to be skipped.
+        raise ValueError(
+            f"Error when calculating rankings; at least {min_votes} votes are "
+            f"required in each ballot, but ballot line {idx + 2} has only {vote_counts[idx]}"
+        )
+
+    total_voters = (vote_counts > 0).sum()
+    scores, total_score = scoring_func(titles_df)
 
     title_percentages = {
         title: (score / total_score) * 100 for title, score in scores.items()
@@ -227,7 +228,9 @@ def calc_ranked_records(
             "Title": title,
             "Uploader": uploader if uploader is not None else "",
             "Percentage": f"{title_percentages[title]:.4f}%",
-            "Total Votes": scores[title],
+            "Votes": scores[title],
+            "Max Votes": total_score,
+            "Total Voters": total_voters,
             "URL": titles_to_urls[title],
             "Notes": "Tie broken randomly by computer" if tie_broken[title] else "",
         }
@@ -237,31 +240,7 @@ def calc_ranked_records(
     return records
 
 
-def check_blank_titles(title_rows: list[list[str]], min_titles: int = 5) -> int:
-    """Check a list of title rows and return a 2-tuple (n, b) for each row, where n is the number of non-blank titles and b is the number of blank titles."""
-    result = []
-    for row in title_rows:
-        non_blank_titles = [t for t in row if t.strip() != ""]
-        blank_titles = [t for t in row if t.strip() == ""]
-        result.append((len(non_blank_titles), len(blank_titles)))
-
-    return result
-
-
-def get_non_blank_titles(title_rows: list[list[str]]) -> list[list[str]]:
-    """Given a list of title rows, return a list or rows in which all blank
-    titles are removed. Rows with all blank titles are removed."""
-    non_blank_title_rows = []
-    for row in title_rows:
-        non_blank_titles = [t for t in row if t.strip() != ""]
-        if len(non_blank_titles) == 0:
-            continue
-        non_blank_title_rows.append(non_blank_titles)
-
-    return non_blank_title_rows
-
-
-def score_by_total_votes(title_rows: list[list[str]]) -> tuple[dict[str, int], float]:
+def score_by_total_votes(title_rows: pd.DataFrame):
     """Given a list of title rows, return a dictionary mapping each title to the
     number of times it occurs in all rows. Blank titles are ignored.
 
@@ -271,27 +250,19 @@ def score_by_total_votes(title_rows: list[list[str]]) -> tuple[dict[str, int], f
     The total number of eligible ballots (ie. non-blank ballots) is also
     returned, which allows scores to be expressed as a percentage of the total
     number of ballots."""
-    title_counts = {}
-    total_ballots = 0
-    for title_row in title_rows:
-        non_blank_titles = [t for t in title_row if t.strip() != ""]
-        if len(non_blank_titles) == 0:
-            continue
-        for title in title_row:
-            if title not in title_counts:
-                title_counts[title] = 0
-            title_counts[title] += 1
-        total_ballots += 1
+    title_rows = title_rows.copy()
+    # Instead of having 10 columns of titles, melt into a dataframe with a single column
+    # for all titles, and a new column that indicates which ballot the title came from
+    title_rows['ballot id'] = title_rows.index
+    ballot_votes_long = title_rows.melt(id_vars='ballot id', value_name='title', ignore_index=False).dropna()
 
-    if "" in title_counts:
-        del title_counts[""]
+    individual_scores = ballot_votes_long.groupby('title').size()
+    total_ballots = ballot_votes_long.groupby('ballot id').ngroups
 
-    return title_counts, total_ballots
+    return individual_scores, total_ballots
 
 
-def score_weight_by_ballot_size(
-    title_rows: list[list[str]],
-) -> tuple[dict[str, int], float]:
+def score_weight_by_ballot_size(title_rows: pd.DataFrame):
     """Given a list of title rows, return a dictionary mapping each title to a
     score. The score is calculated as follows:
 
@@ -310,24 +281,25 @@ def score_weight_by_ballot_size(
 
     The theoretical maximum score is also returned, to allow scores to be
     expressed as a percentage."""
-    non_blank_ballots = get_non_blank_titles(title_rows)
-    full_ballot_size = max([len(row) for row in non_blank_ballots])
+    title_rows = title_rows.copy()
+    title_rows['ballot id'] = title_rows.index
 
-    ballot_weightings = [len(b) / full_ballot_size for b in non_blank_ballots]
-    max_score = sum(ballot_weightings)
+    ballot_votes_long = title_rows.melt(id_vars='ballot id', value_name='title', ignore_index=False).dropna()
 
-    scores = {}
-    for i, ballot in enumerate(non_blank_ballots):
-        for title in ballot:
-            if title not in scores:
-                scores[title] = 0
-            scores[title] += ballot_weightings[i]
+    # Treat the largest ballot count as the full ballot size, then give each
+    # title a weight based on how many votes its ballot has
+    full_ballot_size = ballot_votes_long.groupby('ballot id')['title'].count().max()
+    ballot_votes_long['weight'] = ballot_votes_long.groupby('ballot id')['title'].transform('count') / full_ballot_size
 
-    return scores, max_score
+    # Max total score a title can get is the sum of each ballot's weight
+    individual_scores = ballot_votes_long.groupby('title')['weight'].sum()
+    max_total_score = ballot_votes_long.groupby('ballot id')['weight'].first().sum()
+
+    return individual_scores, max_total_score
 
 
 def score_half_weight_by_ballot_size(
-    title_rows: list[list[str]],
+    title_rows: pd.DataFrame,
 ) -> tuple[dict[str, int], float]:
     """Given a list of title rows, return a dictionary mapping each title to a
     score. The score is calculated as follows:
@@ -343,19 +315,16 @@ def score_half_weight_by_ballot_size(
 
     The theoretical maximum score is also returned, to allow scores to be
     expressed as a percentage."""
-    non_blank_ballots = get_non_blank_titles(title_rows)
+    title_rows = title_rows.copy()
+    title_rows['ballot id'] = title_rows.index
+    ballot_votes_long = title_rows.melt(id_vars='ballot id', value_name='title', ignore_index=False).dropna()
 
-    ballot_weightings = [1 if len(b) >= 5 else len(b) / 5 for b in non_blank_ballots]
-    max_score = sum(ballot_weightings)
+    ballot_votes_long['weight'] = (ballot_votes_long.groupby('ballot id')['title'].transform('count') / 5).clip(upper=1)
 
-    scores = {}
-    for i, ballot in enumerate(non_blank_ballots):
-        for title in ballot:
-            if title not in scores:
-                scores[title] = 0
-            scores[title] += ballot_weightings[i]
+    individual_scores = ballot_votes_long.groupby('title')['weight'].sum()
+    max_total_score = ballot_votes_long.groupby('ballot id')['weight'].first().sum()
 
-    return scores, max_score
+    return individual_scores, max_total_score
 
 
 def get_history(

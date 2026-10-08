@@ -1,7 +1,8 @@
 """Top 10 Pony Video Squeezer 3000 (vote processing) application."""
 
-import csv, sys, traceback
+import sys, traceback
 from datetime import datetime
+import pandas as pd
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk
@@ -14,7 +15,6 @@ from functions.archive import load_top_10_master_archive
 from functions.config import load_config_json
 from functions.gui import browse_file_csv, get_api_key, task
 from functions.voting import (
-    load_votes_csv,
     normalize_voting_data,
     process_voting_data,
     fetch_video_data_for_ballots,
@@ -275,7 +275,7 @@ class VoteProcessing(GUI):
 
         # Load all ballots from the CSV file.
         inf(f'Loading all votes from CSV file "{selected_csv_file}"...')
-        voting_data = load_votes_csv(selected_csv_file)
+        voting_data = pd.read_csv(selected_csv_file, header=0, keep_default_na=False)
         inf(f" * Loaded {len(voting_data)} data rows.")
 
         inf(" * Performing URL normalization...")
@@ -473,9 +473,7 @@ class VoteProcessing(GUI):
         inf(f"Writing annotated ballot data...")
         output_csv_data = generate_annotated_csv_data(ballots, videos)
         output_csv_path = Path(output_csv_path_str)
-        with output_csv_path.open("w", newline="", encoding="utf-8") as output_csv_file:
-            output_csv_writer = csv.writer(output_csv_file)
-            output_csv_writer.writerows(output_csv_data)
+        output_csv_data.to_csv(output_csv_path, index=False)
 
         suc(f'Wrote annotated ballot data to "{output_csv_path_str}".')
 
@@ -487,13 +485,7 @@ class VoteProcessing(GUI):
         inf(f'Writing "shifted cells" CSV...')
         shifted_voting_data = shift_columns(normalized_voting_data)
 
-        with (
-            shifted_cells_path.open(
-                "w", newline="", encoding="utf-8"
-            ) as shifted_cells_file,
-        ):
-            writer = csv.writer(shifted_cells_file)
-            writer.writerows(shifted_voting_data)
+        shifted_voting_data.to_csv(shifted_cells_path, index=False)
 
         suc(f'Wrote "shifted cells" data to "{shifted_cells_path}".')
 
