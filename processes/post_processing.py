@@ -115,7 +115,9 @@ class PostProcessing(GUI):
                 "Title",
                 "Uploader",
                 "Percentage",
-                "Total Votes",
+                "Votes",
+                "Max Votes",
+                "Total Voters",
                 "URL",
                 "Notes",
             ]

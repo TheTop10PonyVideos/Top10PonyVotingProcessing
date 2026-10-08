@@ -245,7 +245,7 @@ def test_generate_sharable_records():
     assert "Example 4" == records[3]["Title"]
     assert (
         '=VLOOKUP("https://example.com/4", IMPORTRANGE("https://docs.google.com/spreadsheets/d/1rEofPkliKppvttd8pEX8H6DtSljlfmQLdFR-SlyyX7E/edit", "Honorable Mentions!C:I"), 6, FALSE)'
-        == records[3]["Link"],
+        == records[3]["Link"]
     )
     assert "12" == records[3]["Votes"]
     assert "60.0000%" == records[3]["Popularity"]

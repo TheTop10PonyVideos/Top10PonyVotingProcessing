@@ -173,7 +173,7 @@ def convert_ancient_to_master_format(dataframe: pd.DataFrame) -> list[ArchiveRec
     return records
 
 
-def merge_archives(archives: list[list[ArchiveRecords]]) -> list[ArchiveRecords]:
+def merge_archives(archives: list[list[ArchiveRecord]]) -> list[ArchiveRecord]:
     """Given a list of archives (each a list of ArchiveRecords), merge them all
     into a single list of ArchiveRecords. If two archives contain a video with
     the same URL, favor the record from the first archive in the list and
