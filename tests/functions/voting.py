@@ -7,16 +7,15 @@ from functions.voting import (
     process_votes_csv_row,
     validate_video_data,
     generate_annotated_csv_data,
-    shift_cells,
     shift_columns,
 )
 from classes.voting import Ballot, Vote, Video
+import pandas as pd
 
 
 class TestFunctionsVoting(TestCase):
     def test_normalize_voting_data(self):
-        voting_data = [
-            ["Timestamp", "", "", "", "", "", "", "", "", "", ""],
+        voting_data = pd.DataFrame([
             [
                 "4/1/2024 9:00:00",
                 "https://example.com/1",
@@ -43,49 +42,36 @@ class TestFunctionsVoting(TestCase):
                 "",
                 "",
             ],
-        ]
+        ], columns=["Timestamp", "", "", "", "", "", "", "", "", "", ""]
+        )
 
         norm_voting_data = normalize_voting_data(voting_data)
-        self.assertEqual(3, len(norm_voting_data))
-        self.assertEqual(11, len(norm_voting_data[0]))
-        self.assertEqual(11, len(norm_voting_data[1]))
-        self.assertEqual(11, len(norm_voting_data[2]))
-        self.assertEqual("Timestamp", norm_voting_data[0][0])
-        self.assertEqual("4/1/2024 9:00:00", norm_voting_data[1][0])
-        self.assertEqual("https://example.com/1", norm_voting_data[1][1])
-        self.assertEqual(
-            "https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][2]
-        )
-        self.assertEqual(
-            "https://www.youtube.com/watch?v=Q8k4UTf8jiI", norm_voting_data[1][3]
-        )
-        self.assertEqual(
-            "https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][4]
-        )
-        self.assertEqual(
-            "https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][5]
-        )
-        self.assertEqual(
-            "https://www.youtube.com/watch?v=9RT4lfvVFhA", norm_voting_data[1][6]
-        )
-        self.assertEqual(
-            "https://www.bilibili.com/video/BV1HC411H7Po/", norm_voting_data[1][7]
-        )
-        self.assertEqual(
-            "https://pony.tube/w/bYSyWpjg6r6zo68o1imK5t", norm_voting_data[1][8]
-        )
-        self.assertEqual("", norm_voting_data[1][9])
-        self.assertEqual("", norm_voting_data[1][10])
+        self.assertEqual((2, 11), norm_voting_data.shape)
+        self.assertEqual("Timestamp", norm_voting_data.columns[0])
+        self.assertTrue(([
+            "4/1/2024 9:00:00",
+            "https://example.com/1",
+            "https://www.youtube.com/watch?v=9RT4lfvVFhA",
+            "https://www.youtube.com/watch?v=Q8k4UTf8jiI",
+            "https://www.youtube.com/watch?v=9RT4lfvVFhA",
+            "https://www.youtube.com/watch?v=9RT4lfvVFhA",
+            "https://www.youtube.com/watch?v=9RT4lfvVFhA",
+            "https://www.bilibili.com/video/BV1HC411H7Po/",
+            "https://pony.tube/w/bYSyWpjg6r6zo68o1imK5t",
+            "",
+            ""
+        ] == norm_voting_data.loc[0]).all())
 
-        self.assertEqual("12/31/2024 23:59:59", norm_voting_data[2][0])
-        self.assertEqual("https://example.com/2", norm_voting_data[2][1])
-        self.assertEqual("", norm_voting_data[2][2])
+        self.assertTrue(([
+            "12/31/2024 23:59:59",
+            "https://example.com/2",
+            ""
+        ] == norm_voting_data.iloc[1, :3]).all())
 
     def test_process_voting_data(self):
         tz = timezone("Etc/UTC")
 
-        voting_data = [
-            ["Timestamp", "", "", "", "", "", "", "", "", ""],
+        voting_data = pd.DataFrame([
             [
                 "4/1/2024 9:00:00",
                 "https://example.com/1",
@@ -134,7 +120,8 @@ class TestFunctionsVoting(TestCase):
                 "",
                 "",
             ],
-        ]
+        ], columns=['Timestamp'] + [''] * 9)
+        voting_data['Timestamp'] = pd.to_datetime(voting_data['Timestamp'], format='%m/%d/%Y %H:%M:%S')
 
         ballots = process_voting_data(voting_data)
         self.assertEqual(4, len(ballots))
@@ -143,11 +130,11 @@ class TestFunctionsVoting(TestCase):
         self.assertEqual("2022-02-02T02:02:02", ballots[2].timestamp.isoformat())
         self.assertEqual("2023-11-06T10:23:36", ballots[3].timestamp.isoformat())
 
-        invalid_csv_rows = [
+        invalid_csv_rows = pd.DataFrame([
             ["Invalid", "", "", "", "", "", "", "", "", "", ""],
             ["Invalid", "", "", "", "", "", "", "", "", "", ""],
             ["Invalid", "", "", "", "", "", "", "", "", "", ""],
-        ]
+        ], columns=[''] * 11)
 
         with self.assertRaises(ValueError):
             ballots = process_voting_data(invalid_csv_rows)
@@ -155,7 +142,7 @@ class TestFunctionsVoting(TestCase):
     def test_process_votes_csv_row(self):
         tz = timezone("Etc/UTC")
 
-        row = [
+        df = pd.DataFrame([[
             "4/1/2024 9:00:00",
             "https://example.com/1",
             "https://example.com/2",
@@ -164,8 +151,9 @@ class TestFunctionsVoting(TestCase):
             "https://example.com/5",
             "https://example.com/6",
             "https://example.com/7",
-        ]
-        ballot = process_votes_csv_row(row)
+        ]], columns=['Timestamp'] + [''] * 7)
+        df['Timestamp'] = pd.to_datetime(df['Timestamp'], format='%m/%d/%Y %H:%M:%S')
+        ballot = process_votes_csv_row(df.loc[0])
 
         self.assertEqual("2024-04-01T09:00:00", ballot.timestamp.isoformat())
         self.assertEqual(7, len(ballot.votes))
@@ -264,112 +252,97 @@ class TestFunctionsVoting(TestCase):
         ballots[0].votes[0].annotations.add("VIDEO TOO SHORT")
         ballots[0].votes[1].annotations.add("VIDEO TOO NEW")
 
-        csv_rows = generate_annotated_csv_data(ballots, videos)
+        csv_df = generate_annotated_csv_data(ballots, videos)
 
-        self.assertEqual(5, len(csv_rows))
-        self.assertEqual(22, len(csv_rows[0]))
-        self.assertEqual(22, len(csv_rows[1]))
-        self.assertEqual(22, len(csv_rows[2]))
-        self.assertEqual(22, len(csv_rows[3]))
-        self.assertEqual(22, len(csv_rows[4]))
+        self.assertEqual((4, 22), csv_df.shape)
 
-        # Row 0
-        self.assertEqual("Timestamp", csv_rows[0][0])
-        for i in range(1, 21):
-            self.assertEqual("", csv_rows[0][i])
+        # Header
+        self.assertEqual("Timestamp", csv_df.columns[0])
+        self.assertTrue((csv_df.columns[1:] == '').all())
 
         # Row 1
-        self.assertEqual("4/1/2024 9:00:00", csv_rows[1][0])
-        self.assertEqual("", csv_rows[1][1])
-        self.assertEqual("Example Video 1", csv_rows[1][2])
-        self.assertEqual("[VIDEO TOO OLD][VIDEO TOO SHORT]", csv_rows[1][3])
-        self.assertEqual("Example Video 2", csv_rows[1][4])
-        self.assertEqual("[VIDEO TOO NEW]", csv_rows[1][5])
-        self.assertEqual("Example Video 3", csv_rows[1][6])
-        self.assertEqual("", csv_rows[1][7])
-        self.assertEqual("Example Video 4", csv_rows[1][8])
-        self.assertEqual("", csv_rows[1][9])
-        self.assertEqual("Example Video 5", csv_rows[1][10])
-        self.assertEqual("", csv_rows[1][11])
-        self.assertEqual("Example Video 6", csv_rows[1][12])
-        self.assertEqual("", csv_rows[1][13])
-        self.assertEqual("Example Video 7", csv_rows[1][14])
-        self.assertEqual("", csv_rows[1][15])
-        self.assertEqual("Example Video 8", csv_rows[1][16])
-        self.assertEqual("", csv_rows[1][17])
-        self.assertEqual("Example Video 9", csv_rows[1][18])
-        self.assertEqual("", csv_rows[1][19])
-        # For the last row, since the video has no data, by convention the vote
+        self.assertTrue(([
+            "4/1/2024 9:00:00",
+            "",
+            "Example Video 1",
+            "[VIDEO TOO OLD][VIDEO TOO SHORT]",
+            "Example Video 2",
+            "[VIDEO TOO NEW]",
+            "Example Video 3",
+            "",
+            "Example Video 4",
+            "",
+            "Example Video 5",
+            "",
+            "Example Video 6",
+            "",
+            "Example Video 7",
+            "",
+            "Example Video 8",
+            "",
+            "Example Video 9",
+            ""
+        ] == csv_df.iloc[0, :-2]).all())
+        # For the last column, since the video has no data, by convention the vote
         # URL should be included instead.
-        self.assertEqual("https://example.com/10", csv_rows[1][20])
-        self.assertEqual("", csv_rows[1][21])
+        self.assertEqual("https://example.com/10", csv_df.iloc[0, 20])
+        self.assertEqual("", csv_df.iloc[0, 21])
 
         # Row 2
-        self.assertEqual("4/2/2024 9:00:00", csv_rows[2][0])
-        self.assertEqual("", csv_rows[2][1])
-        self.assertEqual("Example Video 1", csv_rows[2][2])
-        self.assertEqual("", csv_rows[2][3])
-        self.assertEqual("Example Video 3", csv_rows[2][4])
-        self.assertEqual("", csv_rows[2][5])
-        self.assertEqual("Example Video 5", csv_rows[2][6])
-        self.assertEqual("", csv_rows[2][7])
-        self.assertEqual("Example Video 7", csv_rows[2][8])
-        self.assertEqual("", csv_rows[2][9])
-        self.assertEqual("Example Video 9", csv_rows[2][10])
-        for i in range(11, 22):
-            self.assertEqual("", csv_rows[2][i])
+        self.assertTrue(([
+            "4/2/2024 9:00:00",
+            "",
+            "Example Video 1",
+            "",
+            "Example Video 3",
+            "",
+            "Example Video 5",
+            "",
+            "Example Video 7",
+            "",
+            "Example Video 9"
+        ] == csv_df.iloc[1, :11]).all())
+
+        self.assertTrue((csv_df.iloc[1, 11:] == '').all())
 
         # Row 3
-        self.assertEqual("4/3/2024 9:00:00", csv_rows[3][0])
-        self.assertEqual("", csv_rows[3][1])
-        self.assertEqual("Example Video 1", csv_rows[3][2])
-        for i in range(3, 22):
-            self.assertEqual("", csv_rows[3][i])
+        self.assertTrue(([
+            "4/3/2024 9:00:00",
+            "",
+            "Example Video 1"
+        ] == csv_df.iloc[2, :3]).all())
+
+        self.assertTrue((csv_df.iloc[2, 3:] == '').all())
 
         # Row 4
-        self.assertEqual("4/4/2024 9:00:00", csv_rows[4][0])
-        for i in range(1, 22):
-            self.assertEqual("", csv_rows[4][i])
-
-    def test_shift_cells(self):
-        cells = ["a", "b", "c"]
-        shifted_cells = shift_cells(cells)
-        self.assertEqual(6, len(shifted_cells))
-        self.assertEqual("a", shifted_cells[0])
-        self.assertEqual("", shifted_cells[1])
-        self.assertEqual("b", shifted_cells[2])
-        self.assertEqual("", shifted_cells[3])
-        self.assertEqual("c", shifted_cells[4])
-        self.assertEqual("", shifted_cells[5])
+        self.assertEqual("4/4/2024 9:00:00", csv_df.iloc[3, 0])
+        self.assertTrue((csv_df.iloc[3, 1:] == '').all())
 
     def test_shift_columns(self):
-        rows = [
+        rows = pd.DataFrame([
             ["a", "b", "c"],
             ["d", "e", "f"],
             ["g", "h", "i"],
-        ]
+        ])
 
         rows_shifted = shift_columns(rows)
-        self.assertEqual(3, len(rows_shifted))
-        self.assertEqual(6, len(rows_shifted[0]))
-        self.assertEqual(6, len(rows_shifted[1]))
-        self.assertEqual(6, len(rows_shifted[2]))
+        self.assertEqual((3, 6), rows_shifted.shape)
 
-        self.assertEqual("a", rows_shifted[0][0])
-        self.assertEqual("", rows_shifted[0][1])
-        self.assertEqual("b", rows_shifted[0][2])
-        self.assertEqual("", rows_shifted[0][3])
-        self.assertEqual("c", rows_shifted[0][4])
-        self.assertEqual("", rows_shifted[0][5])
-        self.assertEqual("d", rows_shifted[1][0])
-        self.assertEqual("", rows_shifted[1][1])
-        self.assertEqual("e", rows_shifted[1][2])
-        self.assertEqual("", rows_shifted[1][3])
-        self.assertEqual("f", rows_shifted[1][4])
-        self.assertEqual("", rows_shifted[1][5])
-        self.assertEqual("g", rows_shifted[2][0])
-        self.assertEqual("", rows_shifted[2][1])
-        self.assertEqual("h", rows_shifted[2][2])
-        self.assertEqual("", rows_shifted[2][3])
-        self.assertEqual("i", rows_shifted[2][4])
-        self.assertEqual("", rows_shifted[2][5])
+        self.assertEqual("a", rows_shifted.iloc[0, 0])
+        self.assertEqual("", rows_shifted.iloc[0, 1])
+        self.assertEqual("b", rows_shifted.iloc[0, 2])
+        self.assertEqual("", rows_shifted.iloc[0, 3])
+        self.assertEqual("c", rows_shifted.iloc[0, 4])
+        self.assertEqual("", rows_shifted.iloc[0, 5])
+        self.assertEqual("d", rows_shifted.iloc[1, 0])
+        self.assertEqual("", rows_shifted.iloc[1, 1])
+        self.assertEqual("e", rows_shifted.iloc[1, 2])
+        self.assertEqual("", rows_shifted.iloc[1, 3])
+        self.assertEqual("f", rows_shifted.iloc[1, 4])
+        self.assertEqual("", rows_shifted.iloc[1, 5])
+        self.assertEqual("g", rows_shifted.iloc[2, 0])
+        self.assertEqual("", rows_shifted.iloc[2, 1])
+        self.assertEqual("h", rows_shifted.iloc[2, 2])
+        self.assertEqual("", rows_shifted.iloc[2, 3])
+        self.assertEqual("i", rows_shifted.iloc[2, 4])
+        self.assertEqual("", rows_shifted.iloc[2, 5])

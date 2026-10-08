@@ -1,5 +1,6 @@
 from unittest import TestCase
 from functions.general import sample_item_without_replacement, pad_csv_rows
+import pandas as pd
 
 
 class TestFunctionsGeneral(TestCase):
@@ -19,51 +20,25 @@ class TestFunctionsGeneral(TestCase):
 
         with self.assertRaises(ValueError):
             sample_item_without_replacement(items)
- 
+
     def test_pad_csv_rows(self):
-        rows = [
+        rows = pd.DataFrame([
             ["A", "B", "C"],
             ["D", "E", "F"],
             ["G", "H", "I"],
-        ]
+        ])
 
         padded_rows = pad_csv_rows(rows, 4)
 
         self.assertEqual(len(padded_rows), 4)
-        self.assertEqual(len(padded_rows[3]), 3)
-        self.assertEqual(padded_rows[0][0], "A")
-        self.assertEqual(padded_rows[0][1], "B")
-        self.assertEqual(padded_rows[0][2], "C")
-        self.assertEqual(padded_rows[1][0], "D")
-        self.assertEqual(padded_rows[1][1], "E")
-        self.assertEqual(padded_rows[1][2], "F")
-        self.assertEqual(padded_rows[2][0], "G")
-        self.assertEqual(padded_rows[2][1], "H")
-        self.assertEqual(padded_rows[2][2], "I")
-        self.assertEqual(padded_rows[3][0], "")
-        self.assertEqual(padded_rows[3][1], "")
-        self.assertEqual(padded_rows[3][2], "")
+        self.assertEqual(len(padded_rows.loc[3]), 3)
+        self.assertTrue((padded_rows.iloc[:3] == rows).all().all())
+        self.assertTrue((padded_rows.iloc[3].isna()).all())
 
         padded_rows = pad_csv_rows(rows, 3)
         self.assertEqual(len(padded_rows), 3)
-        self.assertEqual(padded_rows[0][0], "A")
-        self.assertEqual(padded_rows[0][1], "B")
-        self.assertEqual(padded_rows[0][2], "C")
-        self.assertEqual(padded_rows[1][0], "D")
-        self.assertEqual(padded_rows[1][1], "E")
-        self.assertEqual(padded_rows[1][2], "F")
-        self.assertEqual(padded_rows[2][0], "G")
-        self.assertEqual(padded_rows[2][1], "H")
-        self.assertEqual(padded_rows[2][2], "I")
+        self.assertTrue((padded_rows == rows).all().all())
 
         padded_rows = pad_csv_rows(rows, 1)
         self.assertEqual(len(padded_rows), 3)
-        self.assertEqual(padded_rows[0][0], "A")
-        self.assertEqual(padded_rows[0][1], "B")
-        self.assertEqual(padded_rows[0][2], "C")
-        self.assertEqual(padded_rows[1][0], "D")
-        self.assertEqual(padded_rows[1][1], "E")
-        self.assertEqual(padded_rows[1][2], "F")
-        self.assertEqual(padded_rows[2][0], "G")
-        self.assertEqual(padded_rows[2][1], "H")
-        self.assertEqual(padded_rows[2][2], "I")
+        self.assertTrue((padded_rows == rows).all().all())
