@@ -2,6 +2,7 @@
 
 import pandas as pd
 from functions.date import format_votes_csv_timestamp
+from functions.messages import inf
 from functions.url import (
     is_youtube_url,
     is_derpibooru_url,
@@ -76,6 +77,20 @@ def process_votes_csv_row(row: pd.Series) -> Ballot:
     return Ballot(timestamp, votes)
 
 
+def load_ballots(csv_file_path):
+    """Given a raw votes csv file path, return a list with a `Ballot` object for
+    each row, and a version of the data as dataframe with normalized urls."""
+    voting_data = pd.read_csv(csv_file_path, header=0, keep_default_na=False)
+
+    inf(" * Performing URL normalization...")
+    normalized_voting_data = normalize_voting_data(voting_data)
+
+    inf(" * Creating ballots...")
+    ballots = process_voting_data(normalized_voting_data)
+
+    return ballots, normalized_voting_data
+
+
 def fetch_video_data_for_ballots(
     ballots: list[Ballot], fetcher: Fetcher
 ) -> dict[str, Video]:
@@ -134,8 +149,35 @@ def validate_video_data(data: dict) -> list[str]:
     return missing_fields
 
 
-def generate_annotated_csv_data(
-    ballots: list[Ballot], videos: dict[str, Video]
+def generate_annotated_videos_csv_data(ballots: list[Ballot], videos: dict[str, Video]):
+    """Given a list of ballots, generate a dataframe that can be written
+    The output has columns link, title, uploader, annotations, and frequency.
+    """
+    vote_counts = {}
+
+    def count_vote(url):
+        vote_counts[url] = vote_counts.get(url, 0) + 1
+        return vote_counts[url]
+
+    df = pd.DataFrame({
+            'link': url,
+            'title': videos[url].data.get('title') if videos[url].data else '',
+            'annotations': videos[url].annotations.get_label(),
+            'uploader': videos[url].data.get('uploader') if videos[url].data else '',
+            'duration': videos[url].data.get('duration') if videos[url].data else ''
+        }
+        for bal in ballots
+            for url in set([vote.url for vote in bal.votes])
+                if count_vote(url) == 1
+    )
+
+    df['frequency'] = df['link'].map(vote_counts)
+
+    return df[['link', 'title', 'uploader', 'annotations', 'frequency', 'duration']].sort_values('frequency', ascending=False, ignore_index=True)
+
+
+def generate_annotated_ballots_csv_data(
+    ballots: list[Ballot], videos: pd.DataFrame
 ) -> pd.DataFrame:
     """Given a list of ballots, generate a dataframe that can be written
     to a CSV file, for use with the `calc.py` calculation script. The output
@@ -153,14 +195,16 @@ def generate_annotated_csv_data(
     df = pd.DataFrame('', index=range(len(ballots)), columns=header_row)
 
     for r, ballot in enumerate(ballots):
+        if not len(ballot.votes):
+            continue
+
         df.iloc[r, 0] = format_votes_csv_timestamp(ballot.timestamp)
 
         for c, vote in enumerate(ballot.votes, 1):
-            video = videos[vote.url]
             # By convention, we include the voted-for URL if we weren't able
             # to obtain any video data for it - this makes it easier for the
             # user to check the URL themselves to see what's wrong.
-            df.iloc[r, c * 2] = video["title"] if video.data is not None else vote.url
+            df.iloc[r, c * 2] = videos.loc[vote.url, "title"] or vote.url
 
             if not vote.annotations.has_none():
                 df.iloc[r, c * 2 + 1] = vote.annotations.get_label()

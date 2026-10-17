@@ -1,8 +1,8 @@
 """Rule checks for ballots."""
 
-from pathlib import Path
 from fuzzywuzzy import fuzz
-from classes.voting import Ballot, Vote, Video
+from classes.voting import Ballot
+from pandas import DataFrame
 
 
 def check_duplicates(ballots: list[Ballot]):
@@ -18,60 +18,8 @@ def check_duplicates(ballots: list[Ballot]):
                 unique_votes.append(vote.url)
 
 
-def check_blacklisted_ballots(ballots: list[Ballot], videos: dict[str, Video]):
-    """Given a list of ballots and a dictionary of annotated videos indexed by
-    URL, annotate any votes for videos which have been marked as blacklisted.
-    """
-    for ballot in ballots:
-        for vote in ballot.votes:
-            video = videos[vote.url]
-            if video.annotations.has("BLACKLISTED"):
-                vote.annotations.add("BLACKLISTED")
-
-
-def check_non_whitelisted_ballots(ballots: list[Ballot], videos: dict[str, Video]):
-    """Given a list of ballots and a dictionary of annotated videos indexed by
-    URL, annotate any votes for videos which were not found on the whitelist.
-    (This makes it easier to spot new or unknown creators during a manual
-    review).
-    """
-    for ballot in ballots:
-        for vote in ballot.votes:
-            video = videos[vote.url]
-            if video.annotations.has("NOT WHITELISTED"):
-                vote.annotations.add("NOT WHITELISTED")
-
-
-def check_ballot_upload_dates(ballots: list[Ballot], videos: dict[str, Video]):
-    """Given a list of ballots and a dictionary of annotated videos indexed by
-    URL, annotate any votes for videos which have an invalid upload date.
-    """
-    for ballot in ballots:
-        for vote in ballot.votes:
-            video = videos[vote.url]
-            if video.annotations.has("VIDEO TOO OLD"):
-                vote.annotations.add("VIDEO TOO OLD")
-            if video.annotations.has("VIDEO TOO NEW"):
-                vote.annotations.add("VIDEO TOO NEW")
-
-
-def check_ballot_video_durations(ballots: list[Ballot], videos: dict[str, Video]):
-    """Given a list of ballots and a dictionary of annotated videos indexed by
-    URL, annotate any votes for videos which have an invalid duration.
-    """
-    for ballot in ballots:
-        for vote in ballot.votes:
-            video = videos[vote.url]
-            if video.annotations.has("VIDEO TOO SHORT"):
-                vote.annotations.add("VIDEO TOO SHORT")
-            if video.annotations.has("VIDEO MAYBE TOO SHORT"):
-                vote.annotations.add("VIDEO MAYBE TOO SHORT")
-            if video.annotations.has("MISSING DURATION"):
-                vote.annotations.add("MISSING DURATION")
-
-
 def check_fuzzy(
-    ballots: list[Ballot], videos: dict[str, Video], similarity_threshold: float
+    ballots: list[Ballot], videos: DataFrame, similarity_threshold: float
 ):
     """Given a list of ballots, check each vote in the ballot to see if it is
     similar to other votes in the same ballot for each of 3 properties: title,
@@ -96,12 +44,13 @@ def check_fuzzy(
             unchecked_votes = set([vote for vote in ballot.votes])
             while len(unchecked_votes) > 0:
                 vote_to_check = unchecked_votes.pop()
-                video_to_check = videos[vote_to_check.url]
+                video_to_check = videos.loc[vote_to_check.url]
 
-                if video_to_check.data is None:
+                # Using title prescence to determine if there is video data
+                if not video_to_check['title']:
                     continue
 
-                prop_to_check = video_to_check.data[property_name]
+                prop_to_check = video_to_check[property_name]
 
                 # TODO: This string conversion is here because for some reason
                 # we're comparing durations (integer values) with the fuzzy
@@ -113,7 +62,7 @@ def check_fuzzy(
                     [
                         vote
                         for vote in unchecked_votes
-                        if (video_data := videos[vote.url].data) is not None
+                        if (video_data := videos.loc[vote.url])['title']
                         and is_similar(prop_to_check, str(video_data[property_name]))
                     ]
                 )
@@ -134,36 +83,16 @@ def check_fuzzy(
                 vote.annotations.add(annotation)
 
 
-def check_ballot_uploader_occurrences(ballots: list[Ballot], videos: dict[str, Video]):
+def check_ballot_uploader_occurrences(ballots: list[Ballot], videos: DataFrame):
     """Given a list of ballots and a dictionary of videos indexed by URL,
     annotate any votes for videos whose uploader occurs too many times in the
     ballot.
     """
     for ballot in ballots:
-        uploaders = []
-        for vote in ballot.votes:
-            video = videos[vote.url]
-            if video.data is not None:
-                uploaders.append(video["uploader"])
-
-        uploader_counts = {}
-        for uploader in uploaders:
-            uploader_counts[uploader] = uploader_counts.get(uploader, 0) + 1
+        uploader_counts = videos.loc[[vote.url for vote in ballot.votes], 'uploader'].value_counts()
 
         for vote in ballot.votes:
-            video = videos[vote.url]
-            if video.data is not None:
-                if uploader_counts[video["uploader"]] >= 3:
-                    vote.annotations.add("DUPLICATE CREATOR")
+            uploader = videos.loc[vote.url, 'uploader']
 
-
-def check_platform(ballots: list[Ballot], videos: dict[str, Video]):
-    """Given a list of ballots and a dictionary of videos indexed by URL,
-    annotate any votes for videos that are not hosted on the youtube platform.
-    """
-    for ballot in ballots:
-        for vote in ballot.votes:
-            data = videos[vote.url].data
-            platform = data["platform"] if data is not None else None
-            if platform is not None and platform != "YouTube":
-                vote.annotations.add(f"NONYT {platform.upper()}")
+            if uploader_counts[uploader] >= 3:
+                vote.annotations.add("DUPLICATE CREATOR")

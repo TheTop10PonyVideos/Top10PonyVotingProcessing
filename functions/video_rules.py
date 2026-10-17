@@ -3,8 +3,6 @@ annotate any that fail the tests. Note that this is different from annotating a
 _vote_ for a video, which happens in `functions/ballot_rules.py`. Some of the
 vote checks rely on videos having been checked and annotated first."""
 
-from datetime import datetime
-from pytz import timezone
 from functions.date import get_month_year_bounds
 from classes.voting import Video
 
@@ -61,3 +59,14 @@ def check_duration(videos: list[Video]):
             video.annotations.add("VIDEO TOO SHORT")
         elif duration <= 45:
             video.annotations.add("VIDEO MAYBE TOO SHORT")
+
+
+def check_platform(videos: list[Video]):
+    """Given a list of ballots and a dictionary of videos indexed by URL,
+    annotate any votes for videos that are not hosted on the youtube platform.
+    """
+    for video in videos:
+        platform = video.data["platform"]
+
+        if platform is not None and platform != "YouTube":
+            video.annotations.add(f"NONYT {platform.upper()}")
