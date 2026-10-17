@@ -21,6 +21,7 @@ from functions.gui import (
 )
 from functions.voting import (
     load_ballots,
+    apply_candidate_changes,
     fetch_video_data_for_ballots,
     generate_annotated_ballots_csv_data,
     generate_annotated_videos_csv_data,
@@ -533,13 +534,9 @@ class VoteProcessing(GUI):
         total_votes = sum([len(ballot.votes) for ballot in ballots])
         suc(f"Loaded {len(ballots)} ballots containing a total of {total_votes} votes.")
 
-        for ballot in ballots:
-            # Remove vote cells for videos that were pruned in the processed videos csv
-            ballot.votes = [vote for vote in ballot.votes if vote.url in videos.index]
-
-            # Apply video annotations to vote annotations
-            for vote in ballot.votes:
-                vote.annotations.add(videos.loc[vote.url, 'annotations'])
+        # Remove votes where the video data has been manually deleted,
+        # and move all video annotations to vote annotations
+        apply_candidate_changes(ballots, videos)
 
         do_check = lambda k: self.ballot_check_vars[k].get() == True
 

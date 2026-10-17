@@ -89,7 +89,7 @@ class Top10Calculator(GUI):
         # Create "Choose Input CSV..." control
         input_file_label = tk.Label(file_selectors_frame, text="Input CSV file:")
 
-        default_input_file = "outputs/processed.csv"
+        default_input_file = "outputs/processed_ballots.csv"
         self.input_file_var = tk.StringVar()
         self.input_file_var.set(default_input_file)
         input_file_entry = ttk.Entry(

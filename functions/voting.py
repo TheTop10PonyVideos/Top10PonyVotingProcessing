@@ -91,6 +91,26 @@ def load_ballots(csv_file_path):
     return ballots, normalized_voting_data
 
 
+def apply_candidate_changes(ballots: list[Ballot], videos: pd.DataFrame):
+    """Given a list of ballots and a dataframe of video candidates that may have been
+    manually reviewed and edited, delete each vote whose candidate had been deleted, and
+    migrate all candidate annotations into the vote annotations."""
+    for ballot in ballots:
+        ballot.votes = [
+            vote if vote.url in videos.index
+            else Vote()
+            for vote in ballot.votes
+        ]
+
+        for vote in ballot.nonempty_votes():
+            annotations = videos.loc[vote.url, 'annotations'].strip(' []')
+
+            if not annotations:
+                continue
+
+            for annotation in annotations.split(']['):
+                vote.annotations.add(annotation)
+
 def fetch_video_data_for_ballots(
     ballots: list[Ballot], fetcher: Fetcher
 ) -> dict[str, Video]:
@@ -195,12 +215,16 @@ def generate_annotated_ballots_csv_data(
     df = pd.DataFrame('', index=range(len(ballots)), columns=header_row)
 
     for r, ballot in enumerate(ballots):
-        if not len(ballot.votes):
+        if not len(ballot.nonempty_votes()):
             continue
 
         df.iloc[r, 0] = format_votes_csv_timestamp(ballot.timestamp)
 
         for c, vote in enumerate(ballot.votes, 1):
+            # Votes with candidates pruned should leave an empty space instead of a url
+            if not vote.url:
+                continue
+
             # By convention, we include the voted-for URL if we weren't able
             # to obtain any video data for it - this makes it easier for the
             # user to check the URL themselves to see what's wrong.

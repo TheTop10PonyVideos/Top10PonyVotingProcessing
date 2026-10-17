@@ -1,14 +1,11 @@
 from unittest import TestCase
 from functions.ballot_rules import (
     check_duplicates,
-    check_blacklisted_ballots,
-    check_non_whitelisted_ballots,
-    check_ballot_upload_dates,
-    check_ballot_video_durations,
     check_fuzzy,
     check_ballot_uploader_occurrences,
 )
 from classes.voting import Ballot, Vote, Video
+import pandas as pd
 
 
 class TestFunctionsBallotRules(TestCase):
@@ -103,113 +100,23 @@ class TestFunctionsBallotRules(TestCase):
             ),
         ]
 
-        videos = {
-            "https://example.com/1": Video(
-                {
-                    "title": "AAAAA",
-                    "uploader": "AAAAA",
-                    "duration": 60,
-                }
-            ),
-            "https://example.com/2": Video(
-                {
-                    "title": "BBBBB",
-                    "uploader": "BBBBB",
-                    "duration": 120,
-                }
-            ),
-            "https://example.com/3": Video(
-                {
-                    "title": "BBBBB",
-                    "uploader": "CCCCC",
-                    "duration": 180,
-                }
-            ),
-            "https://example.com/4": Video(
-                {
-                    "title": "CCCCC",
-                    "uploader": "DDDDD",
-                    "duration": 240,
-                }
-            ),
-            "https://example.com/5": Video(
-                {
-                    "title": "DDDDD",
-                    "uploader": "DDDDD",
-                    "duration": 300,
-                }
-            ),
-            "https://example.com/6": Video(
-                {
-                    "title": "AAAAA",
-                    "uploader": "AAAAA",
-                    "duration": 60,
-                }
-            ),
-            "https://example.com/7": Video(
-                {
-                    "title": "BBBBB",
-                    "uploader": "BBBBB",
-                    "duration": 120,
-                }
-            ),
-            "https://example.com/8": Video(
-                {
-                    "title": "CCCCC",
-                    "uploader": "CCCCC",
-                    "duration": 180,
-                }
-            ),
-            "https://example.com/9": Video(
-                {
-                    "title": "DDDDD",
-                    "uploader": "DDDDD",
-                    "duration": 240,
-                }
-            ),
-            "https://example.com/10": Video(
-                {
-                    "title": "EEEEE",
-                    "uploader": "EEEEE",
-                    "duration": 300,
-                }
-            ),
-            "https://example.com/11": Video(
-                {
-                    "title": "AAAAA",
-                    "uploader": "AAAAA",
-                    "duration": 60,
-                }
-            ),
-            "https://example.com/12": Video(
-                {
-                    "title": "AAAAA",
-                    "uploader": "AAAAA",
-                    "duration": 60,
-                }
-            ),
-            "https://example.com/13": Video(
-                {
-                    "title": "AAAAA",
-                    "uploader": "AAAAA",
-                    "duration": 60,
-                }
-            ),
-            "https://example.com/14": Video(
-                {
-                    "title": "AAAAA",
-                    "uploader": "AAAAA",
-                    "duration": 60,
-                }
-            ),
-            "https://example.com/15": Video(
-                {
-                    "title": "AAAAA",
-                    "uploader": "AAAAA",
-                    "duration": 60,
-                }
-            ),
-        }
+        videos = pd.DataFrame([
+            ["https://example.com/1", "AAAAA", "AAAAA", 60],
+            ["https://example.com/2", "BBBBB", "BBBBB", 120],
+            ["https://example.com/3", "BBBBB", "CCCCC", 180],
+            ["https://example.com/4", "CCCCC", "DDDDD", 240],
+            ["https://example.com/5", "DDDDD", "DDDDD", 300],
+            ["https://example.com/6", "AAAAA", "AAAAA", 60],
+            ["https://example.com/7","BBBBB", "BBBBB", 120],
+            ["https://example.com/8", "CCCCC", "CCCCC", 180],
+            ["https://example.com/9", "DDDDD", "DDDDD", 240],
+            ["https://example.com/10", "EEEEE", "EEEEE", 300],
+            ["https://example.com/11", "AAAAA", "AAAAA", 60],
+            ["https://example.com/12", "AAAAA", "AAAAA", 60],
+            ["https://example.com/13", "AAAAA", "AAAAA", 60],
+            ["https://example.com/14", "AAAAA", "AAAAA", 60],
+            ["https://example.com/15", "AAAAA", "AAAAA", 60],
+        ], columns=['link', 'title', 'uploader', 'duration']).set_index('link')
 
         check_fuzzy(ballots, videos, 100)
 
@@ -299,23 +206,23 @@ class TestFunctionsBallotRules(TestCase):
             ),
         ]
 
-        videos = {
-            "https://example.com/1": Video({"uploader": "AAAAA"}),
-            "https://example.com/2": Video({"uploader": "AAAAA"}),
-            "https://example.com/3": Video({"uploader": "AAAAA"}),
-            "https://example.com/4": Video({"uploader": "AAAAA"}),
-            "https://example.com/5": Video({"uploader": "BBBBB"}),
-            "https://example.com/6": Video({"uploader": "BBBBB"}),
-            "https://example.com/7": Video({"uploader": "BBBBB"}),
-            "https://example.com/8": Video({"uploader": "CCCCC"}),
-            "https://example.com/9": Video({"uploader": "CCCCC"}),
-            "https://example.com/10": Video({"uploader": "DDDDD"}),
-            "https://example.com/11": Video({"uploader": "AAAAA"}),
-            "https://example.com/12": Video({"uploader": "AAAAA"}),
-            "https://example.com/13": Video({"uploader": "BBBBB"}),
-            "https://example.com/14": Video({"uploader": "BBBBB"}),
-            "https://example.com/15": Video({"uploader": "CCCCC"}),
-        }
+        videos = pd.DataFrame([
+            ["https://example.com/1", "AAAAA"],
+            ["https://example.com/2", "AAAAA"],
+            ["https://example.com/3", "AAAAA"],
+            ["https://example.com/4", "AAAAA"],
+            ["https://example.com/5", "BBBBB"],
+            ["https://example.com/6", "BBBBB"],
+            ["https://example.com/7", "BBBBB"],
+            ["https://example.com/8", "CCCCC"],
+            ["https://example.com/9", "CCCCC"],
+            ["https://example.com/10", "DDDDD"],
+            ["https://example.com/11", "AAAAA"],
+            ["https://example.com/12", "AAAAA"],
+            ["https://example.com/13", "BBBBB"],
+            ["https://example.com/14", "BBBBB"],
+            ["https://example.com/15", "CCCCC"]
+        ], columns=['link', 'uploader']).set_index('link')
 
         check_ballot_uploader_occurrences(ballots, videos)
         self.assertTrue(ballots[0].votes[0].annotations.has("DUPLICATE CREATOR"))
@@ -335,6 +242,9 @@ class TestFunctionsBallotRules(TestCase):
         self.assertTrue(ballots[1].votes[4].annotations.has_none())
 
     def test_check_ballot_uploader_diversity(self):
+        # TODO: should this be removed completely, or should
+        # the uploader diversity be kept an optional check that's
+        # toggled off by default?
         ballots = [
             # All votes for the same uploader
             Ballot(
@@ -388,50 +298,3 @@ class TestFunctionsBallotRules(TestCase):
         self.assertTrue(ballots[1].votes[2].annotations.has_none())
         self.assertTrue(ballots[1].votes[3].annotations.has_none())
         self.assertTrue(ballots[1].votes[4].annotations.has_none())
-
-    def test_other_ballot_checks(self):
-        ballots = [
-            Ballot(
-                "4/1/2024 9:00:00",
-                [
-                    Vote("https://example.com/1"),
-                    Vote("https://example.com/2"),
-                ],
-            ),
-            Ballot(
-                "4/2/2024 9:00:00",
-                [
-                    Vote("https://example.com/3"),
-                    Vote("https://example.com/4"),
-                ],
-            ),
-        ]
-
-        videos = {
-            "https://example.com/1": Video({"title": "Example Video 1"}),
-            "https://example.com/2": Video({"title": "Example Video 2"}),
-            "https://example.com/3": Video({"title": "Example Video 3"}),
-            "https://example.com/4": Video({"title": "Example Video 4"}),
-        }
-
-        videos["https://example.com/1"].annotations.add("BLACKLISTED")
-        videos["https://example.com/1"].annotations.add("VIDEO TOO OLD")
-        videos["https://example.com/1"].annotations.add("VIDEO TOO SHORT")
-        videos["https://example.com/2"].annotations.add("BLACKLISTED")
-        videos["https://example.com/2"].annotations.add("VIDEO MAYBE TOO SHORT")
-        videos["https://example.com/3"].annotations.add("VIDEO TOO NEW")
-        videos["https://example.com/3"].annotations.add("NOT WHITELISTED")
-
-        check_blacklisted_ballots(ballots, videos)
-        check_non_whitelisted_ballots(ballots, videos)
-        check_ballot_upload_dates(ballots, videos)
-        check_ballot_video_durations(ballots, videos)
-
-        self.assertTrue(ballots[0].votes[0].annotations.has("BLACKLISTED"))
-        self.assertTrue(ballots[0].votes[0].annotations.has("VIDEO TOO OLD"))
-        self.assertTrue(ballots[0].votes[0].annotations.has("VIDEO TOO SHORT"))
-        self.assertTrue(ballots[0].votes[1].annotations.has("BLACKLISTED"))
-        self.assertTrue(ballots[0].votes[1].annotations.has("VIDEO MAYBE TOO SHORT"))
-        self.assertTrue(ballots[1].votes[0].annotations.has("VIDEO TOO NEW"))
-        self.assertTrue(ballots[1].votes[0].annotations.has("NOT WHITELISTED"))
-        self.assertTrue(ballots[1].votes[1].annotations.has_none())

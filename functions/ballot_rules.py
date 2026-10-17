@@ -11,7 +11,7 @@ def check_duplicates(ballots: list[Ballot]):
     """
     for ballot in ballots:
         unique_votes = []
-        for vote in ballot.votes:
+        for vote in ballot.nonempty_votes():
             if vote.url in unique_votes:
                 vote.annotations.add("DUPLICATE VIDEO")
             else:
@@ -41,7 +41,7 @@ def check_fuzzy(
         # * Get the set of all unchecked votes similar to it
         # * Store that set, repeat until no more votes or no more similar sets
         for property_name, similarity_set in similarity_sets.items():
-            unchecked_votes = set([vote for vote in ballot.votes])
+            unchecked_votes = set([vote for vote in ballot.nonempty_votes()])
             while len(unchecked_votes) > 0:
                 vote_to_check = unchecked_votes.pop()
                 video_to_check = videos.loc[vote_to_check.url]
@@ -73,7 +73,7 @@ def check_fuzzy(
 
         property_order = ["title", "uploader", "duration"]
 
-        for vote in ballot.votes:
+        for vote in ballot.nonempty_votes():
             vote_similarity_properties = [
                 prop for prop in property_order if vote in similarity_sets[prop]
             ]
@@ -89,9 +89,11 @@ def check_ballot_uploader_occurrences(ballots: list[Ballot], videos: DataFrame):
     ballot.
     """
     for ballot in ballots:
-        uploader_counts = videos.loc[[vote.url for vote in ballot.votes], 'uploader'].value_counts()
+        votes = ballot.nonempty_votes()
 
-        for vote in ballot.votes:
+        uploader_counts = videos.loc[[vote.url for vote in votes], 'uploader'].value_counts()
+
+        for vote in votes:
             uploader = videos.loc[vote.url, 'uploader']
 
             if uploader_counts[uploader] >= 3:
