@@ -1,6 +1,7 @@
-import tkinter as tk, dotenv
+import tkinter as tk
 from PIL import Image, ImageTk
 from threading import Thread
+import asyncio, dotenv
 
 dotenv.load_dotenv()
 
@@ -17,18 +18,21 @@ class GUI:
     instances = {}
 
     # Stores the GUI currently being shown to the user.
-    active_gui = None
+    _active_gui = None
 
     _key_image = None
     _frame_api_key = None
     _var_yt_api_key = tk.StringVar()
+
+    # The asyncio event loop that will run all tasks in the same background thread
+    task_loop = asyncio.new_event_loop()
 
     # Allows guis to use other GUI instances by their class names
     # Otherwise would leave the circular imports issue with the main menu
     def __init__(self):
         self.name = self.__class__.__name__
         GUI.instances[self.name] = self
-        self.task: Thread | None = None
+        self._tasks = set()
 
     # Named gui to be more intuitive when overriding rather than in its use in this class
     def gui(self, root: tk.Tk):
@@ -69,14 +73,14 @@ class GUI:
         name into it."""
 
         # Decommission the current active GUI and destroy it.
-        if GUI.active_gui:
+        if GUI._active_gui:
             for widget in GUI.root.winfo_children():
                 widget.destroy()
 
         # Switch the active GUI to the new instance.
-        GUI.active_gui: GUI = GUI.instances[gui_name]
+        GUI._active_gui: GUI = GUI.instances[gui_name]
 
-        GUI.active_gui.gui(GUI.root)
+        GUI._active_gui.gui(GUI.root)
 
         # Add the YT API Key field toggle button.
         if not GUI._key_image:
@@ -92,15 +96,16 @@ class GUI:
             command=lambda: GUI._toggle_key_entry(),
         ).place(relx=0.95, rely=0.95, anchor="se")
 
-        if GUI.active_gui.task_running():
-            GUI.active_gui._update_loop()
+        if GUI._active_gui.tasks_running():
+            GUI._active_gui.before()
+            GUI._active_gui._update_loop()
 
     def _update_loop(self):
         # Stop ui content updates when the view changes
-        if self.name != GUI.active_gui.name:
+        if self.name != GUI._active_gui.name:
             return
 
-        completed = not self.task_running()
+        completed = not self.tasks_running()
         self.gui_update()
 
         if completed:
@@ -108,10 +113,12 @@ class GUI:
         else:
             GUI.root.after(15, self._update_loop)
 
-    def task_running(self):
-        """Returns `True` if the main task for this GUI view is running"""
-        if self.task is not None and self.task.is_alive():
-            return True
+    def tasks_running(self):
+        """Returns the number of tasks running for the current GUI view"""
+        return len(self._tasks)
 
-        self.task = None
-        return False
+def _start_loop():
+    asyncio.set_event_loop(GUI.task_loop)
+    GUI.task_loop.run_forever()
+
+GUI.task_thread = Thread(target=_start_loop, daemon=True).start()

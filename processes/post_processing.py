@@ -74,7 +74,7 @@ class PostProcessing(GUI):
             buttons_frame,
             text="🏁 Run Post-processing",
             command=self.handle_post_processing,
-            state=tk.DISABLED if self.task_running() else tk.NORMAL
+            state=tk.DISABLED if self.tasks_running() else tk.NORMAL
         )
         self.run_button.grid(column=0, row=0, padx=5, pady=5)
 

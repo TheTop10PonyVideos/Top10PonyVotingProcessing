@@ -178,7 +178,7 @@ class ArchiveStatusChecker(GUI):
         )
         self.label_progress.grid(column=0, row=1, padx=3, pady=3)
 
-        self.ui_lock(self.task_running())
+        self.ui_lock(self.tasks_running())
 
     def checker_target_changed(self):
         """Adjusts the ui to facilitate checking each kind of video list,

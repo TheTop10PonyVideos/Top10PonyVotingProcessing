@@ -166,7 +166,7 @@ class Top10Calculator(GUI):
         buttons_frame.grid(row=4, column=0)
 
         self.run_button = ttk.Button(
-            buttons_frame, text="🧮 Calculate Top 10", command=self.handle_calc, state=tk.DISABLED if self.task_running() else tk.NORMAL
+            buttons_frame, text="🧮 Calculate Top 10", command=self.handle_calc, state=tk.DISABLED if self.tasks_running() else tk.NORMAL
         )
         self.run_button.grid(column=0, row=0, padx=5, pady=5)
 
