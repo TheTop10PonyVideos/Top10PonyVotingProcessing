@@ -6,7 +6,8 @@ from functions.voting import (
     process_voting_data,
     process_votes_csv_row,
     validate_video_data,
-    generate_annotated_csv_data,
+    apply_candidate_changes,
+    generate_annotated_ballots_csv_data,
     shift_columns,
 )
 from classes.voting import Ballot, Vote, Video
@@ -217,11 +218,11 @@ class TestFunctionsVoting(TestCase):
             Ballot(
                 datetime(2024, 4, 2, 9, 0, 0),
                 [
-                    Vote("https://example.com/1"),
-                    Vote("https://example.com/3"),
+                    Vote("https://example.com/4"),
                     Vote("https://example.com/5"),
+                    Vote("https://example.com/6"),
                     Vote("https://example.com/7"),
-                    Vote("https://example.com/9"),
+                    Vote("https://example.com/8"),
                 ],
             ),
             # Ballot with 1 vote
@@ -233,28 +234,49 @@ class TestFunctionsVoting(TestCase):
             ),
             # Ballot with 0 votes
             Ballot(datetime(2024, 4, 4, 9, 0, 0), []),
+            # Ballot with 5 votes, some with video candidates pruned
+            Ballot(
+                datetime(2024, 4, 2, 9, 0, 0),
+                [
+                    Vote("https://example.com/1"),
+                    Vote("https://example.com/11"),
+                    Vote("https://example.com/5"),
+                    Vote("https://example.com/7"),
+                    Vote("https://example.com/12"),
+                ],
+            ),
+            # Ballot with 5 votes, all with video candidates pruned
+            Ballot(
+                datetime(2024, 4, 2, 9, 0, 0),
+                [
+                    Vote("https://example.com/11"),
+                    Vote("https://example.com/12"),
+                    Vote("https://example.com/13"),
+                    Vote("https://example.com/14"),
+                    Vote("https://example.com/15"),
+                ],
+            )
         ]
 
-        videos = {
-            "https://example.com/1": Video({"title": "Example Video 1"}),
-            "https://example.com/2": Video({"title": "Example Video 2"}),
-            "https://example.com/3": Video({"title": "Example Video 3"}),
-            "https://example.com/4": Video({"title": "Example Video 4"}),
-            "https://example.com/5": Video({"title": "Example Video 5"}),
-            "https://example.com/6": Video({"title": "Example Video 6"}),
-            "https://example.com/7": Video({"title": "Example Video 7"}),
-            "https://example.com/8": Video({"title": "Example Video 8"}),
-            "https://example.com/9": Video({"title": "Example Video 9"}),
+        videos = pd.DataFrame([
+            ["https://example.com/1", "Example Video 1", "[VIDEO TOO OLD][VIDEO TOO SHORT]"],
+            ["https://example.com/2", "Example Video 2", "[VIDEO TOO NEW]"],
+            ["https://example.com/3", "Example Video 3", "Manual annotation"],
+            ["https://example.com/4", "Example Video 4", ""],
+            ["https://example.com/5", "Example Video 5", ""],
+            ["https://example.com/6", "Example Video 6", ""],
+            ["https://example.com/7", "Example Video 7", ""],
+            ["https://example.com/8", "Example Video 8", ""],
+            ["https://example.com/9", "Example Video 9", ""],
             # Video with no data
-            "https://example.com/10": Video(),
-        }
-        ballots[0].votes[0].annotations.add("VIDEO TOO OLD")
-        ballots[0].votes[0].annotations.add("VIDEO TOO SHORT")
-        ballots[0].votes[1].annotations.add("VIDEO TOO NEW")
+            ["https://example.com/10", "", ""],
+        ], columns=['link', 'title', 'annotations']).set_index('link')
 
-        csv_df = generate_annotated_csv_data(ballots, videos)
+        apply_candidate_changes(ballots, videos)
 
-        self.assertEqual((4, 22), csv_df.shape)
+        csv_df = generate_annotated_ballots_csv_data(ballots, videos)
+
+        self.assertEqual((6, 22), csv_df.shape)
 
         # Header
         self.assertEqual("Timestamp", csv_df.columns[0])
@@ -269,7 +291,7 @@ class TestFunctionsVoting(TestCase):
             "Example Video 2",
             "[VIDEO TOO NEW]",
             "Example Video 3",
-            "",
+            "[Manual annotation]",
             "Example Video 4",
             "",
             "Example Video 5",
@@ -292,15 +314,15 @@ class TestFunctionsVoting(TestCase):
         self.assertTrue(([
             "4/2/2024 9:00:00",
             "",
-            "Example Video 1",
-            "",
-            "Example Video 3",
+            "Example Video 4",
             "",
             "Example Video 5",
             "",
+            "Example Video 6",
+            "",
             "Example Video 7",
             "",
-            "Example Video 9"
+            "Example Video 8"
         ] == csv_df.iloc[1, :11]).all())
 
         self.assertTrue((csv_df.iloc[1, 11:] == '').all())
@@ -309,14 +331,32 @@ class TestFunctionsVoting(TestCase):
         self.assertTrue(([
             "4/3/2024 9:00:00",
             "",
-            "Example Video 1"
-        ] == csv_df.iloc[2, :3]).all())
+            "Example Video 1",
+            "[VIDEO TOO OLD][VIDEO TOO SHORT]"
+        ] == csv_df.iloc[2, :4]).all())
 
-        self.assertTrue((csv_df.iloc[2, 3:] == '').all())
+        self.assertTrue((csv_df.iloc[2, 4:] == '').all())
 
         # Row 4
-        self.assertEqual("4/4/2024 9:00:00", csv_df.iloc[3, 0])
-        self.assertTrue((csv_df.iloc[3, 1:] == '').all())
+        self.assertTrue((csv_df.iloc[3] == '').all())
+
+        # Row 5
+        self.assertTrue(([
+            "4/2/2024 9:00:00",
+            "",
+            "Example Video 1",
+            "[VIDEO TOO OLD][VIDEO TOO SHORT]",
+            "",
+            "",
+            "Example Video 5",
+            "",
+            "Example Video 7",
+        ] == csv_df.iloc[4, :9]).all())
+
+        self.assertTrue((csv_df.iloc[2, 9:] == '').all())
+        
+        # Row 6
+        self.assertTrue((csv_df.iloc[5] == '').all())
 
     def test_shift_columns(self):
         rows = pd.DataFrame([

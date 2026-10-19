@@ -44,7 +44,7 @@ class Annotations:
 class Vote:
     """Class representing a vote, with optional annotations."""
 
-    def __init__(self, url: str):
+    def __init__(self, url: str = ''):
         super().__init__()
         self.url = url
         self.annotations = Annotations()
@@ -82,3 +82,6 @@ class Ballot:
     def __init__(self, timestamp: datetime, votes: list[Vote]):
         self.timestamp = timestamp
         self.votes = votes
+
+    def nonempty_votes(self):
+        return [vote for vote in self.votes if vote.url]

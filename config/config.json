@@ -5,7 +5,8 @@
         "uploader_blacklist": "data/uploader_blacklist.txt",
         "accepted_domains": "data/accepted_domains.txt",
         "shifted_cells": "outputs/shifted_cells.csv",
-        "output": "outputs/processed.csv",
+        "processed_ballots": "outputs/processed_ballots.csv",
+        "processed_videos": "outputs/processed_videos.csv",
         "cache": "cache.json"
     }
 }

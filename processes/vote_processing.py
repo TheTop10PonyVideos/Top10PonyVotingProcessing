@@ -1,6 +1,6 @@
 """Top 10 Pony Video Squeezer 3000 (vote processing) application."""
 
-import sys, traceback
+import sys, traceback, os, asyncio
 from datetime import datetime
 import pandas as pd
 from pathlib import Path
@@ -10,15 +10,21 @@ from tkinter.font import Font
 from typing import override
 from PIL import ImageTk, Image
 from tktooltip import ToolTip
-from functions.general import load_text_data
+from functions.general import load_text_data, open_file
 from functions.archive import load_top_10_master_archive
 from functions.config import load_config_json
-from functions.gui import browse_file_csv, get_api_key, task
+from functions.gui import (
+    browse_file_csv,
+    get_api_key,
+    task,
+    message_box
+)
 from functions.voting import (
-    normalize_voting_data,
-    process_voting_data,
+    load_ballots,
+    apply_candidate_changes,
     fetch_video_data_for_ballots,
-    generate_annotated_csv_data,
+    generate_annotated_ballots_csv_data,
+    generate_annotated_videos_csv_data,
     shift_columns,
 )
 from functions.date import (
@@ -32,15 +38,11 @@ from functions.video_rules import (
     check_uploader_whitelist,
     check_upload_date,
     check_duration,
+    check_platform
 )
 from functions.ballot_rules import (
     check_duplicates,
-    check_blacklisted_ballots,
-    check_non_whitelisted_ballots,
-    check_ballot_upload_dates,
-    check_ballot_video_durations,
     check_fuzzy,
-    check_platform,
     check_ballot_uploader_occurrences,
 )
 from functions.messages import suc, inf, err
@@ -92,18 +94,32 @@ class VoteProcessing(GUI):
         inputs_frame.pack()
         csv_input_frame.pack()
 
-        self.csv_entry_var = tk.StringVar()
-        input_file_label = tk.Label(csv_input_frame, text="Votes CSV file:")
+        self.ballot_csv_entry_var = tk.StringVar()
+        ballots_input_file_label = tk.Label(csv_input_frame, text="Votes CSV file:")
 
-        input_file_entry = ttk.Entry(csv_input_frame, textvariable=self.csv_entry_var)
+        self.videos_csv_entry_var = tk.StringVar(
+            value=config["paths"]["processed_videos"]
+            if os.path.exists(config["paths"]["processed_videos"])
+            else ''
+        )
+        videos_input_file_label = tk.Label(csv_input_frame, text="Videos CSV file:")
 
-        browse_button = ttk.Button(
-            csv_input_frame, text="📁 Choose...", command=browse_file_csv(self.csv_entry_var)
+        ballots_input_file_entry = ttk.Entry(csv_input_frame, textvariable=self.ballot_csv_entry_var)
+        videos_input_file_entry = ttk.Entry(csv_input_frame, textvariable=self.videos_csv_entry_var)
+
+        ballots_browse_button = ttk.Button(
+            csv_input_frame, text="📁 Choose...", command=browse_file_csv(self.ballot_csv_entry_var)
+        )
+        videos_browse_button = ttk.Button(
+            csv_input_frame, text="📁 Choose...", command=browse_file_csv(self.videos_csv_entry_var)
         )
 
-        input_file_label.grid(column=0, row=0, padx=8, pady=(2, 8))
-        input_file_entry.grid(column=1, row=0, padx=8, pady=(2, 8))
-        browse_button.grid(column=2, row=0, padx=8, pady=(2, 8))
+        ballots_input_file_label.grid(column=0, row=0, padx=8, pady=(2, 8))
+        ballots_input_file_entry.grid(column=1, row=0, padx=8, pady=(2, 8))
+        ballots_browse_button.grid(column=2, row=0, padx=8, pady=(2, 8))
+        videos_input_file_label.grid(column=0, row=1, padx=8, pady=(2, 8))
+        videos_input_file_entry.grid(column=1, row=1, padx=8, pady=(2, 8))
+        videos_browse_button.grid(column=2, row=1, padx=8, pady=(2, 8))
 
         # Create options frame
         options_frame = tk.Frame(main_frame)
@@ -224,36 +240,46 @@ class VoteProcessing(GUI):
         buttons_frame = tk.Frame(main_frame)
         buttons_frame.pack()
 
-        self.run_button = ttk.Button(
-            buttons_frame, text="📜 Run Checks", command=self.run_checks, state=tk.DISABLED if self.task_running() else tk.NORMAL
+        self.run_video_checks_button = ttk.Button(
+            buttons_frame, text="🎞️ Run Video Checks", command=self.run_video_checks, state=tk.DISABLED if self.tasks_running() else tk.NORMAL
         )
-        self.run_button.grid(column=0, row=0, padx=5, pady=5)
+        self.run_video_checks_button.grid(column=0, row=0, padx=5, pady=5)
+
+        self.run_ballot_checks_button = ttk.Button(
+            buttons_frame, text="📜 Run Ballot Checks", command=self.run_ballot_checks, state=tk.DISABLED if self.tasks_running() else tk.NORMAL
+        )
+        self.run_ballot_checks_button.grid(column=1, row=0, padx=5, pady=5)
 
         quit_button = ttk.Button(
             buttons_frame,
             text="Back to Main Menu",
             command=lambda: GUI.run("MainMenu"),
         )
-        quit_button.grid(column=1, row=0, padx=5, pady=5)
+        quit_button.grid(column=2, row=0, padx=5, pady=5)
 
     @override
     def before(self):
-        self.run_button.config(state=tk.DISABLED)
+        self.run_video_checks_button.config(state=tk.DISABLED)
+        self.run_ballot_checks_button.config(state=tk.DISABLED)
 
     @override
     def finish(self):
-        self.run_button.config(state=tk.NORMAL)
+        self.run_video_checks_button.config(state=tk.NORMAL)
+        self.run_ballot_checks_button.config(state=tk.NORMAL)
+
+        if not self.videos_csv_entry_var.get().strip():
+            self.videos_csv_entry_var.set(config["paths"]["processed_videos"])
 
     @task
-    async def run_checks(self):
-        """Handler for the "Run Checks" button. Reads in the selected CSV file, runs
+    async def run_video_checks(self, from_ui=True):
+        """Handler for the "Run Video Checks" button. Reads in the selected CSV file, runs
         a battery of checks on the voting data, and outputs an annotated version of
         the CSV with problematic votes labeled.
         """
         youtube_api_key = get_api_key()
         if not youtube_api_key: return
 
-        selected_csv_file = self.csv_entry_var.get()
+        selected_csv_file = self.ballot_csv_entry_var.get()
         if selected_csv_file.strip() == "":
             tk.messagebox.showinfo("Error", "Please choose a votes CSV file first.")
             return
@@ -265,7 +291,7 @@ class VoteProcessing(GUI):
         ]
 
         if len(selected_checks) == 0:
-            tk.messagebox.showinfo("Error", "Please select at least one ballot check.")
+            tk.messagebox.showinfo("Error", "Please select at least one video check.")
             return
 
         inf(f'Preparing to run checks on "{selected_csv_file}"...')
@@ -275,19 +301,13 @@ class VoteProcessing(GUI):
 
         # Load all ballots from the CSV file.
         inf(f'Loading all votes from CSV file "{selected_csv_file}"...')
-        voting_data = pd.read_csv(selected_csv_file, header=0, keep_default_na=False)
-        inf(f" * Loaded {len(voting_data)} data rows.")
 
-        inf(" * Performing URL normalization...")
         try:
-            normalized_voting_data = normalize_voting_data(voting_data)
+            ballots, _ = load_ballots(selected_csv_file)
         except Exception as e:
             traceback.print_exc()
             tk.messagebox.showinfo("Error", f"{e}\nMore details in console")
             return
-
-        inf(" * Creating ballots...")
-        ballots = process_voting_data(normalized_voting_data)
 
         total_votes = sum([len(ballot.votes) for ballot in ballots])
         suc(f"Loaded {len(ballots)} ballots containing a total of {total_votes} votes.")
@@ -403,52 +423,126 @@ class VoteProcessing(GUI):
             else:
                 inf("No cross-platform or duplicate uploads were detected.")
 
-        # Run some checks to annotate any issues with the videos themselves.
-        inf("Performing video checks...")
         videos_with_data = {
             url: video for url, video in videos.items() if video.data is not None
         }
 
-        inf(f"* Checking video upload dates...")
-        check_upload_date(
-            videos_with_data.values(), upload_month_date.month, upload_month_date.year
-        )
-
-        inf(f"* Checking video durations...")
-        check_duration(videos_with_data.values())
-
-        inf("* Checking for videos from blacklisted uploaders...")
-        uploader_blacklist = load_text_data(config["paths"]["uploader_blacklist"])
-        check_uploader_blacklist(videos_with_data.values(), uploader_blacklist)
-
-        inf("* Checking for videos from whitelisted uploaders...")
-        uploader_whitelist = set(row["channel"].removeprefix("[BLACKLIST] ") for row in load_top_10_master_archive(False))
-        check_uploader_whitelist(videos_with_data.values(), uploader_whitelist)
-
-        suc(f"Video checks complete.")
-
-        # Run checks on the ballots to annotate problematic votes. These checks
+        # Run checks on the videos to annotate problematic votes. These checks
         # should be ordered most important first, to make the more important
         # annotations appear first in the CSV.
-        inf("Performing ballot checks...")
+        inf("Performing video checks...")
 
         do_check = lambda k: self.ballot_check_vars[k].get() == True
 
         if do_check("blacklist"):
             inf("* Checking for votes for blacklisted videos...")
-            check_blacklisted_ballots(ballots, videos)
+            uploader_blacklist = load_text_data(config["paths"]["uploader_blacklist"])
+            check_uploader_blacklist(videos_with_data.values(), uploader_blacklist)
+
+        if do_check("upload_date"):
+            inf("* Checking for votes for videos with invalid upload dates...")
+            check_upload_date(
+                videos_with_data.values(), upload_month_date.month, upload_month_date.year
+            )
+
+        if do_check("duration"):
+            inf("* Checking for votes for videos with invalid durations...")
+            check_duration(videos_with_data.values())
+
+        if do_check("whitelist"):
+            inf("* Checking for votes for non-whitelisted videos...")
+            uploader_whitelist = set(row["channel"].removeprefix("[BLACKLIST] ") for row in load_top_10_master_archive(False))
+            check_uploader_whitelist(videos_with_data.values(), uploader_whitelist)
+
+        if do_check("platform"):
+            inf("* Checking for votes for non-YouTube videos")
+            check_platform(videos_with_data.values())
+
+        suc(f"Video checks complete.")
+
+        output_csv_path_str = self.videos_csv_entry_var.get().strip() or config["paths"]["processed_videos"]
+
+        inf(f"Writing annotated video data...")
+        output_csv_data = generate_annotated_videos_csv_data(ballots, videos)
+        output_csv_path = Path(output_csv_path_str)
+        output_csv_data.to_csv(output_csv_path, index=False)
+
+        suc(f'Wrote annotated video data to "{output_csv_path_str}".')
+        suc("Finished checks.")
+
+        proc_complete_msgs = []
+        proc_complete_msgs.append(
+            f"Vote processing complete. An annotated video data file has been created at:\n\n{output_csv_path_str}"
+        )
+        if found_possible_cross_platform:
+            proc_complete_msgs.append(
+                "Detected some possible cross-platform uploads. See the console output for more details."
+            )
+
+        proc_complete_msg = "\n\n".join(proc_complete_msgs)
+
+        if from_ui:
+            message_box(
+                'Processing Completed',
+                proc_complete_msg,
+                [('Open', lambda: open_file(output_csv_path))]
+            )
+
+        return output_csv_data
+
+
+    @task
+    async def run_ballot_checks(self):
+        ballots_csv_file = self.ballot_csv_entry_var.get().strip()
+        videos_csv_file = self.videos_csv_entry_var.get().strip()
+
+        if not ballots_csv_file:
+            tk.messagebox.showinfo("Error", "Please choose a votes CSV file first.")
+            return
+
+        if not videos_csv_file:
+            videos = await asyncio.wrap_future(self.run_video_checks(False))
+        else:
+            try:
+                videos = pd.read_csv(videos_csv_file, index_col='link', keep_default_na=False)
+            except Exception as e:
+                tk.messagebox.showinfo("Error", f"Could not open {videos_csv_file}")
+                return
+
+        selected_checks = [
+            name
+            for name in self.ballot_check_vars
+            if self.ballot_check_vars[name].get() == True
+        ]
+
+        if len(selected_checks) == 0:
+            tk.messagebox.showinfo("Error", "Please select at least one ballot check.")
+            return
+
+        inf(f'Preparing to run checks on "{ballots_csv_file}"...')
+
+        # Load all ballots from the CSV file.
+        inf(f'Loading all votes from CSV file "{ballots_csv_file}"...')
+
+        try:
+            ballots, normalized_voting_data = load_ballots(ballots_csv_file)
+        except Exception as e:
+            traceback.print_exc()
+            tk.messagebox.showinfo("Error", f"{e}\nMore details in console")
+            return
+
+        total_votes = sum([len(ballot.votes) for ballot in ballots])
+        suc(f"Loaded {len(ballots)} ballots containing a total of {total_votes} votes.")
+
+        # Remove votes where the video data has been manually deleted,
+        # and move all video annotations to vote annotations
+        apply_candidate_changes(ballots, videos)
+
+        do_check = lambda k: self.ballot_check_vars[k].get() == True
 
         if do_check("duplicate"):
             inf("* Checking for duplicate votes...")
             check_duplicates(ballots)
-
-        if do_check("upload_date"):
-            inf("* Checking for votes for videos with invalid upload dates...")
-            check_ballot_upload_dates(ballots, videos)
-
-        if do_check("duration"):
-            inf("* Checking for votes for videos with invalid durations...")
-            check_ballot_video_durations(ballots, videos)
 
         if do_check("uploader_occurrence"):
             inf("* Checking for ballot uploader occurrences...")
@@ -459,19 +553,12 @@ class VoteProcessing(GUI):
             fuzzy_similarity_threshold = 80
             check_fuzzy(ballots, videos, fuzzy_similarity_threshold)
 
-        if do_check("whitelist"):
-            inf("* Checking for votes for non-whitelisted videos...")
-            check_non_whitelisted_ballots(ballots, videos)
-
-        if do_check("platform"):
-            inf("* Checking for votes for non-YouTube videos")
-            check_platform(ballots, videos)
-
         suc(f"Ballot checks complete.")
 
-        output_csv_path_str = config["paths"]["output"]
-        inf(f"Writing annotated ballot data...")
-        output_csv_data = generate_annotated_csv_data(ballots, videos)
+        output_csv_path_str = config["paths"]["processed_ballots"]
+
+        inf(f"Writing annotated video data...")
+        output_csv_data = generate_annotated_ballots_csv_data(ballots, videos)
         output_csv_path = Path(output_csv_path_str)
         output_csv_data.to_csv(output_csv_path, index=False)
 
@@ -488,18 +575,10 @@ class VoteProcessing(GUI):
         shifted_voting_data.to_csv(shifted_cells_path, index=False)
 
         suc(f'Wrote "shifted cells" data to "{shifted_cells_path}".')
-
         suc("Finished checks.")
 
-        proc_complete_msgs = []
-        proc_complete_msgs.append(
-            f"Vote processing complete. An annotated ballot data file has been created at:\n\n{output_csv_path_str}"
+        message_box(
+            'Processing Completed',
+            f'Ballot processing complete. An annotated ballot data file has been created at:\n\n{output_csv_path_str}',
+            [('Open', lambda: open_file(output_csv_path))]
         )
-        if found_possible_cross_platform:
-            proc_complete_msgs.append(
-                "Detected some possible cross-platform uploads. See the console output for more details."
-            )
-
-        proc_complete_msg = "\n\n".join(proc_complete_msgs)
-
-        tk.messagebox.showinfo("Processing Completed", proc_complete_msg)

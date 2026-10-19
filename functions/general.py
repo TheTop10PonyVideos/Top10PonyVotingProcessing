@@ -3,6 +3,7 @@
 from random import randint
 from pathlib import Path
 import pandas as pd
+import sys, os, subprocess
 
 
 def load_text_data(path_str: str) -> list[str]:
@@ -62,3 +63,11 @@ def pad_csv_rows(df: pd.DataFrame, num_rows: int):
     padded_rows = pd.concat([df, empty_rows], ignore_index=True)
 
     return padded_rows
+
+def open_file(path):
+    if sys.platform == "win32":
+        os.startfile(path)
+    elif sys.platform == "darwin":
+        subprocess.Popen(["open", path])
+    else:
+        subprocess.Popen(["xdg-open", path])

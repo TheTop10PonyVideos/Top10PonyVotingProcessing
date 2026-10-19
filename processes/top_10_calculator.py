@@ -89,7 +89,7 @@ class Top10Calculator(GUI):
         # Create "Choose Input CSV..." control
         input_file_label = tk.Label(file_selectors_frame, text="Input CSV file:")
 
-        default_input_file = "outputs/processed.csv"
+        default_input_file = "outputs/processed_ballots.csv"
         self.input_file_var = tk.StringVar()
         self.input_file_var.set(default_input_file)
         input_file_entry = ttk.Entry(
@@ -166,7 +166,7 @@ class Top10Calculator(GUI):
         buttons_frame.grid(row=4, column=0)
 
         self.run_button = ttk.Button(
-            buttons_frame, text="🧮 Calculate Top 10", command=self.handle_calc, state=tk.DISABLED if self.task_running() else tk.NORMAL
+            buttons_frame, text="🧮 Calculate Top 10", command=self.handle_calc, state=tk.DISABLED if self.tasks_running() else tk.NORMAL
         )
         self.run_button.grid(column=0, row=0, padx=5, pady=5)
 
