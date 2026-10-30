@@ -267,8 +267,10 @@ class VoteProcessing(GUI):
         self.run_video_checks_button.config(state=tk.NORMAL)
         self.run_ballot_checks_button.config(state=tk.NORMAL)
 
-        if not self.videos_csv_entry_var.get().strip():
-            self.videos_csv_entry_var.set(config["paths"]["processed_videos"])
+        default_output = config["paths"]["processed_videos"]
+
+        if not self.videos_csv_entry_var.get().strip() and os.path.exists(default_output):
+            self.videos_csv_entry_var.set(default_output)
 
     @task
     async def run_video_checks(self, from_ui=True):
@@ -465,7 +467,7 @@ class VoteProcessing(GUI):
         inf(f"Writing annotated video data...")
         output_csv_data = generate_annotated_videos_csv_data(ballots, videos)
         output_csv_path = Path(output_csv_path_str)
-        output_csv_data.to_csv(output_csv_path, index=False)
+        output_csv_data.to_csv(output_csv_path)
 
         suc(f'Wrote annotated video data to "{output_csv_path_str}".')
         suc("Finished checks.")

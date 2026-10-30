@@ -182,7 +182,7 @@ def generate_annotated_videos_csv_data(ballots: list[Ballot], videos: dict[str, 
     df = pd.DataFrame({
             'link': url,
             'title': videos[url].data.get('title') if videos[url].data else '',
-            'annotations': videos[url].annotations.get_label(),
+            'annotations': videos[url].annotations.get_label() or '',
             'uploader': videos[url].data.get('uploader') if videos[url].data else '',
             'duration': videos[url].data.get('duration') if videos[url].data else ''
         }
@@ -193,7 +193,11 @@ def generate_annotated_videos_csv_data(ballots: list[Ballot], videos: dict[str, 
 
     df['frequency'] = df['link'].map(vote_counts)
 
-    return df[['link', 'title', 'uploader', 'annotations', 'frequency', 'duration']].sort_values('frequency', ascending=False, ignore_index=True)
+    return (
+        df[['link', 'title', 'uploader', 'annotations', 'frequency', 'duration']]
+        .sort_values('frequency', ascending=False, ignore_index=True)
+        .set_index('annotations')
+    )
 
 
 def generate_annotated_ballots_csv_data(
